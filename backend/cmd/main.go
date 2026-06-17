@@ -1,9 +1,10 @@
 package main
 
 import (
-	"citramascoweb-backend/config"
 	"fmt"
 	"time"
+
+	"citramascoweb-backend/config"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
