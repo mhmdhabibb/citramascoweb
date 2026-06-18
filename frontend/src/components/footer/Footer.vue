@@ -19,7 +19,7 @@ const currentYear = new Date().getFullYear()
       </div>
       <div class="border-t border-border mt-8 pt-8 flex justify-between items-center text-xs text-muted-foreground">
         <p>&copy; {{ currentYear }} CitraMas Co Living. All rights reserved.</p>
-      </div>  
+      </div>
     </div>
   </footer>
 </template>
