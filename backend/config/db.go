@@ -3,6 +3,7 @@ package config
 import (
 	"citramascoweb-backend/internal/modules/auth"
 	"citramascoweb-backend/internal/modules/category"
+	"citramascoweb-backend/internal/modules/types"
 	"log"
 
 	"gorm.io/driver/mysql"
@@ -24,7 +25,7 @@ func ConnectDB() *gorm.DB {
 		log.Fatalf("Database connection failed: %v", err)
 	}
 
-	db.AutoMigrate(&auth.User{}, &category.Category{})
+	db.AutoMigrate(&auth.User{}, &category.Category{}, &types.Types{})
 
 	return db
 }

@@ -5,6 +5,7 @@ import (
 
 	"citramascoweb-backend/config"
 	"citramascoweb-backend/internal/modules/category"
+	"citramascoweb-backend/internal/modules/types"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -31,10 +32,12 @@ func main() {
 
 	//  init modules
 	categoryModule := category.InitModule(db)
+	typeModule := types.InitModule(db)
 
 	api := app.Group("/api")
 
 	categoryModule.CategoryRoutes(api)
+	typeModule.TypeRoutes(api)
 
 	api.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{
