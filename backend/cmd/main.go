@@ -1,10 +1,11 @@
 package main
 
 import (
-	"fmt"
 	"time"
 
 	"citramascoweb-backend/config"
+	"citramascoweb-backend/internal/modules/category"
+	"citramascoweb-backend/internal/modules/types"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -14,9 +15,7 @@ func main() {
 
 	app := gin.Default()
 
-	config.ConnectDB()
-
-	db := config.Config("DB_URL")
+	db := config.ConnectDB()
 
 	corsConfig := cors.Config{
 		AllowOrigins:     []string{"*"},
@@ -28,11 +27,23 @@ func main() {
 	}
 
 	app.Use(cors.New(corsConfig))
-	fmt.Println("Database: ", db)
 
 	port := config.Config("PORT")
 
-	// api := app.Group("/api")
+	//  init modules
+	categoryModule := category.InitModule(db)
+	typeModule := types.InitModule(db)
+
+	api := app.Group("/api")
+
+	categoryModule.CategoryRoutes(api)
+	typeModule.TypeRoutes(api)
+
+	api.GET("/health", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"message": "OK",
+		})
+	})
 
 	app.Run(":" + port)
 }
