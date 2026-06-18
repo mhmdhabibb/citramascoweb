@@ -55,12 +55,12 @@ func (s *offerService) Create(req *dto.CreateOfferRequest) error {
 	}
 
 	offer := &Offer{
-		Id:    uuid.New().String(),
-		Title: req.Title,
-
+		Id:          uuid.New().String(),
+		Title:       req.Title,
+		Price:       req.Price,
 		Discount:    req.Discount,
 		Description: req.Description,
-		Price:       req.Price,
+		Image:       *req.Image,
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}
@@ -86,7 +86,12 @@ func (s *offerService) Update(id string, req *dto.UpdateOfferRequest) error {
 	offer.Discount = req.Discount
 	offer.Price = req.Price
 	offer.Description = req.Description
-	offer.Status = OfferStatus(*req.Status)
+	if req.Image != nil {
+		offer.Image = *req.Image
+	}
+	if req.Status != nil {
+		offer.Status = OfferStatus(*req.Status)
+	}
 	offer.UpdatedAt = time.Now()
 
 	return s.repo.Update(id, offer)
