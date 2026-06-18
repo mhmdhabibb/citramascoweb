@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue'
 import { roomService, type Room } from '@/services/roomService'
 import { useCategoryStore } from '@/stores/categoryStore'
 import { useTypeStore } from '@/stores/typeStore'
+import { useScrollReveal } from '@/composables/useScrollReveal'
 import RoomCard from '@/components/room/RoomCard.vue'
 
 const rooms = ref<Room[]>([])
@@ -10,6 +11,9 @@ const loading = ref(true)
 
 const categoryStore = useCategoryStore()
 const typeStore = useTypeStore()
+
+const { elementRef: headerRef, isVisible: headerVisible } = useScrollReveal(0.2)
+const { elementRef: gridRef, isVisible: gridVisible } = useScrollReveal(0.05)
 
 onMounted(async () => {
   try {
@@ -28,10 +32,10 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-    <div class="mb-10 text-center md:text-left">
-      <h1 class="text-3xl font-extrabold tracking-tight">Our Rooms & Suites</h1>
-      <p class="mt-2 text-muted-foreground">Find the perfect room for your trip, business stay, or weekend getaway.</p>
+  <div class="max-w-[1400px] mx-auto py-12 px-4 sm:px-6 lg:px-8">
+    <div ref="headerRef" class="mb-10 text-center md:text-left" :class="{ 'reveal-visible': headerVisible }">
+      <h1 class="text-3xl font-extrabold tracking-tight reveal-item reveal-delay-0">Our Rooms & Suites</h1>
+      <p class="mt-2 text-muted-foreground reveal-item reveal-delay-1">Find the perfect room for your trip, business stay, or weekend getaway.</p>
     </div>
 
     <!-- Categories Filter (from Backend API) -->
@@ -80,13 +84,41 @@ onMounted(async () => {
       <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
     </div>
 
-    <div v-else class="grid grid-cols-1 md:grid-cols-3 gap-8">
-      <RoomCard v-for="room in rooms" :key="room.id" :room="room" />
+    <div v-else ref="gridRef" class="grid grid-cols-1 md:grid-cols-3 gap-8" :class="{ 'reveal-visible': gridVisible }">
+      <div
+        v-for="(room, index) in rooms"
+        :key="room.id"
+        class="reveal-item"
+        :class="`reveal-delay-${Math.min(index, 5)}`"
+      >
+        <RoomCard :room="room" />
+      </div>
     </div>
   </div>
 </template>
 
 <style scoped>
+/* Scroll reveal */
+.reveal-item {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reveal-visible .reveal-item {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reveal-delay-0 { transition-delay: 0s; }
+.reveal-delay-1 { transition-delay: 0.1s; }
+.reveal-delay-2 { transition-delay: 0.2s; }
+.reveal-delay-3 { transition-delay: 0.3s; }
+.reveal-delay-4 { transition-delay: 0.4s; }
+.reveal-delay-5 { transition-delay: 0.5s; }
+
+/* Filters */
 .categories-filter,
 .types-bar {
   margin-bottom: 1.5rem;
@@ -125,13 +157,14 @@ onMounted(async () => {
   border: 1px solid rgba(28, 22, 18, 0.1);
   border-radius: 100px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .filter-chip:hover {
   background: #EDE8E1;
   border-color: rgba(28, 22, 18, 0.2);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(28, 22, 18, 0.06);
 }
 
 .filter-chip--type {
