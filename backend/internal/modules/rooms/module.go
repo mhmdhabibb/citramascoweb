@@ -29,4 +29,6 @@ func (m *Module) RoomRoutes(router *gin.RouterGroup) {
 	room.POST("", middlewares.AuthMiddleware(), middlewares.RoleMiddleware("admin"), m.Handler.Store)
 	room.PATCH("/:id", middlewares.AuthMiddleware(), middlewares.RoleMiddleware("admin"), m.Handler.Update)
 	room.DELETE("/:id", middlewares.AuthMiddleware(), middlewares.RoleMiddleware("admin"), m.Handler.Delete)
+	room.GET("/filter/category/:id", m.Handler.FilerByCategory)
+	room.GET("/filter/type/:id", m.Handler.FilterByType)
 }

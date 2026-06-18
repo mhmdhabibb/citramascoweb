@@ -139,3 +139,23 @@ func (h *roomHandler) Delete(c *gin.Context) {
 	}
 	c.JSON(200, gin.H{"success": true, "message": "Room deleted successfully!"})
 }
+
+func (h *roomHandler) FilerByCategory(c *gin.Context) {
+	id := c.Param("id")
+	rooms, err := h.roomService.FilerByCategory(id)
+	if err != nil {
+		c.JSON(404, gin.H{"success": false, "message": err.Error()})
+		return
+	}
+	c.JSON(200, gin.H{"success": true, "message": "Room filtered by category successfully", "data": rooms})
+}
+
+func (h *roomHandler) FilterByType(c *gin.Context) {
+	id := c.Param("id")
+	rooms, err := h.roomService.FilterByType(id)
+	if err != nil {
+		c.JSON(404, gin.H{"success": false, "message": err.Error()})
+		return
+	}
+	c.JSON(200, gin.H{"success": true, "message": "Room filtered by type successfully", "data": rooms})
+}
