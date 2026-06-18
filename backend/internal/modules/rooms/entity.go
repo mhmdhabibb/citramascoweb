@@ -20,6 +20,8 @@ type Room struct {
 	TypeId      string            `gorm:"type:varchar(191)" json:"type_id"`
 	Type        types.Types       `gorm:"foreignKey:TypeId;references:Id" json:"type"`
 	Description string            `json:"description"`
+	Status      string            `json:"status" gorm:"-"`
+	AvailabilityStatus string      `json:"availability_status" gorm:"-"`
 	CreatedAt   time.Time         `json:"created_at"`
 	UpdatedAt   time.Time         `json:"updated_at"`
 }

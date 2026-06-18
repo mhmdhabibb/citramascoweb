@@ -26,12 +26,13 @@ func InitModule(db *gorm.DB) *Module {
 
 func (m *Module) ReservationRoutes(router *gin.RouterGroup) {
 	router.GET("/reservations", m.Handler.GetAll)
+	router.GET("/reservations/availability", m.Handler.CheckAvailability)
 	router.GET("/reservation/:id", m.Handler.GetById)
 
 	res := router.Group("/reservation")
-	res.POST("", middlewares.AuthMiddleware(), m.Handler.Store)
-	res.PATCH("/:id", middlewares.AuthMiddleware(), m.Handler.Update)
-	res.DELETE("/:id", middlewares.AuthMiddleware(), m.Handler.Delete)
+	res.POST("", m.Handler.Store)
+	res.PATCH("/:id", middlewares.AuthMiddleware(), middlewares.RoleMiddleware("admin", "manager"), m.Handler.Update)
+	res.DELETE("/:id", middlewares.AuthMiddleware(), middlewares.RoleMiddleware("admin", "manager"), m.Handler.Delete)
 	res.PATCH("/approve/:id", middlewares.AuthMiddleware(), middlewares.RoleMiddleware("admin", "manager"), m.Handler.ApproveReservation)
 	res.PATCH("/cancel/:id", middlewares.AuthMiddleware(), middlewares.RoleMiddleware("admin", "manager"), m.Handler.CancelReservation)
 	res.PATCH("/reject/:id", middlewares.AuthMiddleware(), middlewares.RoleMiddleware("admin", "manager"), m.Handler.RejectReservation)

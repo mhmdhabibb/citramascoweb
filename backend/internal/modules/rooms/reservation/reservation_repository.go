@@ -1,6 +1,11 @@
 package reservation
 
-import "gorm.io/gorm"
+import (
+	"citramascoweb-backend/internal/modules/rooms"
+	"time"
+
+	"gorm.io/gorm"
+)
 
 type ReservationRepositoryInterface interface {
 	GetAll() ([]Reservation, error)
@@ -12,6 +17,7 @@ type ReservationRepositoryInterface interface {
 	ApproveReservation(id string) error
 	CancelReservation(id string) error
 	RejectReservation(id string) error
+	CheckAvailability(checkInDate time.Time, checkOutDate time.Time) ([]rooms.Room, error)
 }
 
 type reservationRepo struct {
@@ -24,7 +30,7 @@ func NewReservationRepository(db *gorm.DB) ReservationRepositoryInterface {
 
 func (r *reservationRepo) GetAll() ([]Reservation, error) {
 	var reservations []Reservation
-	err := r.db.Preload("User").Preload("Room").Find(&reservations).Error
+	err := r.db.Preload("Room").Find(&reservations).Error
 	if err != nil {
 		return nil, err
 	}
@@ -33,7 +39,7 @@ func (r *reservationRepo) GetAll() ([]Reservation, error) {
 
 func (r *reservationRepo) GetById(id string) (*Reservation, error) {
 	var reservation Reservation
-	err := r.db.Preload("User").Preload("Room").Where("id = ?", id).First(&reservation).Error
+	err := r.db.Preload("Room").Where("id = ?", id).First(&reservation).Error
 	if err != nil {
 		return nil, err
 	}
@@ -71,4 +77,28 @@ func (r *reservationRepo) CancelReservation(id string) error {
 
 func (r *reservationRepo) RejectReservation(id string) error {
 	return r.db.Model(&Reservation{}).Where("id = ?", id).Update("status", ReservationStatusRejected).Error
+}
+
+func (r *reservationRepo) CheckAvailability(checkInDate time.Time, checkOutDate time.Time) ([]rooms.Room, error) {
+	var availableRooms []rooms.Room
+
+	// Subquery to find room IDs that have overlapping reservations in "pending", "approved", or "checked-in" status
+	subQuery := r.db.Model(&Reservation{}).
+		Select("room_id").
+		Where("room_id IS NOT NULL AND room_id != ''").
+		Where("checkin_date < ? AND checkout_date > ? AND status IN ?",
+			checkOutDate,
+			checkInDate,
+			[]ReservationStatus{ReservationStatusPending, ReservationStatusApproved, ReservationStatusCheckedIn},
+		)
+
+	// Fetch all rooms that are not in the subquery result
+	err := r.db.Preload("Category").Preload("Type").
+		Where("id NOT IN (?)", subQuery).
+		Find(&availableRooms).Error
+
+	if err != nil {
+		return nil, err
+	}
+	return availableRooms, nil
 }

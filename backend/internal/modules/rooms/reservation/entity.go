@@ -1,7 +1,6 @@
 package reservation
 
 import (
-	"citramascoweb-backend/internal/modules/auth"
 	"citramascoweb-backend/internal/modules/rooms"
 	"time"
 )
@@ -18,13 +17,14 @@ const (
 )
 
 type Reservation struct {
-	Id     string            `gorm:"type:varchar(191);primaryKey" json:"id"`
-	Code   string            `gorm:"type:varchar(191)" json:"code"`    // Ditambahkan varchar(191) agar aman di-index
-	UserId string            `gorm:"type:varchar(191)" json:"user_id"` // FIX: Ditambahkan varchar(191)
-	User   auth.User         `gorm:"foreignKey:UserId;references:Id" json:"user"`
-	RoomId string            `gorm:"type:varchar(191)" json:"room_id"` // FIX: Ditambahkan varchar(191)
-	Room   rooms.Room        `gorm:"foreignKey:RoomId;references:Id" json:"room"`
-	Status ReservationStatus `gorm:"type:varchar(191);default:'pending'" json:"status"` // Ditambahkan tipe varchar
+	Id            string            `gorm:"type:varchar(191);primaryKey" json:"id"`
+	Code          string            `gorm:"type:varchar(191)" json:"code"`
+	FullName      string            `json:"full_name"`
+	Email         string            `json:"email"`
+	RoomId        string            `gorm:"type:varchar(191)" json:"room_id"`
+	Room          rooms.Room        `gorm:"foreignKey:RoomId;references:Id" json:"room"`
+	Status        ReservationStatus `gorm:"type:varchar(191);default:'pending'" json:"status"`
+	NumberOfGuest int               `json:"number_of_guest"`
 
 	CheckinDate  time.Time `json:"checkin_date"`
 	CheckoutDate time.Time `json:"checkout_date"`

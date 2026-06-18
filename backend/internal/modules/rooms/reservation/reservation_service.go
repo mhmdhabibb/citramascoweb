@@ -72,6 +72,23 @@ func (s *reservationService) Store(req *dto.CreateReservationRequest) error {
 		return errors.New("check-out date must be after check-in date")
 	}
 
+	// Check room availability before creating reservation
+	availableRooms, err := s.reservationRepo.CheckAvailability(checkinDate, checkoutDate)
+	if err != nil {
+		return fmt.Errorf("failed to check room availability: %v", err)
+	}
+
+	isAvailable := false
+	for _, room := range availableRooms {
+		if room.Id == req.RoomId {
+			isAvailable = true
+			break
+		}
+	}
+	if !isAvailable {
+		return errors.New("room is not available for the selected dates")
+	}
+
 	// 4. Calculate total price
 	totalPrice := roomData.Price * totalNight
 
@@ -82,16 +99,18 @@ func (s *reservationService) Store(req *dto.CreateReservationRequest) error {
 	}
 
 	newReservation := &Reservation{
-		Id:           uuid.New().String(),
-		Code:         code,
-		RoomId:       req.RoomId,
-		UserId:       req.UserId,
-		CheckinDate:  checkinDate,
-		CheckoutDate: checkoutDate,
-		Price:        roomData.Price,
-		TotalNight:   totalNight,
-		TotalPrice:   totalPrice,
-		Status:       ReservationStatusPending,
+		Id:            uuid.New().String(),
+		Code:          code,
+		RoomId:        req.RoomId,
+		FullName:      req.FullName,
+		Email:         req.Email,
+		CheckinDate:   checkinDate,
+		CheckoutDate:  checkoutDate,
+		Price:         roomData.Price,
+		TotalNight:    totalNight,
+		TotalPrice:    totalPrice,
+		Status:        ReservationStatusPending,
+		NumberOfGuest: req.NumberOfGuest,
 	}
 
 	err = s.reservationRepo.Create(newReservation)
@@ -116,10 +135,6 @@ func (s *reservationService) Update(id string, req *dto.UpdateReservationRequest
 			return fmt.Errorf("room not found: %v", err)
 		}
 		reservation.Price = roomData.Price
-	}
-
-	if req.UserId != "" {
-		reservation.UserId = req.UserId
 	}
 
 	// Track if dates changed to recalculate total price/nights
@@ -163,6 +178,10 @@ func (s *reservationService) Update(id string, req *dto.UpdateReservationRequest
 
 	if req.Status != "" {
 		reservation.Status = ReservationStatus(req.Status)
+	}
+
+	if req.NumberOfGuest != 0 {
+		reservation.NumberOfGuest = req.NumberOfGuest
 	}
 
 	err = s.reservationRepo.Update(reservation, id)
@@ -253,4 +272,72 @@ func (s *reservationService) RejectReservation(id string) error {
 	}
 
 	return nil
+}
+
+func (s *reservationService) CheckAvailability(req *dto.CheckAvailabilityRequest) (interface{}, error) {
+	// Parse check-in and check-out dates
+	checkinDate, err := time.Parse("2006-01-02", req.CheckInDate)
+	if err != nil {
+		checkinDate, err = time.Parse(time.RFC3339, req.CheckInDate)
+		if err != nil {
+			return nil, fmt.Errorf("invalid check-in date: %v", err)
+		}
+	}
+
+	checkoutDate, err := time.Parse("2006-01-02", req.CheckOutDate)
+	if err != nil {
+		checkoutDate, err = time.Parse(time.RFC3339, req.CheckOutDate)
+		if err != nil {
+			return nil, fmt.Errorf("invalid check-out date: %v", err)
+		}
+	}
+
+	if checkoutDate.Before(checkinDate) || checkoutDate.Equal(checkinDate) {
+		return nil, errors.New("check-out date must be after check-in date")
+	}
+
+	availableRooms, err := s.reservationRepo.CheckAvailability(checkinDate, checkoutDate)
+	if err != nil {
+		return nil, err
+	}
+
+	if req.RoomId != "" {
+		isAvailable := false
+		for _, room := range availableRooms {
+			if room.Id == req.RoomId {
+				isAvailable = true
+				break
+			}
+		}
+		status := "tidak tersedia"
+		if isAvailable {
+			status = "tersedia"
+		}
+		return map[string]interface{}{
+			"available": isAvailable,
+			"status":    status,
+		}, nil
+	}
+
+	allRooms, err := s.roomRepo.GetAll()
+	if err != nil {
+		return nil, err
+	}
+
+	availableMap := make(map[string]bool)
+	for _, r := range availableRooms {
+		availableMap[r.Id] = true
+	}
+
+	for i := range allRooms {
+		if availableMap[allRooms[i].Id] {
+			allRooms[i].Status = "tersedia"
+			allRooms[i].AvailabilityStatus = "tersedia"
+		} else {
+			allRooms[i].Status = "tidak tersedia"
+			allRooms[i].AvailabilityStatus = "tidak tersedia"
+		}
+	}
+
+	return allRooms, nil
 }

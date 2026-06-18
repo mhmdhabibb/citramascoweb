@@ -34,6 +34,7 @@ func (h *reservationHandler) GetById(c *gin.Context) {
 }
 
 func (h *reservationHandler) Store(c *gin.Context) {
+
 	var req dto.CreateReservationRequest
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
@@ -105,4 +106,21 @@ func (h *reservationHandler) RejectReservation(c *gin.Context) {
 		return
 	}
 	c.JSON(200, gin.H{"success": true, "message": "Reservation rejected successfully!"})
+}
+
+func (h *reservationHandler) CheckAvailability(c *gin.Context) {
+	var req dto.CheckAvailabilityRequest
+	err := c.ShouldBindQuery(&req)
+	if err != nil {
+		c.JSON(400, gin.H{"success": false, "message": err.Error()})
+		return
+	}
+
+	result, err := h.reservationService.CheckAvailability(&req)
+	if err != nil {
+		c.JSON(400, gin.H{"success": false, "message": err.Error()})
+		return
+	}
+
+	c.JSON(200, gin.H{"success": true, "message": "Availability checked successfully", "data": result})
 }
