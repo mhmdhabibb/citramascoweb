@@ -101,3 +101,19 @@ func (s *roomService) Delete(id string) error {
 
 	return nil
 }
+
+func (s *roomService) FilerByCategory(categoryId string) ([]Room, error) {
+	rooms, err := s.roomRepo.FilerByCategory(categoryId)
+	if err != nil {
+		return nil, err
+	}
+	return rooms, nil
+}
+
+func (s *roomService) FilterByType(typeId string) ([]Room, error) {
+	rooms, err := s.roomRepo.FilterByType(typeId)
+	if err != nil {
+		return nil, err
+	}
+	return rooms, nil
+}

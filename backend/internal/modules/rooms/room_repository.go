@@ -9,6 +9,8 @@ type RoomRepositoryInterface interface {
 	Update(room *Room, id string) error
 	Delete(id string) error
 	GetLastRoom() (*Room, error)
+	FilerByCategory(categoryId string) ([]Room, error)
+	FilterByType(typeId string) ([]Room, error)
 }
 
 type roomRepo struct {
@@ -60,4 +62,34 @@ func (r *roomRepo) GetLastRoom() (*Room, error) {
 		return nil, err
 	}
 	return &room, nil
+}
+
+func (r *roomRepo) FilerByCategory(categoryId string) ([]Room, error) {
+
+	var rooms []Room
+
+	err := r.db.Preload("Type").Preload("Category").Where("category_id = ?", categoryId).Find(&rooms).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return rooms, nil
+
+}
+
+func (r *roomRepo) FilterByType(typeId string) ([]Room, error) {
+
+	var rooms []Room
+
+	err := r.db.Preload("Type").Preload("Category").Where("type_id = ?", typeId).Find(&rooms).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return rooms, nil
+
 }

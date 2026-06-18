@@ -2,7 +2,7 @@ package dto
 
 type CreateRoomRequest struct {
 	Name        string `json:"name" form:"name" binding:"required"`
-	Image       string `json:"image" form:"image"`
+	Image       string `json:"image" form:"-"`
 	CategoryId  string `json:"category_id" form:"category_id" binding:"required"`
 	Price       int    `json:"price" form:"price" binding:"required"`
 	Capacity    int    `json:"capacity" form:"capacity" binding:"required"`
@@ -13,7 +13,7 @@ type CreateRoomRequest struct {
 
 type UpdateRoomRequest struct {
 	Name        string `json:"name" form:"name" `
-	Image       string `json:"image" form:"image"`
+	Image       string `json:"image" form:"-"`
 	CategoryId  string `json:"category_id" form:"category_id" `
 	Price       int    `json:"price" form:"price" `
 	Capacity    int    `json:"capacity" form:"capacity" `
