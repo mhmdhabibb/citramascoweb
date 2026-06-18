@@ -1,34 +1,28 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { useScrollReveal } from '@/composables/useScrollReveal'
 
-const name = ref('')
-const email = ref('')
-const message = ref('')
-const submitted = ref(false)
-
-const handleSubmit = () => {
-  submitted.value = true
-}
+const { elementRef: infoRef, isVisible: infoVisible } = useScrollReveal(0.2)
+const { elementRef: mapRef, isVisible: mapVisible } = useScrollReveal(0.15)
 </script>
 
 <template>
-  <div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-    <div class="mb-10 text-center md:text-left">
+  <div class="max-w-[1400px] mx-auto py-12 px-4 sm:px-6 lg:px-8">
+    <div class="mb-10 text-center md:text-left contact-header">
       <h1 class="text-3xl font-extrabold tracking-tight">Contact Us</h1>
       <p class="mt-2 text-muted-foreground">Have any questions? We would love to hear from you.</p>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
       <!-- Contact Info -->
-      <div class="space-y-8">
-        <div>
+      <div ref="infoRef" class="space-y-8" :class="{ 'reveal-visible': infoVisible }">
+        <div class="reveal-item reveal-delay-0">
           <h2 class="text-xl font-bold">Get in Touch</h2>
           <p class="text-muted-foreground mt-2">Feel free to reach out to us using the form or through our direct contact information below.</p>
         </div>
 
         <div class="space-y-4">
-          <div class="flex items-start">
-            <div class="flex-shrink-0 text-primary">
+          <div class="contact-info-item reveal-item reveal-delay-1">
+            <div class="contact-info-icon">
               <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -36,12 +30,12 @@ const handleSubmit = () => {
             </div>
             <div class="ml-3">
               <p class="font-medium text-foreground">Address</p>
-              <p class="text-muted-foreground text-sm">Jl. Raya Citramasco No. 123, Indonesia</p>
+              <p class="text-muted-foreground text-sm">Citramas Commercial Complex, Block B No. 14 - 15, Batam, Riau Islands Province, Indonesia</p>
             </div>
           </div>
 
-          <div class="flex items-start">
-            <div class="flex-shrink-0 text-primary">
+          <div class="contact-info-item reveal-item reveal-delay-2">
+            <div class="contact-info-icon">
               <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
               </svg>
@@ -52,8 +46,8 @@ const handleSubmit = () => {
             </div>
           </div>
 
-          <div class="flex items-start">
-            <div class="flex-shrink-0 text-primary">
+          <div class="contact-info-item reveal-item reveal-delay-3">
+            <div class="contact-info-icon">
               <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
               </svg>
@@ -66,39 +60,104 @@ const handleSubmit = () => {
         </div>
       </div>
 
-      <!-- Contact Form -->
-      <div class="bg-card text-card-foreground border border-border rounded-lg p-8 shadow-sm">
-        <div v-if="submitted" class="text-center py-8">
-          <div class="inline-flex items-center justify-center h-12 w-12 rounded-full bg-green-100 text-green-600 mb-4">
-            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-            </svg>
+      <!-- Our Location Map -->
+      <div ref="mapRef" :class="{ 'reveal-visible': mapVisible }">
+        <div class="map-card reveal-item reveal-delay-0">
+          <h2 class="text-xl font-bold mb-4">Our Location</h2>
+          <div class="map-wrapper">
+            <iframe
+              src="https://www.google.com/maps?q=Komplek+Pertokoan+Citra+Mas,+Penuin,+Lubuk+Baja,+Batam,+Kepulauan+Riau&output=embed"
+              width="100%"
+              height="400"
+              style="border: 0"
+              :allowfullscreen="true"
+              loading="lazy"
+              referrerpolicy="no-referrer-when-downgrade"
+              title="Ruko Citramas Blok B No 14-15, Batam, Kepulauan Riau"
+            ></iframe>
           </div>
-          <h3 class="text-xl font-bold">Message Sent!</h3>
-          <p class="text-muted-foreground mt-2">Thank you, {{ name }}. We will get back to you shortly.</p>
-          <button @click="submitted = false" class="mt-6 inline-flex items-center justify-center rounded-md bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 text-sm font-medium">
-            Send Another Message
-          </button>
         </div>
-
-        <form v-else @submit.prevent="handleSubmit" class="space-y-6">
-          <div>
-            <label for="name" class="block text-sm font-medium text-foreground">Name</label>
-            <input type="text" id="name" v-model="name" required placeholder="John Doe" class="mt-1 block w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
-          </div>
-          <div>
-            <label for="email" class="block text-sm font-medium text-foreground">Email</label>
-            <input type="email" id="email" v-model="email" required placeholder="john@example.com" class="mt-1 block w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
-          </div>
-          <div>
-            <label for="message" class="block text-sm font-medium text-foreground">Message</label>
-            <textarea id="message" v-model="message" rows="4" required placeholder="Your message here..." class="mt-1 block w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"></textarea>
-          </div>
-          <button type="submit" class="w-full inline-flex items-center justify-center rounded-md bg-primary text-primary-foreground hover:bg-primary/90 py-3 text-base font-semibold shadow-sm">
-            Send Message
-          </button>
-        </form>
       </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+/* Header entrance */
+.contact-header {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards;
+}
+
+@keyframes slideUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Scroll reveal */
+.reveal-item {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reveal-visible .reveal-item {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reveal-delay-0 { transition-delay: 0s; }
+.reveal-delay-1 { transition-delay: 0.12s; }
+.reveal-delay-2 { transition-delay: 0.24s; }
+.reveal-delay-3 { transition-delay: 0.36s; }
+
+/* Contact info items */
+.contact-info-item {
+  display: flex;
+  align-items: flex-start;
+  padding: 1rem;
+  border-radius: 12px;
+  transition: background-color 0.3s ease, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.contact-info-item:hover {
+  background-color: rgba(28, 22, 18, 0.03);
+  transform: translateX(4px);
+}
+
+.contact-info-icon {
+  flex-shrink: 0;
+  color: var(--primary);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.contact-info-item:hover .contact-info-icon {
+  transform: scale(1.15);
+}
+
+/* Map card */
+.map-card {
+  padding: 0;
+}
+
+/* Google Maps */
+.map-wrapper {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 16px rgba(28, 22, 18, 0.06);
+  transition: box-shadow 0.3s ease;
+}
+
+.map-wrapper:hover {
+  box-shadow: 0 8px 24px rgba(28, 22, 18, 0.12);
+}
+
+.map-wrapper iframe {
+  display: block;
+}
+</style>

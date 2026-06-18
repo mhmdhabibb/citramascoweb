@@ -47,6 +47,14 @@
     --radius-md: calc(var(--radius) - 2px);
     --radius-lg: var(--radius);
     --radius-xl: calc(var(--radius) + 4px);
+    
+    /* Semantic Spacing Rules */
+    --spacing-component: 24px;          /* antar komponen kecil */
+    --spacing-card: 32px;               /* antar card */
+    --spacing-group: 48px;              /* antar group content */
+    --spacing-section: 80px;            /* antar section normal */
+    --spacing-section-premium: 96px;    /* antar section premium */
+    --spacing-section-large: 120px;     /* antar section besar */
 }
 
 :root {

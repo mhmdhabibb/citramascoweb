@@ -60,7 +60,7 @@ const menuOpen = ref(false)
 }
 
 .navbar-inner {
-  max-width: 1280px;
+  max-width: 1400px;
   margin: 0 auto;
   padding: 0 2rem;
   display: flex;
