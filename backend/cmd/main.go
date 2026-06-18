@@ -4,8 +4,10 @@ import (
 	"time"
 
 	"citramascoweb-backend/config"
+	"citramascoweb-backend/internal/modules/auth"
 	"citramascoweb-backend/internal/modules/category"
 	"citramascoweb-backend/internal/modules/types"
+	"citramascoweb-backend/internal/modules/user"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -33,11 +35,15 @@ func main() {
 	//  init modules
 	categoryModule := category.InitModule(db)
 	typeModule := types.InitModule(db)
+	authModule := auth.InitModule(db)
+	userModule := user.InitModule(db)
 
 	api := app.Group("/api")
 
 	categoryModule.CategoryRoutes(api)
 	typeModule.TypeRoutes(api)
+	authModule.AuthRoutes(api)
+	userModule.UserRoutes(api)
 
 	api.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{
