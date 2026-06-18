@@ -5,9 +5,10 @@ import (
 
 	"citramascoweb-backend/config"
 	"citramascoweb-backend/internal/modules/auth"
+	"citramascoweb-backend/internal/modules/offer"
+	"citramascoweb-backend/internal/modules/rooms"
 	"citramascoweb-backend/internal/modules/rooms/category"
 	"citramascoweb-backend/internal/modules/rooms/reservation"
-	"citramascoweb-backend/internal/modules/rooms"
 	"citramascoweb-backend/internal/modules/rooms/types"
 
 	"citramascoweb-backend/internal/modules/user"
@@ -42,6 +43,7 @@ func main() {
 	userModule := user.InitModule(db)
 	roomModule := rooms.InitModule(db)
 	reservationModule := reservation.InitModule(db)
+	offerModule := offer.InitModule(db)
 
 	api := app.Group("/api")
 
@@ -51,6 +53,7 @@ func main() {
 	userModule.UserRoutes(api)
 	roomModule.RoomRoutes(api)
 	reservationModule.ReservationRoutes(api)
+	offerModule.OfferRoutes(api)
 
 	api.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{
