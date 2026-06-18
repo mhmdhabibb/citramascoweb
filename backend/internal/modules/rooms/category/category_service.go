@@ -2,7 +2,7 @@ package category
 
 import (
 	"citramascoweb-backend/internal/dto"
-	"strings"
+	"citramascoweb-backend/pkg/utils"
 	"time"
 
 	"github.com/google/uuid"
@@ -10,12 +10,6 @@ import (
 
 type categoryService struct {
 	categoryRepo CategoryRepositoryInterface
-}
-
-func Slugify(text string) string {
-	text = strings.ToLower(text)
-	text = strings.ReplaceAll(text, " ", "-")
-	return text
 }
 
 func NewCategoryService(categoryRepo CategoryRepositoryInterface) *categoryService {
@@ -58,7 +52,7 @@ func (s *categoryService) Create(req *dto.CreateCategoryRequest) error {
 	category := &Category{
 		Id:        uuid.New().String(),
 		Name:      req.Name,
-		Slug:      Slugify(req.Name),
+		Slug:      utils.Slugify(req.Name),
 		CreatedAt: now,
 		IsDeleted: false,
 	}
@@ -79,7 +73,7 @@ func (s *categoryService) Update(id string, req *dto.UpdateCategoryRequest) erro
 	}
 
 	category.Name = req.Name
-	category.Slug = Slugify(req.Name)
+	category.Slug = utils.Slugify(req.Name)
 
 	err = s.categoryRepo.Update(id, category)
 	if err != nil {

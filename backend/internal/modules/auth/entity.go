@@ -12,7 +12,7 @@ const (
 )
 
 type User struct {
-	Id        string    `gorm:"primaryKey" json:"id"`
+	Id        string    `gorm:"type:varchar(191);primaryKey" json:"id"`
 	FirstName string    `json:"first_name"`
 	LastName  string    `json:"last_name"`
 	Username  string    `json:"username"`
