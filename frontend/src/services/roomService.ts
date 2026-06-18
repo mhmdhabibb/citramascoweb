@@ -1,12 +1,8 @@
-export interface Room {
-  id: number
-  name: string
-  price: number
-  image: string
-  capacity: number
-  description: string
-  features: string[]
-}
+// TODO: Replace with real API calls when backend Room module is ready
+// Currently uses mock data since the backend doesn't have a Room entity yet.
+
+import type { Room } from '@/types'
+export type { Room }
 
 const mockRooms: Room[] = [
   {
