@@ -1,12 +1,6 @@
 package config
 
 import (
-	"citramascoweb-backend/internal/modules/auth"
-	"citramascoweb-backend/internal/modules/offer"
-	"citramascoweb-backend/internal/modules/rooms"
-	"citramascoweb-backend/internal/modules/rooms/category"
-	"citramascoweb-backend/internal/modules/rooms/reservation"
-	"citramascoweb-backend/internal/modules/rooms/types"
 	"fmt"
 	"log"
 
@@ -32,14 +26,14 @@ func ConnectDB() *gorm.DB {
 	}
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Info),
+		Logger:      logger.Default.LogMode(logger.Info),
+		PrepareStmt: false,
 	})
 
 	if err != nil {
 		log.Fatalf("Database connection failed: %v", err)
 	}
 
-	err = db.AutoMigrate(&auth.User{}, &category.Category{}, &types.Types{}, &rooms.Room{}, &reservation.Reservation{}, &offer.Offer{})
 	if err != nil {
 		log.Fatalf("Database migration failed: %v", err)
 	}
