@@ -33,7 +33,7 @@ export const offerService = {
    * POST /api/offer/ - Create a new offer (multipart form-data)
    */
   create: async (formData: FormData): Promise<string> => {
-    const response = await api.post<ApiResponse<any>>('/offer/', formData)
+    const response = await api.post<ApiResponse<any>>('/offer/store', formData,)
     return response.data.message
   },
 

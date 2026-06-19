@@ -8,6 +8,8 @@ import RoomCard from '@/components/room/RoomCard.vue'
 
 const rooms = ref<Room[]>([])
 const loading = ref(true)
+const selectedCategoryId = ref('all')
+const selectedTypeId = ref('all')
 
 const categoryStore = useCategoryStore()
 const typeStore = useTypeStore()
@@ -15,18 +17,44 @@ const typeStore = useTypeStore()
 const { elementRef: headerRef, isVisible: headerVisible } = useScrollReveal(0.2)
 const { elementRef: gridRef, isVisible: gridVisible } = useScrollReveal(0.05)
 
+const fetchRooms = async () => {
+  loading.value = true
+  try {
+    if (selectedCategoryId.value !== 'all') {
+      rooms.value = await roomService.filterByCategory(selectedCategoryId.value)
+    } else if (selectedTypeId.value !== 'all') {
+      rooms.value = await roomService.filterByType(selectedTypeId.value)
+    } else {
+      rooms.value = await roomService.getRooms()
+    }
+  } catch (error) {
+    console.error('Error fetching filtered rooms:', error)
+  } finally {
+    loading.value = false
+  }
+}
+
+const handleCategoryClick = (categoryId: string) => {
+  selectedCategoryId.value = categoryId
+  selectedTypeId.value = 'all' // Clear type filter when category is selected
+  fetchRooms()
+}
+
+const handleTypeClick = (typeId: string) => {
+  selectedTypeId.value = typeId
+  selectedCategoryId.value = 'all' // Clear category filter when type is selected
+  fetchRooms()
+}
+
 onMounted(async () => {
   try {
-    const [fetchedRooms] = await Promise.all([
-      roomService.getRooms(),
+    await Promise.all([
+      fetchRooms(),
       categoryStore.fetchCategories(),
       typeStore.fetchTypes(),
     ])
-    rooms.value = fetchedRooms
   } catch (error) {
-    console.error('Error fetching rooms:', error)
-  } finally {
-    loading.value = false
+    console.error('Error fetching rooms page data:', error)
   }
 })
 </script>
@@ -62,9 +90,18 @@ onMounted(async () => {
         </div>
         <div class="filter-chips justify-center">
           <span
+            class="filter-chip"
+            :class="{ 'filter-chip--active': selectedCategoryId === 'all' }"
+            @click="handleCategoryClick('all')"
+          >
+            All
+          </span>
+          <span
             v-for="category in categoryStore.categories"
             :key="category.id"
             class="filter-chip"
+            :class="{ 'filter-chip--active': selectedCategoryId === category.id }"
+            @click="handleCategoryClick(category.id)"
           >
             {{ category.name }}
           </span>
@@ -84,9 +121,18 @@ onMounted(async () => {
         </div>
         <div class="filter-chips justify-center">
           <span
+            class="filter-chip filter-chip--type"
+            :class="{ 'filter-chip--active': selectedTypeId === 'all' }"
+            @click="handleTypeClick('all')"
+          >
+            All
+          </span>
+          <span
             v-for="roomType in typeStore.types"
             :key="roomType.id"
             class="filter-chip filter-chip--type"
+            :class="{ 'filter-chip--active': selectedTypeId === roomType.id }"
+            @click="handleTypeClick(roomType.id)"
           >
             {{ roomType.name }}
           </span>
@@ -189,5 +235,11 @@ onMounted(async () => {
 
 .filter-chip--type:hover {
   background: #F8F5F1;
+}
+
+.filter-chip--active {
+  background: #1C1612 !important;
+  color: #FFFFFF !important;
+  border-color: #1C1612 !important;
 }
 </style>

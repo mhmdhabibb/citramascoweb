@@ -56,5 +56,25 @@ export const roomService = {
       throw new Error(response.data.message || 'Deletion failed!')
     }
     return response.data.message
+  },
+
+  filterByCategory: async (categoryId: string): Promise<Room[]> => {
+    try {
+      const response = await api.get<ApiResponse<Room[]>>(`/room/filter/category/${categoryId}`)
+      return response.data.data ?? []
+    } catch (error) {
+      console.error('Error filtering rooms by category:', error)
+      return []
+    }
+  },
+
+  filterByType: async (typeId: string): Promise<Room[]> => {
+    try {
+      const response = await api.get<ApiResponse<Room[]>>(`/room/filter/type/${typeId}`)
+      return response.data.data ?? []
+    } catch (error) {
+      console.error('Error filtering rooms by type:', error)
+      return []
+    }
   }
 }

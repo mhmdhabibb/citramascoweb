@@ -34,14 +34,14 @@ onMounted(async () => {
       axios.get('/api/offers').catch(() => ({ data: { data: [] } }))
     ])
     rooms.value = fetchedRooms
-    if (offersRes.data?.success) {
+    if (offersRes.data?.data) {
       offers.value = offersRes.data.data.filter((o: any) => o.code)
     }
 
     if (route.query.roomId) {
       selectedRoomId.value = String(route.query.roomId)
     } else if (rooms.value.length > 0 && rooms.value[0]) {
-      selectedRoomId.value = String(rooms!.value[0].id)
+      selectedRoomId.value = String(rooms.value[0].id)
     }
   } catch (error) {
     console.error('Error loading data:', error)

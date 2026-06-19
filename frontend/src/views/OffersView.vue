@@ -2,17 +2,10 @@
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
 import { useScrollReveal } from '@/composables/useScrollReveal'
+import type { Offer } from '@/types'
 
 const { elementRef: headerRef, isVisible: headerVisible } = useScrollReveal(0.2)
 const { elementRef: cardsRef, isVisible: cardsVisible } = useScrollReveal(0.1)
-
-interface Offer {
-  id: number
-  category: string
-  title: string
-  description: string
-  image: string
-}
 
 const offers = ref<Offer[]>([])
 const loading = ref(true)
@@ -20,7 +13,7 @@ const loading = ref(true)
 onMounted(async () => {
   try {
     const response = await axios.get('/api/offers')
-    if (response.data && response.data.success) {
+    if (response.data && response.data.data) {
       offers.value = response.data.data
     }
   } catch (error) {
@@ -84,7 +77,7 @@ onMounted(async () => {
           <!-- Text Content -->
           <div class="p-6">
             <div class="text-accent text-[11px] font-bold tracking-[0.15em] uppercase mb-2.5">
-              {{ offer.category }}
+              Code: {{ offer.code }}
             </div>
             <h3 class="text-[26px] font-serif text-primary-dark mb-3">
               {{ offer.title }}

@@ -22,8 +22,8 @@ const form = ref({
   code: '',
   type: 'Percentage',
   value: 10,
-  startDate: '',
-  endDate: '',
+  validStart: '',
+  validEnd: '',
   max_quota: 100,
   description: '',
   image: ''
@@ -102,7 +102,8 @@ const openCreateModal = () => {
     endDate: '',
     max_quota: 100,
     description: '',
-    image: ''
+    image: '',
+    status: 'Active'
   }
   isModalOpen.value = true
 }
@@ -130,10 +131,10 @@ const openEditModal = (item) => {
     value: discValue,
     startDate: formatDateToInput(item.valid_start),
     endDate: formatDateToInput(item.valid_end),
-    status: item.status === 'active' ? 'Active' : 'Expired',
     max_quota: item.max_quota || 0,
     description: item.description || '',
-    image: item.image || ''
+    image: item.image || '',
+    status: item.status === 'active' ? 'Active' : 'Expired/Draft'
   }
   isModalOpen.value = true
 }
@@ -398,7 +399,13 @@ const deletePromotion = async (id) => {
                 class="form-input"
               />
             </div>
-           
+            <div class="form-group flex-1">
+              <label class="form-label">Status</label>
+              <select v-model="form.status" class="form-select">
+                <option value="Active">Active</option>
+                <option value="Expired/Draft">Expired/Draft</option>
+              </select>
+            </div>
           </div>
           <div class="form-group">
             <label class="form-label">Description</label>
