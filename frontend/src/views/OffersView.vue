@@ -1,34 +1,32 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import axios from 'axios'
 import { useScrollReveal } from '@/composables/useScrollReveal'
 
 const { elementRef: headerRef, isVisible: headerVisible } = useScrollReveal(0.2)
 const { elementRef: cardsRef, isVisible: cardsVisible } = useScrollReveal(0.1)
 
-interface Offer {
-  id: number
-  category: string
-  title: string
-  description: string
-  image: string
-}
-
-const offers = ref<Offer[]>([])
-const loading = ref(true)
-
-onMounted(async () => {
-  try {
-    const response = await axios.get('/api/offers')
-    if (response.data && response.data.success) {
-      offers.value = response.data.data
-    }
-  } catch (error) {
-    console.error('Error fetching offers:', error)
-  } finally {
-    loading.value = false
+const offers = [
+  {
+    id: 1,
+    category: 'RENEWAL',
+    title: 'Spa Rituals',
+    description: 'Restorative spa rituals inspired by calm, warmth, and deep relaxation.',
+    image: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?q=80&w=800&auto=format&fit=crop'
+  },
+  {
+    id: 2,
+    category: 'ATMOSPHERE',
+    title: 'Coastal Dining',
+    description: 'Seasonal coastal dining crafted with refined flavors and regional ingredients.',
+    image: 'https://images.unsplash.com/photo-1544148103-0773bf10d330?q=80&w=800&auto=format&fit=crop'
+  },
+  {
+    id: 3,
+    category: 'DISCOVERY',
+    title: 'Curated Escapes',
+    description: 'Private coastal escapes designed for immersive journeys and peaceful exploration.',
+    image: 'https://images.unsplash.com/photo-1506501139174-099022df5260?q=80&w=800&auto=format&fit=crop'
   }
-})
+]
 </script>
 
 <template>
@@ -44,7 +42,7 @@ onMounted(async () => {
         <div class="reveal-item reveal-delay-0">
           <div class="flex items-center justify-center gap-2 mb-4">
             <span class="text-accent text-[10px]">◆</span>
-            <span class="text-accent text-xs font-semibold tracking-[0.2em] uppercase">Signature Suite</span>
+            <span class="text-accent text-xs font-semibold tracking-[0.2em] uppercase">Our Offers</span>
             <span class="text-accent text-[10px]">◆</span>
           </div>
           
