@@ -43,27 +43,20 @@ func (s *roomService) Store(req *dto.CreateRoomRequest) error {
 		return err
 	}
 
-	isOffer, priceAfterDiscount, offerCode, err := s.calculateOfferDiscount(req.IsOffer, req.OfferCode, req.Price, "")
-	if err != nil {
-		return err
-	}
-
 	newRoom := &Room{
-		Id:                 uuid.New().String(),
-		Code:               code,
-		Name:               req.Name,
-		Slug:               utils.Slugify(req.Name),
-		CategoryId:         req.CategoryId,
-		Price:              req.Price,
-		Capacity:           req.Capacity,
-		Size:               req.Size,
-		IsOffer:            isOffer,
-		PriceAfterDiscount: priceAfterDiscount,
-		OfferCode:          offerCode,
-		TypeId:             req.TypeId,
-		Description:        req.Description,
-		Image:              req.Image, // Menggunakan string URL publik Supabase yang sudah disiapkan handler
-		CreatedAt:          now,
+		Id:         uuid.New().String(),
+		Code:       code,
+		Name:       req.Name,
+		Slug:       utils.Slugify(req.Name),
+		CategoryId: req.CategoryId,
+		Price:      req.Price,
+		Capacity:   req.Capacity,
+		Size:       req.Size,
+
+		TypeId:      req.TypeId,
+		Description: req.Description,
+		Image:       req.Image, // Menggunakan string URL publik Supabase yang sudah disiapkan handler
+		CreatedAt:   now,
 	}
 
 	err = s.roomRepo.Create(newRoom)
@@ -80,20 +73,13 @@ func (s *roomService) Update(id string, req *dto.UpdateRoomRequest) error {
 		return err
 	}
 
-	isOffer, priceAfterDiscount, offerCode, err := s.calculateOfferDiscount(req.IsOffer, req.OfferCode, req.Price, id)
-	if err != nil {
-		return err
-	}
-
 	room.Name = req.Name
 	room.Slug = utils.Slugify(req.Name)
 	room.CategoryId = req.CategoryId
 	room.Price = req.Price
 	room.Capacity = req.Capacity
 	room.Size = req.Size
-	room.IsOffer = isOffer
-	room.PriceAfterDiscount = priceAfterDiscount
-	room.OfferCode = offerCode
+
 	room.TypeId = req.TypeId
 	room.Description = req.Description
 
