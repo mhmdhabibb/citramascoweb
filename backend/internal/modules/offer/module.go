@@ -24,7 +24,7 @@ func (m *Module) OfferRoutes(rg *gin.RouterGroup) {
 	offers := rg.Group("/offer")
 	offers.GET("", middlewares.AuthMiddleware(), middlewares.RoleMiddleware("admin", "manager"), m.Handler.GetAlls)
 	offers.GET("/:id", m.Handler.GetById)
-	offers.POST("/", middlewares.AuthMiddleware(), middlewares.RoleMiddleware("admin"), m.Handler.Create)
+	offers.POST("/store", middlewares.AuthMiddleware(), middlewares.RoleMiddleware("admin"), m.Handler.Create)
 	offers.PATCH("/:id", middlewares.AuthMiddleware(), middlewares.RoleMiddleware("admin"), m.Handler.Update)
 	offers.DELETE("/:id", middlewares.AuthMiddleware(), middlewares.RoleMiddleware("admin"), m.Handler.Delete)
 }

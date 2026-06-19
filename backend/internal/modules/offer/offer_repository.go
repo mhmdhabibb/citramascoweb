@@ -57,15 +57,11 @@ func (r *offerRepository) Create(offer *Offer) error {
 }
 
 func (r *offerRepository) Update(id string, offer *Offer) error {
-	err := r.db.Where("id = ?", id).Updates(offer).Error
-	if err != nil {
-		return err
-	}
-	return nil
+	return r.db.Save(offer).Error
 }
 
 func (r *offerRepository) Delete(id string) error {
-	err := r.db.Where("id = ?").Delete(&Offer{}).Error
+	err := r.db.Where("id = ?", id).Delete(&Offer{}).Error
 	if err != nil {
 		return err
 	}

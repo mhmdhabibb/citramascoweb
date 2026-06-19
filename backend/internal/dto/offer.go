@@ -16,11 +16,14 @@ func (cd *CustomDate) UnmarshalJSON(b []byte) error {
 	if s == "" || s == "null" {
 		return nil
 	}
-	t, err := time.Parse("02-01-2006", s)
+	t, err := time.ParseInLocation("2-1-2006", s, time.Local)
 	if err != nil {
-		t, err = time.Parse(time.RFC3339, s)
+		t, err = time.ParseInLocation("02-01-2006", s, time.Local)
 		if err != nil {
-			return err
+			t, err = time.ParseInLocation(time.RFC3339, s, time.Local)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	*cd = CustomDate(t)
@@ -42,11 +45,14 @@ func (cd *CustomDate) UnmarshalText(text []byte) error {
 	if s == "" || s == "null" {
 		return nil
 	}
-	t, err := time.Parse("02-01-2006", s)
+	t, err := time.ParseInLocation("2-1-2006", s, time.Local)
 	if err != nil {
-		t, err = time.Parse(time.RFC3339, s)
+		t, err = time.ParseInLocation("02-01-2006", s, time.Local)
 		if err != nil {
-			return err
+			t, err = time.ParseInLocation(time.RFC3339, s, time.Local)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	*cd = CustomDate(t)
@@ -75,28 +81,47 @@ func (cd CustomDate) Value() (driver.Value, error) {
 	return t, nil
 }
 
+// ParseCustomDate parses a string representation into a CustomDate pointer
+func ParseCustomDate(s string) (*CustomDate, error) {
+	if s == "" || s == "null" {
+		return nil, nil
+	}
+	t, err := time.ParseInLocation("2-1-2006", s, time.Local)
+	if err != nil {
+		t, err = time.ParseInLocation("02-01-2006", s, time.Local)
+		if err != nil {
+			t, err = time.ParseInLocation(time.RFC3339, s, time.Local)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+	cd := CustomDate(t)
+	return &cd, nil
+}
+
 type CreateOfferRequest struct {
-	Title       string      `json:"title" form:"title" binding:"required"`
-	Image       *string     `json:"image" form:"-"`
-	Price       *int        `json:"price" form:"price"`
-	Discount    *int        `json:"discount" form:"discount"`
-	Code        string      `json:"code" form:"code"`
-	ValidStart  *CustomDate `json:"valid_start" form:"valid_start"`
-	ValidEnd    *CustomDate `json:"valid_end" form:"valid_end"`
-	MaxQuota    *int        `json:"max_quota" form:"max_quota"`
-	Description *string     `json:"description" form:"description"`
+	Title       string  `json:"title" form:"title" binding:"required"`
+	Image       *string `json:"image" form:"-"`
+	Price       *int    `json:"price" form:"price"`
+	Discount    *int    `json:"discount" form:"discount"`
+	Code        string  `json:"code" form:"code"`
+	ValidStart  string  `json:"valid_start" form:"valid_start"`
+	ValidEnd    string  `json:"valid_end" form:"valid_end"`
+	MaxQuota    *int    `json:"max_quota" form:"max_quota"`
+	Description *string `json:"description" form:"description"`
+	Status      *string `json:"status" form:"status"`
 }
 
 type UpdateOfferRequest struct {
-	Title string  `json:"title" form:"title"`
-	Image *string `json:"image" form:"-"`
-	Code  string  `json:"code" form:"code"`
-
-	Price       *int        `json:"price" form:"price"`
-	Discount    *int        `json:"discount" form:"discount"`
-	ValidStart  *CustomDate `json:"valid_start" form:"valid_start"`
-	ValidEnd    *CustomDate `json:"valid_end" form:"valid_end"`
-	MaxQuota    *int        `json:"max_quota" form:"max_quota"`
-	Description *string     `json:"description" form:"description"`
-	Status      *string     `json:"status" form:"status"`
+	Title       string  `json:"title" form:"title"`
+	Image       *string `json:"image" form:"-"`
+	Code        string  `json:"code" form:"code"`
+	Price       *int    `json:"price" form:"price"`
+	Discount    *int    `json:"discount" form:"discount"`
+	ValidStart  string  `json:"valid_start" form:"valid_start"`
+	ValidEnd    string  `json:"valid_end" form:"valid_end"`
+	MaxQuota    *int    `json:"max_quota" form:"max_quota"`
+	Description *string `json:"description" form:"description"`
+	Status      *string `json:"status" form:"status"`
 }
