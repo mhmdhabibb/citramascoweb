@@ -54,13 +54,34 @@ func (s *offerService) Create(req *dto.CreateOfferRequest) error {
 		return errors.New("Offer is required!")
 	}
 
+	var image string
+	if req.Image != nil {
+		image = *req.Image
+	}
+
+	var discounted *int
+	if req.Price != nil {
+		priceVal := *req.Price
+		discountVal := 0
+		if req.Discount != nil {
+			discountVal = *req.Discount
+		}
+		calculated := priceVal - (priceVal * discountVal / 100)
+		discounted = &calculated
+	}
+
 	offer := &Offer{
 		Id:          uuid.New().String(),
 		Title:       req.Title,
 		Price:       req.Price,
 		Discount:    req.Discount,
+		Code:        req.Code,
+		ValidStart:  req.ValidStart,
+		ValidEnd:    req.ValidEnd,
+		MaxQuota:    req.MaxQuota,
 		Description: req.Description,
-		Image:       *req.Image,
+		Discounted:  discounted,
+		Image:       image,
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}
@@ -86,6 +107,22 @@ func (s *offerService) Update(id string, req *dto.UpdateOfferRequest) error {
 	offer.Discount = req.Discount
 	offer.Price = req.Price
 	offer.Description = req.Description
+	offer.ValidStart = req.ValidStart
+	offer.ValidEnd = req.ValidEnd
+	offer.MaxQuota = req.MaxQuota
+
+	if offer.Price != nil {
+		priceVal := *offer.Price
+		discountVal := 0
+		if offer.Discount != nil {
+			discountVal = *offer.Discount
+		}
+		calculated := priceVal - (priceVal * discountVal / 100)
+		offer.Discounted = &calculated
+	} else {
+		offer.Discounted = nil
+	}
+
 	if req.Image != nil {
 		offer.Image = *req.Image
 	}

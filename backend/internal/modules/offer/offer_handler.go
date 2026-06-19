@@ -98,11 +98,12 @@ func (h *offerHandler) Create(c *gin.Context) {
 	}
 
 	imageURL, err := h.uploadToSupabase(c, "image")
-	if err != nil {
+	if err == nil {
+		req.Image = &imageURL
+	} else if err != http.ErrMissingFile && err != http.ErrNotMultipart {
 		c.JSON(400, gin.H{"success": false, "message": "Failed to upload image: " + err.Error()})
 		return
 	}
-	req.Image = &imageURL
 
 	err = h.offerService.Create(&req)
 	if err != nil {
@@ -125,7 +126,7 @@ func (h *offerHandler) Update(c *gin.Context) {
 	imageURL, err := h.uploadToSupabase(c, "image")
 	if err == nil {
 		req.Image = &imageURL
-	} else if err != http.ErrMissingFile {
+	} else if err != http.ErrMissingFile && err != http.ErrNotMultipart {
 		c.JSON(400, gin.H{"success": false, "message": "Failed to upload image: " + err.Error()})
 		return
 	}

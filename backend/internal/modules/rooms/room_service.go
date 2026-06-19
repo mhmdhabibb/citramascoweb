@@ -3,6 +3,7 @@ package rooms
 import (
 	"citramascoweb-backend/internal/dto"
 	"citramascoweb-backend/pkg/utils"
+	"errors"
 	"time"
 
 	"github.com/google/uuid"
@@ -42,19 +43,27 @@ func (s *roomService) Store(req *dto.CreateRoomRequest) error {
 		return err
 	}
 
+	isOffer, priceAfterDiscount, offerCode, err := s.calculateOfferDiscount(req.IsOffer, req.OfferCode, req.Price, "")
+	if err != nil {
+		return err
+	}
+
 	newRoom := &Room{
-		Id:          uuid.New().String(),
-		Code:        code,
-		Name:        req.Name,
-		Slug:        utils.Slugify(req.Name),
-		CategoryId:  req.CategoryId,
-		Price:       req.Price,
-		Capacity:    req.Capacity,
-		Size:        req.Size,
-		TypeId:      req.TypeId,
-		Description: req.Description,
-		Image:       req.Image, // Menggunakan string URL publik Supabase yang sudah disiapkan handler
-		CreatedAt:   now,
+		Id:                 uuid.New().String(),
+		Code:               code,
+		Name:               req.Name,
+		Slug:               utils.Slugify(req.Name),
+		CategoryId:         req.CategoryId,
+		Price:              req.Price,
+		Capacity:           req.Capacity,
+		Size:               req.Size,
+		IsOffer:            isOffer,
+		PriceAfterDiscount: priceAfterDiscount,
+		OfferCode:          offerCode,
+		TypeId:             req.TypeId,
+		Description:        req.Description,
+		Image:              req.Image, // Menggunakan string URL publik Supabase yang sudah disiapkan handler
+		CreatedAt:          now,
 	}
 
 	err = s.roomRepo.Create(newRoom)
@@ -71,12 +80,20 @@ func (s *roomService) Update(id string, req *dto.UpdateRoomRequest) error {
 		return err
 	}
 
+	isOffer, priceAfterDiscount, offerCode, err := s.calculateOfferDiscount(req.IsOffer, req.OfferCode, req.Price, id)
+	if err != nil {
+		return err
+	}
+
 	room.Name = req.Name
 	room.Slug = utils.Slugify(req.Name)
 	room.CategoryId = req.CategoryId
 	room.Price = req.Price
 	room.Capacity = req.Capacity
 	room.Size = req.Size
+	room.IsOffer = isOffer
+	room.PriceAfterDiscount = priceAfterDiscount
+	room.OfferCode = offerCode
 	room.TypeId = req.TypeId
 	room.Description = req.Description
 
@@ -91,6 +108,41 @@ func (s *roomService) Update(id string, req *dto.UpdateRoomRequest) error {
 	}
 
 	return nil
+}
+
+func (s *roomService) calculateOfferDiscount(isOffer *bool, offerCode *string, price int, excludeRoomId string) (*bool, *int, *string, error) {
+	if isOffer == nil || !*isOffer {
+		isOfferFalse := false
+		return &isOfferFalse, nil, nil, nil
+	}
+
+	if offerCode == nil || *offerCode == "" {
+		return nil, nil, nil, errors.New("Offer code is required when is_offer is active!")
+	}
+
+	offerData, err := s.roomRepo.GetOfferByCode(*offerCode)
+	if err != nil {
+		return nil, nil, nil, errors.New("Invalid offer code!")
+	}
+
+	// Check ValidStart and ValidEnd ranges
+	now := time.Now()
+	if offerData.ValidStart != nil && now.Before(*offerData.ValidStart) {
+		return nil, nil, nil, errors.New("Offer code is not active yet!")
+	}
+	if offerData.ValidEnd != nil && now.After(*offerData.ValidEnd) {
+		return nil, nil, nil, errors.New("Offer code has expired!")
+	}
+
+	// Calculate discounted price
+	discountVal := 0
+	if offerData.Discount != nil {
+		discountVal = *offerData.Discount
+	}
+	priceAfterDiscount := price - (price * discountVal / 100)
+
+	isOfferTrue := true
+	return &isOfferTrue, &priceAfterDiscount, offerCode, nil
 }
 
 func (s *roomService) Delete(id string) error {

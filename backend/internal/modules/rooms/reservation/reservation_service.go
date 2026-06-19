@@ -90,7 +90,32 @@ func (s *reservationService) Store(req *dto.CreateReservationRequest) error {
 	}
 
 	// 4. Calculate total price
-	totalPrice := roomData.Price * totalNight
+	pricePerNight := roomData.Price
+	var offerApplied *string
+	if roomData.IsOffer != nil && *roomData.IsOffer && roomData.OfferCode != nil && *roomData.OfferCode != "" {
+		offerData, err := s.roomRepo.GetOfferByCode(*roomData.OfferCode)
+		if err == nil {
+			// Check expiration (ValidStart & ValidEnd)
+			now := time.Now()
+			if offerData.ValidStart != nil && now.Before(*offerData.ValidStart) {
+				return errors.New("the discount offer associated with this room is not active yet")
+			}
+			if offerData.ValidEnd != nil && now.After(*offerData.ValidEnd) {
+				return errors.New("the discount offer associated with this room has expired")
+			}
+
+			// Check reservation quota (MaxQuota)
+			if offerData.MaxQuota != nil && *offerData.MaxQuota <= 0 {
+				return errors.New("the discount offer for this room has reached its usage limit")
+			}
+
+			if roomData.PriceAfterDiscount != nil {
+				pricePerNight = *roomData.PriceAfterDiscount
+			}
+			offerApplied = roomData.OfferCode
+		}
+	}
+	totalPrice := pricePerNight * totalNight
 
 	// 5. Generate random reservation code
 	code, err := utils.GenerateRandomNumberCode(6)
@@ -106,7 +131,7 @@ func (s *reservationService) Store(req *dto.CreateReservationRequest) error {
 		Email:         req.Email,
 		CheckinDate:   checkinDate,
 		CheckoutDate:  checkoutDate,
-		Price:         roomData.Price,
+		Price:         pricePerNight,
 		TotalNight:    totalNight,
 		TotalPrice:    totalPrice,
 		Status:        ReservationStatusPending,
@@ -118,6 +143,11 @@ func (s *reservationService) Store(req *dto.CreateReservationRequest) error {
 		return err
 	}
 
+	// Decrement offer quota if applied
+	if offerApplied != nil {
+		_ = s.roomRepo.DecrementOfferQuota(*offerApplied)
+	}
+
 	return nil
 }
 
@@ -127,14 +157,47 @@ func (s *reservationService) Update(id string, req *dto.UpdateReservationRequest
 		return err
 	}
 
-	if req.RoomId != "" {
-		reservation.RoomId = req.RoomId
+	if req.RoomId != "" && req.RoomId != reservation.RoomId {
+		// Increment old room offer quota
+		oldRoom, err := s.roomRepo.GetById(reservation.RoomId)
+		if err == nil && oldRoom.IsOffer != nil && *oldRoom.IsOffer && oldRoom.OfferCode != nil && *oldRoom.OfferCode != "" {
+			_ = s.roomRepo.IncrementOfferQuota(*oldRoom.OfferCode)
+		}
+
 		// Recalculate price if room changes
 		roomData, err := s.roomRepo.GetById(req.RoomId)
 		if err != nil {
 			return fmt.Errorf("room not found: %v", err)
 		}
-		reservation.Price = roomData.Price
+		
+		pricePerNight := roomData.Price
+		if roomData.IsOffer != nil && *roomData.IsOffer && roomData.OfferCode != nil && *roomData.OfferCode != "" {
+			offerData, err := s.roomRepo.GetOfferByCode(*roomData.OfferCode)
+			if err == nil {
+				// Check expiration (ValidStart & ValidEnd)
+				now := time.Now()
+				if offerData.ValidStart != nil && now.Before(*offerData.ValidStart) {
+					return errors.New("the discount offer associated with the new room is not active yet")
+				}
+				if offerData.ValidEnd != nil && now.After(*offerData.ValidEnd) {
+					return errors.New("the discount offer associated with the new room has expired")
+				}
+
+				// Check reservation quota (MaxQuota)
+				if offerData.MaxQuota != nil && *offerData.MaxQuota <= 0 {
+					return errors.New("the discount offer for the new room has reached its usage limit")
+				}
+
+				if roomData.PriceAfterDiscount != nil {
+					pricePerNight = *roomData.PriceAfterDiscount
+				}
+
+				// Decrement new room offer quota
+				_ = s.roomRepo.DecrementOfferQuota(*roomData.OfferCode)
+			}
+		}
+		reservation.Price = pricePerNight
+		reservation.RoomId = req.RoomId
 	}
 
 	// Track if dates changed to recalculate total price/nights
@@ -248,6 +311,11 @@ func (s *reservationService) CancelReservation(id string) error {
 		return err
 	}
 
+	// Increment offer quota back
+	if reservation.Room.IsOffer != nil && *reservation.Room.IsOffer && reservation.Room.OfferCode != nil && *reservation.Room.OfferCode != "" {
+		_ = s.roomRepo.IncrementOfferQuota(*reservation.Room.OfferCode)
+	}
+
 	return nil
 }
 
@@ -269,6 +337,11 @@ func (s *reservationService) RejectReservation(id string) error {
 	err = s.reservationRepo.RejectReservation(id)
 	if err != nil {
 		return err
+	}
+
+	// Increment offer quota back
+	if reservation.Room.IsOffer != nil && *reservation.Room.IsOffer && reservation.Room.OfferCode != nil && *reservation.Room.OfferCode != "" {
+		_ = s.roomRepo.IncrementOfferQuota(*reservation.Room.OfferCode)
 	}
 
 	return nil
