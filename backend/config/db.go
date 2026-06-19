@@ -25,7 +25,11 @@ func ConnectDB() *gorm.DB {
 		log.Fatalf("Database connection failed: DB_URL environment variable is missing or empty")
 	}
 
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
+	db, err := gorm.Open(postgres.New(postgres.Config{
+
+		DSN:                  dsn,
+		PreferSimpleProtocol: true,
+	}), &gorm.Config{
 		Logger:      logger.Default.LogMode(logger.Info),
 		PrepareStmt: false,
 	})

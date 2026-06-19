@@ -17,9 +17,6 @@ type Room struct {
 	Price              int               `json:"price"`
 	Capacity           int               `json:"capacity"`
 	Size               int               `json:"size"`
-	IsOffer            *bool             `json:"is_offer"`
-	PriceAfterDiscount *int              `json:"price_after_discount"`
-	OfferCode          *string           `json:"offer_code" gorm:"type:varchar(191)"`
 	TypeId             string            `gorm:"type:varchar(191)" json:"type_id"`
 	Type               types.Types       `gorm:"foreignKey:TypeId;references:Id" json:"type"`
 	Description        string            `json:"description"`

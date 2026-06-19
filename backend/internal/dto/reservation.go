@@ -7,6 +7,8 @@ type CreateReservationRequest struct {
 	CheckInDate   *CustomDate `json:"check_in_date" form:"check_in_date" binding:"required"`
 	CheckOutDate  *CustomDate `json:"check_out_date" form:"check_out_date" binding:"required"`
 	NumberOfGuest int         `json:"number_of_guest" form:"number_of_guest" binding:"required"`
+	IsOffer       *bool       `json:"is_offer" form:"is_offer"`
+	OfferCode     *string     `json:"offer_code" form:"offer_code"`
 }
 
 type UpdateReservationRequest struct {
@@ -16,6 +18,8 @@ type UpdateReservationRequest struct {
 	CheckOutDate  *CustomDate `json:"check_out_date" form:"check_out_date"`
 	Status        string      `json:"status" form:"status"`
 	NumberOfGuest int         `json:"number_of_guest" form:"number_of_guest"`
+	IsOffer       *bool       `json:"is_offer" form:"is_offer"`
+	OfferCode     *string     `json:"offer_code" form:"offer_code"`
 }
 
 type CheckAvailabilityRequest struct {
