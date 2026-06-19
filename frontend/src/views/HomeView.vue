@@ -31,7 +31,7 @@ onMounted(async () => {
     <section ref="heroRef" class="hero-section" :class="{ 'reveal-visible': heroVisible }">
       <div class="hero-overlay"></div>
       <div class="hero-container">
-        <h1 class="hero-heading reveal-item reveal-delay-0">
+        <h1 class="text-[50px] md:text-[70px] lg:text-[89px] leading-[1.1] font-serif italic text-white mb-6 reveal-item reveal-delay-0">
           Experience luxury<br />
           living at Citramas<br />
           Co Living.
@@ -58,7 +58,7 @@ onMounted(async () => {
           
           <!-- Left Column: Heading -->
           <div class="lg:col-span-5 reveal-item reveal-delay-0">
-            <h2 class="text-4xl md:text-[44px] lg:text-[52px] font-serif text-[#1C1612] uppercase leading-[1.1] tracking-wide" style="font-family: 'Playfair Display', ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;">
+            <h2 class="text-4xl md:text-5xl lg:text-6xl font-serif italic text-primary-dark mb-6">
               A House Built<br />
               For Slow Living
             </h2>
@@ -87,11 +87,11 @@ onMounted(async () => {
         <!-- Header -->
         <div class="text-center mb-16 reveal-item reveal-delay-0">
           <div class="flex items-center justify-center gap-4 mb-4">
-            <div class="h-px w-8 bg-[#C2A379]"></div>
+            <span class="text-[#B59E75] text-[10px]">◆</span>
             <span class="text-[#C2A379] text-[11px] font-bold tracking-[0.2em] uppercase">What Guides Us</span>
-            <div class="h-px w-8 bg-[#C2A379]"></div>
+            <span class="text-[#B59E75] text-[10px]">◆</span>
           </div>
-          <h2 class="text-4xl md:text-5xl font-serif text-[#1C1612] uppercase tracking-wide" style="font-family: 'Playfair Display', ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;">
+          <h2 class="text-4xl md:text-5xl lg:text-6xl font-serif italic text-primary-dark mb-6">
             Our Values
           </h2>
         </div>
@@ -174,7 +174,7 @@ onMounted(async () => {
               <span class="text-[#B59E75] text-xs font-semibold tracking-[0.2em] uppercase">Curated</span>
               <span class="text-[#B59E75] text-[10px]">◆</span>
             </div>
-            <h2 class="text-4xl md:text-5xl lg:text-6xl text-[#1A1A1A] mb-6" style="font-family: 'Playfair Display', ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif; font-style: italic;">
+            <h2 class="text-4xl md:text-5xl lg:text-6xl font-serif italic text-primary-dark mb-6">
               Exclusive Rooms
             </h2>
           </div>
@@ -207,7 +207,7 @@ onMounted(async () => {
     <section ref="ctaRef" class="relative py-24 md:py-32 flex items-center justify-center min-h-[400px] md:min-h-[500px]">
       <!-- Background Image -->
       <div class="absolute inset-0 z-0">
-        <img src="https://images.unsplash.com/photo-1542224566-6e85f2e6772f?q=80&w=2000&auto=format&fit=crop" alt="Resort landscape" class="w-full h-full object-cover" />
+        <img src="@/assets/room2.jpg" alt="Resort landscape" class="w-full h-full object-cover" />
         <div class="absolute inset-0 bg-black/40"></div>
       </div>
       
@@ -220,8 +220,8 @@ onMounted(async () => {
             <span class="text-white/80 text-[10px]">◆</span>
           </div>
           
-          <h2 class="text-4xl md:text-5xl lg:text-7xl text-white mb-10 leading-tight tracking-wide" style="font-family: 'Playfair Display', ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;">
-            RESERVE YOUR<br/>STAY TODAY
+          <h2 class="text-4xl md:text-5xl lg:text-7xl font-serif italic text-white mb-10 leading-tight tracking-wide">
+            Reserve Your<br/>Stay Today
           </h2>
           
           <router-link to="/booking" class="inline-flex items-center justify-center px-10 py-3.5 border border-white/80 text-[13px] font-bold tracking-[0.1em] text-white uppercase hover:bg-white hover:text-[#1A1A1A] transition-colors duration-400 rounded-[100px]">
@@ -239,7 +239,7 @@ onMounted(async () => {
    ============================================ */
 .hero-section {
   position: relative;
-  background-image: url('@/assets/hero-bg.png');
+  background-image: url('@/assets/hero-bg.jpg');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
