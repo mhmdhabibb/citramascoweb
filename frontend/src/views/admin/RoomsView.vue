@@ -131,11 +131,11 @@ const saveRoom = async () => {
     }
 
     if (isEditing.value) {
-      await roomService.update(editingId.value, formData)
-      toastStore.success('Kamar berhasil diperbarui!')
+      const msg = await roomService.update(editingId.value, formData)
+      toastStore.success(msg || 'Kamar berhasil diperbarui!')
     } else {
-      await roomService.create(formData)
-      toastStore.success('Kamar baru berhasil ditambahkan!')
+      const msg = await roomService.create(formData)
+      toastStore.success(msg || 'Kamar baru berhasil ditambahkan!')
     }
 
     // Refresh rooms
@@ -161,8 +161,8 @@ const deleteRoom = async (id) => {
   if (confirm(`Are you sure you want to delete this room?`)) {
     try {
       loading.value = true
-      await roomService.delete(id)
-      toastStore.success('Kamar berhasil dihapus!')
+      const msg = await roomService.delete(id)
+      toastStore.success(msg || 'Kamar berhasil dihapus!')
       rooms.value = await roomService.getAll()
     } catch (error) {
       console.error(error)

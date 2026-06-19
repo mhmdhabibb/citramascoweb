@@ -20,13 +20,25 @@ export const typeService = {
     }
     return response.data.data
   },
-  create: async (data: { name: string }): Promise<void> => {
-    await api.post('/type', data)
+  create: async (data: { name: string }): Promise<string> => {
+    const response = await api.post<ApiResponse<any>>('/type', data)
+    if (!response.data.success) {
+      throw new Error(response.data.message || 'Validation failed!')
+    }
+    return response.data.message
   },
-  update: async (id: string, data: { name: string }): Promise<void> => {
-    await api.patch(`/type/${id}`, data)
+  update: async (id: string, data: { name: string }): Promise<string> => {
+    const response = await api.patch<ApiResponse<any>>(`/type/${id}`, data)
+    if (!response.data.success) {
+      throw new Error(response.data.message || 'Validation failed!')
+    }
+    return response.data.message
   },
-  delete: async (id: string): Promise<void> => {
-    await api.delete(`/type/${id}`)
+  delete: async (id: string): Promise<string> => {
+    const response = await api.delete<ApiResponse<any>>(`/type/${id}`)
+    if (!response.data.success) {
+      throw new Error(response.data.message || 'Deletion failed!')
+    }
+    return response.data.message
   }
 }

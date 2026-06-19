@@ -82,21 +82,11 @@ const saveRoomCategory = async () => {
     }
 
     if (isEditing.value) {
-      await categoryStore.update(editingId.value, payload)
-      
-      if (categoryStore.error) {
-        toastStore.error(`Gagal mengubah kategori: ${categoryStore.error}`)
-        return
-      }
-      toastStore.success('Kategori kamar berhasil diperbarui!')
+      const msg = await categoryStore.update(editingId.value, payload)
+      toastStore.success(msg || 'Kategori kamar berhasil diperbarui!')
     } else {
-      await categoryStore.store(payload)
-
-      if (categoryStore.error) {
-        toastStore.error(`Gagal menambah kategori: ${categoryStore.error}`)
-        return
-      }
-      toastStore.success('Kategori kamar berhasil ditambahkan!')
+      const msg = await categoryStore.store(payload)
+      toastStore.success(msg || 'Kategori kamar berhasil ditambahkan!')
     }
 
     // Refresh categories in the view
@@ -106,7 +96,7 @@ const saveRoomCategory = async () => {
     closeModal()
   } catch (error) {
     console.error('Error saving category:', error)
-    toastStore.error('Terjadi kesalahan saat menyimpan kategori')
+    toastStore.error(error.response?.data?.message || error.message || 'Terjadi kesalahan saat menyimpan kategori')
   } finally {
     loading.value = false
   }
@@ -117,19 +107,13 @@ const deleteRoomCategory = async (index) => {
   if (confirm(`Apakah Anda yakin ingin menghapus Kategori: ${item.name}?`)) {
     try {
       loading.value = true
-      await categoryStore.destroy(item.id)
-      
-      if (categoryStore.error) {
-        toastStore.error(`Gagal menghapus kategori: ${categoryStore.error}`)
-        return
-      }
-
-      toastStore.success('Kategori kamar berhasil dihapus!')
+      const msg = await categoryStore.destroy(item.id)
+      toastStore.success(msg || 'Kategori kamar berhasil dihapus!')
       await categoryStore.fetchCategories()
       categories.value = categoryStore.categories
     } catch (error) {
       console.error('Error deleting category:', error)
-      toastStore.error('Terjadi kesalahan saat menghapus kategori')
+      toastStore.error(error.response?.data?.message || error.message || 'Terjadi kesalahan saat menghapus kategori')
     } finally {
       loading.value = false
     }

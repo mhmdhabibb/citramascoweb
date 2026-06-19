@@ -32,21 +32,24 @@ export const offerService = {
   /**
    * POST /api/offer/ - Create a new offer (multipart form-data)
    */
-  create: async (formData: FormData): Promise<void> => {
-    await api.post('/offer/', formData)
+  create: async (formData: FormData): Promise<string> => {
+    const response = await api.post<ApiResponse<any>>('/offer/', formData)
+    return response.data.message
   },
 
   /**
    * PATCH /api/offer/:id - Update an offer (multipart form-data)
    */
-  update: async (id: string, formData: FormData): Promise<void> => {
-    await api.patch(`/offer/${id}`, formData)
+  update: async (id: string, formData: FormData): Promise<string> => {
+    const response = await api.patch<ApiResponse<any>>(`/offer/${id}`, formData)
+    return response.data.message
   },
 
   /**
    * DELETE /api/offer/:id - Delete an offer
    */
-  delete: async (id: string): Promise<void> => {
-    await api.delete(`/offer/${id}`)
+  delete: async (id: string): Promise<string> => {
+    const response = await api.delete<ApiResponse<any>>(`/offer/${id}`)
+    return response.data.message
   }
 }

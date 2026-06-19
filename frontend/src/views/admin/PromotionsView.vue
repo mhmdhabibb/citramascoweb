@@ -193,26 +193,18 @@ const savePromotion = async () => {
     }
 
     if (isEditing.value) {
-      await offerStore.update(editingId.value, formData)
-      if (offerStore.error) {
-        toastStore.error(`Gagal mengubah penawaran: ${offerStore.error}`)
-        return
-      }
-      toastStore.success('Penawaran berhasil diperbarui!')
+      const msg = await offerStore.update(editingId.value, formData)
+      toastStore.success(msg || 'Penawaran berhasil diperbarui!')
     } else {
-      await offerStore.store(formData)
-      if (offerStore.error) {
-        toastStore.error(`Gagal membuat penawaran: ${offerStore.error}`)
-        return
-      }
-      toastStore.success('Penawaran berhasil ditambahkan!')
+      const msg = await offerStore.store(formData)
+      toastStore.success(msg || 'Penawaran berhasil ditambahkan!')
     }
 
     await loadPromotions()
     closeModal()
   } catch (error) {
     console.error(error)
-    toastStore.error('Terjadi kesalahan saat menyimpan penawaran')
+    toastStore.error(error.response?.data?.message || error.message || 'Terjadi kesalahan saat menyimpan penawaran')
   } finally {
     loading.value = false
   }
@@ -222,16 +214,12 @@ const deletePromotion = async (id) => {
   if (confirm(`Are you sure you want to delete this offer/promotion?`)) {
     try {
       loading.value = true
-      await offerStore.destroy(id)
-      if (offerStore.error) {
-        toastStore.error(`Gagal menghapus penawaran: ${offerStore.error}`)
-        return
-      }
-      toastStore.success('Penawaran berhasil dihapus!')
+      const msg = await offerStore.destroy(id)
+      toastStore.success(msg || 'Penawaran berhasil dihapus!')
       await loadPromotions()
     } catch (error) {
       console.error(error)
-      toastStore.error('Terjadi kesalahan saat menghapus penawaran')
+      toastStore.error(error.response?.data?.message || error.message || 'Terjadi kesalahan saat menghapus penawaran')
     } finally {
       loading.value = false
     }

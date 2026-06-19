@@ -34,15 +34,27 @@ export const roomService = {
     }
   },
 
-  create: async (formData: FormData): Promise<void> => {
-    await api.post('/room', formData)
+  create: async (formData: FormData): Promise<string> => {
+    const response = await api.post<ApiResponse<any>>('/room', formData)
+    if (!response.data.success) {
+      throw new Error(response.data.message || 'Validation failed!')
+    }
+    return response.data.message
   },
 
-  update: async (id: string, formData: FormData): Promise<void> => {
-    await api.patch(`/room/${id}`, formData)
+  update: async (id: string, formData: FormData): Promise<string> => {
+    const response = await api.patch<ApiResponse<any>>(`/room/${id}`, formData)
+    if (!response.data.success) {
+      throw new Error(response.data.message || 'Validation failed!')
+    }
+    return response.data.message
   },
 
-  delete: async (id: string): Promise<void> => {
-    await api.delete(`/room/${id}`)
+  delete: async (id: string): Promise<string> => {
+    const response = await api.delete<ApiResponse<any>>(`/room/${id}`)
+    if (!response.data.success) {
+      throw new Error(response.data.message || 'Deletion failed!')
+    }
+    return response.data.message
   }
 }

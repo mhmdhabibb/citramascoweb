@@ -48,11 +48,11 @@ export const useOfferStore = defineStore('offer', () => {
     }
   }
 
-  async function store(payload: FormData) {
+  async function store(payload: FormData): Promise<string> {
     loading.value = true
     error.value = null
     try {
-      await offerService.create(payload)
+      return await offerService.create(payload)
     } catch (err: any) {
       error.value = err.response?.data?.message || err.message || 'Failed to create offer'
       console.error('Failed to create offer:', err)
@@ -62,11 +62,11 @@ export const useOfferStore = defineStore('offer', () => {
     }
   }
 
-  async function update(id: string, payload: FormData) {
+  async function update(id: string, payload: FormData): Promise<string> {
     loading.value = true
     error.value = null
     try {
-      await offerService.update(id, payload)
+      return await offerService.update(id, payload)
     } catch (err: any) {
       error.value = err.response?.data?.message || err.message || 'Failed to update offer'
       console.error('Failed to update offer:', err)
@@ -76,11 +76,11 @@ export const useOfferStore = defineStore('offer', () => {
     }
   }
 
-  async function destroy(id: string) {
+  async function destroy(id: string): Promise<string> {
     loading.value = true
     error.value = null
     try {
-      await offerService.delete(id)
+      return await offerService.delete(id)
     } catch (err: any) {
       error.value = err.response?.data?.message || err.message || 'Failed to delete offer'
       console.error('Failed to delete offer:', err)

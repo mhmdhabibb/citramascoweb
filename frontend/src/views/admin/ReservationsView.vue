@@ -1,6 +1,7 @@
 <script setup>
 import { reservationService } from '@/services/admin/reservationService'
 import { authService } from '@/services/authService'
+import { useToastStore } from '@/stores/toastStore'
 import { ref, computed, onMounted } from 'vue'
 
 const reservations = ref([])
@@ -8,6 +9,7 @@ const searchQuery = ref('')
 const statusFilter = ref('All')
 const loading = ref(false)
 const currentUser = ref(null)
+const toastStore = useToastStore()
 
 // Stats
 const totalBookings = computed(() => reservations.value.length)
@@ -35,11 +37,12 @@ const filteredReservations = computed(() => {
 const approveReservation = async (id) => {
   try {
     loading.value = true
-    await reservationService.approve(id)
+    const msg = await reservationService.approve(id)
+    toastStore.success(msg || 'Reservasi berhasil disetujui!')
     const data = await reservationService.getAll()
     reservations.value = data
   } catch (error) {
-    alert(error.message || 'Failed to approve reservation')
+    toastStore.error(error.message || 'Gagal menyetujui reservasi')
   } finally {
     loading.value = false
   }
@@ -48,11 +51,12 @@ const approveReservation = async (id) => {
 const rejectReservation = async (id) => {
   try {
     loading.value = true
-    await reservationService.reject(id)
+    const msg = await reservationService.reject(id)
+    toastStore.success(msg || 'Reservasi berhasil ditolak!')
     const data = await reservationService.getAll()
     reservations.value = data
   } catch (error) {
-    alert(error.message || 'Failed to reject reservation')
+    toastStore.error(error.message || 'Gagal menolak reservasi')
   } finally {
     loading.value = false
   }
@@ -62,11 +66,12 @@ const cancelReservation = async (id) => {
   if (confirm('Are you sure you want to cancel this reservation?')) {
     try {
       loading.value = true
-      await reservationService.cancel(id)
+      const msg = await reservationService.cancel(id)
+      toastStore.success(msg || 'Reservasi berhasil dibatalkan!')
       const data = await reservationService.getAll()
       reservations.value = data
     } catch (error) {
-      alert(error.message || 'Failed to cancel reservation')
+      toastStore.error(error.message || 'Gagal membatalkan reservasi')
     } finally {
       loading.value = false
     }

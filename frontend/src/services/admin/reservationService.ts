@@ -16,31 +16,34 @@ export const reservationService = {
     /**
      * PATCH /api/reservation/approve/:id
      */
-    approve: async (id: string): Promise<void> => {
+    approve: async (id: string): Promise<string> => {
         const response = await api.patch<ApiResponse<any>>(`/reservation/approve/${id}`)
         if (!response.data.success) {
             throw new Error(response.data.message || 'Failed to approve reservation')
         }
+        return response.data.message
     },
 
     /**
      * PATCH /api/reservation/reject/:id
      */
-    reject: async (id: string): Promise<void> => {
+    reject: async (id: string): Promise<string> => {
         const response = await api.patch<ApiResponse<any>>(`/reservation/reject/${id}`)
         if (!response.data.success) {
             throw new Error(response.data.message || 'Failed to reject reservation')
         }
+        return response.data.message
     },
 
     /**
      * PATCH /api/reservation/cancel/:id
      */
-    cancel: async (id: string): Promise<void> => {
+    cancel: async (id: string): Promise<string> => {
         const response = await api.patch<ApiResponse<any>>(`/reservation/cancel/${id}`)
         if (!response.data.success) {
             throw new Error(response.data.message || 'Failed to cancel reservation')
         }
+        return response.data.message
     },
 
     /**
