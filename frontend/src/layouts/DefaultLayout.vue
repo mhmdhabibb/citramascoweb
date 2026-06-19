@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import Navbar from '@/components/navbar/Navbar.vue'
-import CtaBanner from '@/components/footer/CtaBanner.vue'
 import Footer from '@/components/footer/Footer.vue'
 </script>
 
@@ -17,7 +16,6 @@ import Footer from '@/components/footer/Footer.vue'
         </Transition>
       </RouterView>
     </main>
-    <CtaBanner />
     <Footer />
   </div>
 </template>

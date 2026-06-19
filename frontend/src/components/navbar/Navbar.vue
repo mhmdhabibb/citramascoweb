@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useScrollReveal } from '@/composables/useScrollReveal'
 
 const menuOpen = ref(false)
+const { elementRef: navRef, isVisible: navVisible } = useScrollReveal(0.1)
 </script>
 
 <template>
-  <nav class="navbar">
-    <div class="navbar-inner">
+  <nav ref="navRef" class="navbar" :class="{ 'reveal-visible': navVisible }">
+    <div class="navbar-inner reveal-item reveal-delay-0">
       <!-- Logo (Left) -->
       <div class="navbar-logo">
         <router-link to="/" class="logo-link">
@@ -51,6 +53,21 @@ const menuOpen = ref(false)
 </template>
 
 <style scoped>
+/* Scroll Reveal Animations */
+.reveal-item {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reveal-visible .reveal-item {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reveal-delay-0 { transition-delay: 0s; }
+
 .navbar {
   background-color: #F8F5F1;
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
