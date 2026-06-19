@@ -13,15 +13,23 @@ const category = computed(() => {
 </script>
 
 <template>
-  <div class="room-card">
+  <div class="room-card group cursor-pointer">
     <div class="room-card-image-wrapper">
       <img :src="room.image" :alt="room.name" class="room-card-image" />
       <div class="room-card-image-overlay"></div>
     </div>
-    <div class="room-info">
-      <div class="text-[11px] font-bold tracking-[0.1em] text-gray-500 uppercase mb-2">{{ category }}</div>
-      <h3 class="text-xl font-bold text-[#1C1612] leading-tight mb-3">{{ room.name }}</h3>
-      <p class="text-[15px] text-gray-500">From Rp {{ room.price.toLocaleString('id-ID') }} <span class="text-[13px]">/ night</span></p>
+    
+    <div class="pt-5 px-1">
+      <div class="text-accent text-[11px] font-bold tracking-[0.15em] uppercase mb-2">{{ category }}</div>
+      <h3 class="text-[26px] font-serif text-primary-dark mb-3 leading-tight">{{ room.name }}</h3>
+      <p class="text-[#6B5E52] text-[14.5px] leading-relaxed mb-6">
+        {{ room.description }}
+      </p>
+      
+      <div class="flex items-center justify-between">
+        <span class="text-[#4A4A4A] text-[14.5px]">from Rp {{ room.price.toLocaleString('id-ID') }}</span>
+        <span class="text-[#1C1612] text-[14.5px] border-b border-[#1C1612] pb-0.5 font-medium transition-colors hover:text-accent hover:border-accent">Inquire</span>
+      </div>
     </div>
   </div>
 </template>
@@ -29,32 +37,33 @@ const category = computed(() => {
 <style scoped>
 .room-card {
   background: transparent;
-  overflow: hidden;
-  position: relative;
-  cursor: pointer;
 }
 
-.room-info {
-  background-color: #F8F9FA;
-  padding: 1.5rem;
-  transition: background-color 0.3s ease;
+.text-accent {
+  color: #B59E75;
 }
 
-.room-card:hover .room-info {
-  background-color: #F1F3F5;
+.text-primary-dark {
+  color: #1A1A1A;
+}
+
+.font-serif {
+  font-family: 'Playfair Display', ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
 }
 
 .room-card-image-wrapper {
   position: relative;
   overflow: hidden;
+  border-radius: 16px;
+  aspect-ratio: 4/5;
+  margin-bottom: 1.25rem;
 }
 
 .room-card-image {
   width: 100%;
-  aspect-ratio: 16/10;
-  height: auto;
+  height: 100%;
   object-fit: cover;
-  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .room-card:hover .room-card-image {
@@ -64,13 +73,12 @@ const category = computed(() => {
 .room-card-image-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(28, 22, 18, 0.15) 0%, transparent 50%);
+  background: rgba(0, 0, 0, 0.1);
   opacity: 0;
-  transition: opacity 0.4s ease;
+  transition: opacity 0.5s ease;
 }
 
 .room-card:hover .room-card-image-overlay {
   opacity: 1;
 }
-
 </style>

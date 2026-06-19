@@ -32,66 +32,81 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="max-w-[1400px] mx-auto py-12 px-4 sm:px-6 lg:px-8">
-    <div ref="headerRef" class="mb-10 text-center md:text-left" :class="{ 'reveal-visible': headerVisible }">
-      <h1 class="text-3xl font-extrabold tracking-tight reveal-item reveal-delay-0">Our Rooms & Suites</h1>
-      <p class="mt-2 text-muted-foreground reveal-item reveal-delay-1">Find the perfect room for your trip, business stay, or weekend getaway.</p>
-    </div>
-
-    <!-- Categories Filter (from Backend API) -->
-    <div v-if="categoryStore.categories.length > 0" class="categories-filter">
-      <div class="filter-label">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
-        </svg>
-        <span>Categories</span>
+  <div class="rooms-page bg-[#FAF7F2] min-h-screen pt-24 pb-24">
+    <div class="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <!-- Header -->
+      <div ref="headerRef" class="mb-16 text-center max-w-2xl mx-auto" :class="{ 'reveal-visible': headerVisible }">
+        <div class="reveal-item reveal-delay-0">
+          <div class="flex items-center justify-center gap-2 mb-4">
+            <span class="text-[#B59E75] text-[10px]">◆</span>
+            <span class="text-[#B59E75] text-xs font-semibold tracking-[0.2em] uppercase">Our Collection</span>
+            <span class="text-[#B59E75] text-[10px]">◆</span>
+          </div>
+          <h1 class="text-4xl md:text-5xl lg:text-6xl text-[#1A1A1A] mb-6" style="font-family: 'Playfair Display', ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif; font-style: italic;">
+            Rooms & Suites
+          </h1>
+          <p class="text-[#6B5E52] text-[15px] leading-relaxed max-w-lg mx-auto">
+            Find the perfect room for your trip, business stay, or weekend getaway.
+          </p>
+        </div>
       </div>
-      <div class="filter-chips">
-        <span
-          v-for="category in categoryStore.categories"
-          :key="category.id"
-          class="filter-chip"
+
+      <!-- Categories Filter (from Backend API) -->
+      <div v-if="categoryStore.categories.length > 0" class="categories-filter justify-center mb-6">
+        <div class="filter-label hidden sm:flex">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+          </svg>
+          <span>Categories</span>
+        </div>
+        <div class="filter-chips justify-center">
+          <span
+            v-for="category in categoryStore.categories"
+            :key="category.id"
+            class="filter-chip"
+          >
+            {{ category.name }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Room Types (from Backend API) -->
+      <div v-if="typeStore.types.length > 0" class="types-bar justify-center mb-12">
+        <div class="filter-label hidden sm:flex">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7" />
+            <rect x="14" y="3" width="7" height="7" />
+            <rect x="14" y="14" width="7" height="7" />
+            <rect x="3" y="14" width="7" height="7" />
+          </svg>
+          <span>Room Types</span>
+        </div>
+        <div class="filter-chips justify-center">
+          <span
+            v-for="roomType in typeStore.types"
+            :key="roomType.id"
+            class="filter-chip filter-chip--type"
+          >
+            {{ roomType.name }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Room Cards -->
+      <div v-if="loading" class="flex justify-center items-center py-20">
+        <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
+      </div>
+
+      <div v-else ref="gridRef" class="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-6 lg:gap-8" :class="{ 'reveal-visible': gridVisible }">
+        <div
+          v-for="(room, index) in rooms"
+          :key="room.id"
+          class="reveal-item"
+          :class="`reveal-delay-${Math.min(index, 5)}`"
         >
-          {{ category.name }}
-        </span>
-      </div>
-    </div>
-
-    <!-- Room Types (from Backend API) -->
-    <div v-if="typeStore.types.length > 0" class="types-bar">
-      <div class="filter-label">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="3" width="7" height="7" />
-          <rect x="14" y="3" width="7" height="7" />
-          <rect x="14" y="14" width="7" height="7" />
-          <rect x="3" y="14" width="7" height="7" />
-        </svg>
-        <span>Room Types</span>
-      </div>
-      <div class="filter-chips">
-        <span
-          v-for="roomType in typeStore.types"
-          :key="roomType.id"
-          class="filter-chip filter-chip--type"
-        >
-          {{ roomType.name }}
-        </span>
-      </div>
-    </div>
-
-    <!-- Room Cards -->
-    <div v-if="loading" class="flex justify-center items-center py-20">
-      <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
-    </div>
-
-    <div v-else ref="gridRef" class="grid grid-cols-1 md:grid-cols-3 gap-8" :class="{ 'reveal-visible': gridVisible }">
-      <div
-        v-for="(room, index) in rooms"
-        :key="room.id"
-        class="reveal-item"
-        :class="`reveal-delay-${Math.min(index, 5)}`"
-      >
-        <RoomCard :room="room" />
+          <RoomCard :room="room" />
+        </div>
       </div>
     </div>
   </div>

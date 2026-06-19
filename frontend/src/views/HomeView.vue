@@ -7,8 +7,11 @@ import RoomCard from '@/components/room/RoomCard.vue'
 const featuredRooms = ref<Room[]>([])
 const loading = ref(true)
 
+const { elementRef: heroRef, isVisible: heroVisible } = useScrollReveal(0.1)
 const { elementRef: aboutRef, isVisible: aboutVisible } = useScrollReveal(0.2)
+const { elementRef: valuesRef, isVisible: valuesVisible } = useScrollReveal(0.2)
 const { elementRef: featuredRef, isVisible: featuredVisible } = useScrollReveal(0.1)
+const { elementRef: ctaRef, isVisible: ctaVisible } = useScrollReveal(0.2)
 
 onMounted(async () => {
   try {
@@ -25,19 +28,19 @@ onMounted(async () => {
 <template>
   <div>
     <!-- Hero Section -->
-    <section class="hero-section">
+    <section ref="heroRef" class="hero-section" :class="{ 'reveal-visible': heroVisible }">
       <div class="hero-overlay"></div>
       <div class="hero-container">
-        <h1 class="hero-heading animate-hero-text">
+        <h1 class="hero-heading reveal-item reveal-delay-0">
           Experience luxury<br />
           living at Citramas<br />
           Co Living.
         </h1>
-        <p class="hero-subtitle animate-hero-text animate-hero-text--delay-1">
+        <p class="hero-subtitle reveal-item reveal-delay-1">
           Your premium co-living destination offering beautifully designed rooms,<br class="hidden-mobile" />
           modern amenities, and a vibrant community in the heart of the city.
         </p>
-        <div class="hero-buttons animate-hero-text animate-hero-text--delay-2">
+        <div class="hero-buttons reveal-item reveal-delay-2">
           <router-link to="/rooms" class="hero-btn-primary">
             View Rooms &nbsp;&rarr;
           </router-link>
@@ -49,52 +52,181 @@ onMounted(async () => {
     </section>
 
     <!-- About Us -->
-    <section id="about" ref="aboutRef" class="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-16">
-      <div class="grid grid-cols-1 md:grid-cols-2" :class="{ 'reveal-visible': aboutVisible }">
-        <!-- Image Column -->
-        <div class="reveal-item reveal-delay-0 overflow-hidden">
-          <img src="@/assets/hero-bg.png" alt="Hotel Details" class="w-full h-full object-cover min-h-[400px] md:min-h-[500px]" />
+    <section id="about" ref="aboutRef" class="w-full bg-[#FAF6F1] py-24 md:py-32">
+      <div class="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-12" :class="{ 'reveal-visible': aboutVisible }">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-24 items-center">
+          
+          <!-- Left Column: Heading -->
+          <div class="lg:col-span-5 reveal-item reveal-delay-0">
+            <h2 class="text-4xl md:text-[44px] lg:text-[52px] font-serif text-[#1C1612] uppercase leading-[1.1] tracking-wide" style="font-family: 'Playfair Display', ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;">
+              A House Built<br />
+              For Slow Living
+            </h2>
+          </div>
+          
+          <!-- Right Column: Text -->
+          <div class="lg:col-span-7 reveal-item reveal-delay-1">
+            <p class="text-[16px] md:text-[18px] text-[#6B5E52] leading-relaxed mb-6 font-light">
+              CitraMas began as a private residence on the tranquil coastline. 
+              When we opened our doors to guests, we kept its quiet — its hand-plastered walls, its sun-drenched terraces, its old citrus garden.
+            </p>
+            <p class="text-[16px] md:text-[18px] text-[#6B5E52] leading-relaxed font-light">
+              Today it is a small resort of curated suites and pavilions, run 
+              by a small team who care deeply about the craft of hospitality.
+            </p>
+          </div>
+          
         </div>
-        <!-- Text Column -->
-        <div class="bg-[#F8F9FA] flex flex-col justify-center p-8 md:p-16 lg:p-24 reveal-item reveal-delay-1">
-          <div class="text-[11px] font-bold tracking-[0.15em] text-gray-500 uppercase mb-3">WHO WE ARE</div>
-          <h2 class="text-4xl md:text-[42px] font-bold tracking-tight text-[#1C1612] mb-6 leading-[1.15]">The details that matter.</h2>
-          <p class="text-[15px] text-[#4A4A4A] leading-relaxed mb-6">
-            The Hotel opened in 2026 with a simple idea: that a great hotel should feel like somewhere, not anywhere. Independently owned and operated, we have never chased scale over quality.
-          </p>
-          <p class="text-[15px] text-[#4A4A4A] leading-relaxed">
-            Every decision we make, from the mattresses to the menu, comes back to the same question: does this make the stay better? If the answer is no, we do not do it.
-          </p>
+      </div>
+    </section>
+
+    <!-- Our Values -->
+    <section ref="valuesRef" class="w-full bg-[#F2EFEA] py-24 md:py-32">
+      <div class="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8" :class="{ 'reveal-visible': valuesVisible }">
+        
+        <!-- Header -->
+        <div class="text-center mb-16 reveal-item reveal-delay-0">
+          <div class="flex items-center justify-center gap-4 mb-4">
+            <div class="h-px w-8 bg-[#C2A379]"></div>
+            <span class="text-[#C2A379] text-[11px] font-bold tracking-[0.2em] uppercase">What Guides Us</span>
+            <div class="h-px w-8 bg-[#C2A379]"></div>
+          </div>
+          <h2 class="text-4xl md:text-5xl font-serif text-[#1C1612] uppercase tracking-wide" style="font-family: 'Playfair Display', ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;">
+            Our Values
+          </h2>
+        </div>
+
+        <!-- Values Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12 text-center">
+          
+          <!-- Value 1 -->
+          <div class="flex flex-col items-center reveal-item reveal-delay-1">
+            <div class="w-20 h-20 mb-6 flex items-center justify-center text-[#1C1612]">
+              <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="2" class="w-full h-full">
+                 <path d="M50 5C53.5 15 65 20 75 15C73 25 80 32 90 32C82 39 85 50 95 50C85 50 82 61 90 68C80 68 73 75 75 85C65 80 53.5 85 50 95C46.5 85 35 80 25 85C27 75 20 68 10 68C18 61 15 50 5 50C15 50 18 39 10 32C20 32 27 25 25 15C35 20 46.5 15 50 5Z" stroke-width="1.5" stroke-linejoin="round" />
+                 <circle cx="50" cy="40" r="8" fill="currentColor" />
+                 <path d="M50 52C42 52 38 60 38 68H62C62 60 58 52 50 52Z" fill="currentColor" />
+              </svg>
+            </div>
+            <h3 class="text-[22px] font-serif text-[#1C1612] mb-3" style="font-family: 'Playfair Display', ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;">Thoughtful</h3>
+            <p class="text-[14px] text-[#6B5E52] leading-[1.8] font-light max-w-[220px] mx-auto">
+              Every stay is designed with care and attention to detail.
+            </p>
+          </div>
+
+          <!-- Value 2 -->
+          <div class="flex flex-col items-center reveal-item reveal-delay-2">
+            <div class="w-20 h-20 mb-6 flex items-center justify-center text-[#1C1612]">
+              <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="2" class="w-full h-full">
+                 <path d="M50 5C53.5 15 65 20 75 15C73 25 80 32 90 32C82 39 85 50 95 50C85 50 82 61 90 68C80 68 73 75 75 85C65 80 53.5 85 50 95C46.5 85 35 80 25 85C27 75 20 68 10 68C18 61 15 50 5 50C15 50 18 39 10 32C20 32 27 25 25 15C35 20 46.5 15 50 5Z" stroke-width="1.5" stroke-linejoin="round" />
+                 <circle cx="50" cy="50" r="12" fill="currentColor" />
+                 <path d="M50 25V18M50 82V75M25 50H18M82 50H75M32 32L27 27M68 68L73 73M32 68L27 73M68 32L73 27" stroke-width="3" stroke-linecap="round" />
+              </svg>
+            </div>
+            <h3 class="text-[22px] font-serif text-[#1C1612] mb-3" style="font-family: 'Playfair Display', ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;">Warm Hospitality</h3>
+            <p class="text-[14px] text-[#6B5E52] leading-[1.8] font-light max-w-[220px] mx-auto">
+              Service that feels personal, genuine, and welcoming.
+            </p>
+          </div>
+
+          <!-- Value 3 -->
+          <div class="flex flex-col items-center reveal-item reveal-delay-3">
+            <div class="w-20 h-20 mb-6 flex items-center justify-center text-[#1C1612]">
+              <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="2" class="w-full h-full">
+                 <path d="M50 5C53.5 15 65 20 75 15C73 25 80 32 90 32C82 39 85 50 95 50C85 50 82 61 90 68C80 68 73 75 75 85C65 80 53.5 85 50 95C46.5 85 35 80 25 85C27 75 20 68 10 68C18 61 15 50 5 50C15 50 18 39 10 32C20 32 27 25 25 15C35 20 46.5 15 50 5Z" stroke-width="1.5" stroke-linejoin="round" />
+                 <path d="M50 65C50 65 35 52 35 42C35 34 42 30 48 35C50 37 50 37 52 35C58 30 65 34 65 42C65 52 50 65 50 65Z" fill="currentColor" />
+                 <path d="M42 45L50 52L58 45" stroke="white" stroke-width="2" stroke-linecap="round" />
+              </svg>
+            </div>
+            <h3 class="text-[22px] font-serif text-[#1C1612] mb-3" style="font-family: 'Playfair Display', ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;">Authentic</h3>
+            <p class="text-[14px] text-[#6B5E52] leading-[1.8] font-light max-w-[220px] mx-auto">
+              Local culture, flavors, and experiences woven into every stay.
+            </p>
+          </div>
+
+          <!-- Value 4 -->
+          <div class="flex flex-col items-center reveal-item reveal-delay-4">
+            <div class="w-20 h-20 mb-6 flex items-center justify-center text-[#1C1612]">
+              <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="2" class="w-full h-full">
+                 <path d="M50 5C53.5 15 65 20 75 15C73 25 80 32 90 32C82 39 85 50 95 50C85 50 82 61 90 68C80 68 73 75 75 85C65 80 53.5 85 50 95C46.5 85 35 80 25 85C27 75 20 68 10 68C18 61 15 50 5 50C15 50 18 39 10 32C20 32 27 25 25 15C35 20 46.5 15 50 5Z" stroke-width="1.5" stroke-linejoin="round" />
+                 <path d="M40 30H60L52 48H48L40 66H60" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+                 <path d="M40 30L60 30M40 66L60 66" stroke-width="4" stroke-linecap="round" />
+                 <circle cx="50" cy="48" r="3" fill="currentColor" />
+              </svg>
+            </div>
+            <h3 class="text-[22px] font-serif text-[#1C1612] mb-3" style="font-family: 'Playfair Display', ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;">Memorable</h3>
+            <p class="text-[14px] text-[#6B5E52] leading-[1.8] font-light max-w-[220px] mx-auto">
+              Creating moments guests will want to return to again and again.
+            </p>
+          </div>
+
         </div>
       </div>
     </section>
 
     <!-- Featured Rooms -->
-    <section ref="featuredRef" class="max-w-[1400px] mx-auto py-16 px-4 sm:px-6 lg:px-8">
-      <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-12" :class="{ 'reveal-visible': featuredVisible }">
-        <div class="reveal-item reveal-delay-0">
-          <div class="text-[11px] font-bold tracking-[0.15em] text-gray-500 uppercase mb-3">ROOMS & SUITES</div>
-          <h2 class="text-4xl md:text-5xl font-bold tracking-tight text-[#1C1612]">Find your room.</h2>
+    <div class="bg-[#FAF7F2] py-24">
+      <section ref="featuredRef" class="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center max-w-2xl mx-auto mb-16" :class="{ 'reveal-visible': featuredVisible }">
+          <div class="reveal-item reveal-delay-0">
+            <div class="flex items-center justify-center gap-2 mb-4">
+              <span class="text-[#B59E75] text-[10px]">◆</span>
+              <span class="text-[#B59E75] text-xs font-semibold tracking-[0.2em] uppercase">Curated</span>
+              <span class="text-[#B59E75] text-[10px]">◆</span>
+            </div>
+            <h2 class="text-4xl md:text-5xl lg:text-6xl text-[#1A1A1A] mb-6" style="font-family: 'Playfair Display', ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif; font-style: italic;">
+              Exclusive Rooms
+            </h2>
+          </div>
         </div>
-        <div class="reveal-item reveal-delay-1">
-          <router-link to="/rooms" class="inline-block border border-gray-300 text-[13px] font-medium px-5 py-2.5 hover:bg-gray-50 transition-colors text-[#1C1612]">
-            View All Rooms
+
+        <div v-if="loading" class="flex justify-center items-center py-12">
+          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+
+        <div v-else class="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-6 lg:gap-8" :class="{ 'reveal-visible': featuredVisible }">
+          <div
+            v-for="(room, index) in featuredRooms"
+            :key="room.id"
+            class="reveal-item"
+            :class="`reveal-delay-${index + 2}`"
+          >
+            <RoomCard :room="room" />
+          </div>
+        </div>
+        
+        <div class="mt-16 text-center reveal-item reveal-delay-4" :class="{ 'reveal-visible': featuredVisible }">
+          <router-link to="/rooms" class="inline-flex items-center justify-center px-8 py-3.5 border border-[#1A1A1A] text-[14px] font-medium tracking-wide text-[#1A1A1A] hover:bg-[#1A1A1A] hover:text-white transition-colors duration-300">
+            Explore All Rooms
           </router-link>
         </div>
-      </div>
+      </section>
+    </div>
 
-      <div v-if="loading" class="flex justify-center items-center py-12">
-        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+    <!-- CTA Section -->
+    <section ref="ctaRef" class="relative py-24 md:py-32 flex items-center justify-center min-h-[400px] md:min-h-[500px]">
+      <!-- Background Image -->
+      <div class="absolute inset-0 z-0">
+        <img src="https://images.unsplash.com/photo-1542224566-6e85f2e6772f?q=80&w=2000&auto=format&fit=crop" alt="Resort landscape" class="w-full h-full object-cover" />
+        <div class="absolute inset-0 bg-black/40"></div>
       </div>
-
-      <div v-else class="grid grid-cols-1 md:grid-cols-3 gap-8" :class="{ 'reveal-visible': featuredVisible }">
-        <div
-          v-for="(room, index) in featuredRooms"
-          :key="room.id"
-          class="reveal-item"
-          :class="`reveal-delay-${index + 2}`"
-        >
-          <RoomCard :room="room" />
+      
+      <!-- Content -->
+      <div class="relative z-10 text-center px-4 max-w-4xl mx-auto" :class="{ 'reveal-visible': ctaVisible }">
+        <div class="reveal-item reveal-delay-0">
+          <div class="flex items-center justify-center gap-2 mb-6">
+            <span class="text-white/80 text-[10px]">◆</span>
+            <span class="text-white text-xs font-bold tracking-[0.2em] uppercase">The Invitation</span>
+            <span class="text-white/80 text-[10px]">◆</span>
+          </div>
+          
+          <h2 class="text-4xl md:text-5xl lg:text-7xl text-white mb-10 leading-tight tracking-wide" style="font-family: 'Playfair Display', ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;">
+            RESERVE YOUR<br/>STAY TODAY
+          </h2>
+          
+          <router-link to="/booking" class="inline-flex items-center justify-center px-10 py-3.5 border border-white/80 text-[13px] font-bold tracking-[0.1em] text-white uppercase hover:bg-white hover:text-[#1A1A1A] transition-colors duration-400 rounded-[100px]">
+            Reserve Now
+          </router-link>
         </div>
       </div>
     </section>

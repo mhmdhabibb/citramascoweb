@@ -58,10 +58,11 @@ export const reservationService = {
         number_of_guest: number;
         is_offer?: boolean;
         offer_code?: string;
-    }): Promise<void> => {
+    }): Promise<string> => {
         const response = await api.post<ApiResponse<any>>('/reservation', data)
         if (!response.data.success) {
             throw new Error(response.data.message || 'Failed to submit reservation')
         }
+        return response.data.message
     }
 }

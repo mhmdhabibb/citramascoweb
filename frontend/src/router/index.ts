@@ -7,6 +7,7 @@ import RoomDetailView from '@/views/RoomDetailView.vue'
 import BookingView from '@/views/BookingView.vue'
 import ContactView from '@/views/ContactView.vue'
 import LoginView from '@/views/LoginView.vue'
+import OffersView from '@/views/OffersView.vue'
 
 // Admin Views
 import DashboardView from '@/views/admin/DashboardView.vue'
@@ -19,6 +20,15 @@ import PromotionsView from '@/views/admin/PromotionsView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
+  scrollBehavior(to, from, savedPosition) {
+    if (savedPosition) {
+      return savedPosition
+    }
+    if (to.hash) {
+      return { el: to.hash, behavior: 'smooth' }
+    }
+    return { top: 0 }
+  },
   routes: [
     {
       path: '/login',
@@ -54,6 +64,11 @@ const router = createRouter({
           path: 'contact',
           name: 'contact',
           component: ContactView
+        },
+        {
+          path: 'offers',
+          name: 'offers',
+          component: OffersView
         }
       ]
     },
