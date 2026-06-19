@@ -1,6 +1,8 @@
 package category
 
 import (
+	"citramascoweb-backend/internal/middlewares"
+
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
@@ -23,9 +25,9 @@ func (m *Module) CategoryRoutes(router *gin.RouterGroup) {
 	router.GET("/categories", m.Handler.GetAll)
 
 	category := router.Group("/category")
-	category.POST("/", m.Handler.Create)
+	category.POST("/", middlewares.AuthMiddleware(), middlewares.RoleMiddleware("admin"), m.Handler.Create)
 	category.GET("/:slug", m.Handler.GetBySlug)
 	category.GET("/detail/:id", m.Handler.GetById)
-	category.PATCH("/:id", m.Handler.Update)
-	category.DELETE("/:id", m.Handler.Delete)
+	category.PATCH("/:id", middlewares.AuthMiddleware(), middlewares.RoleMiddleware("admin"), m.Handler.Update)
+	category.DELETE("/:id", middlewares.AuthMiddleware(), middlewares.RoleMiddleware("admin"), m.Handler.Delete)
 }

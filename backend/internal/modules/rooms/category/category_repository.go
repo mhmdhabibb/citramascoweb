@@ -24,7 +24,7 @@ func NewCategoryRepository(db *gorm.DB) CategoryRepositoryInterface {
 func (r *categoryRepo) GetAll() ([]Category, error) {
 	var categories []Category
 
-	err := r.db.Find(&categories).Error
+	err := r.db.Preload("Rooms").Find(&categories).Error
 
 	if err != nil {
 		return nil, err
@@ -58,7 +58,7 @@ func (r *categoryRepo) Delete(id string) error {
 func (r *categoryRepo) GetById(id string) (*Category, error) {
 	var category *Category
 
-	err := r.db.Where("id = ?", id).First(&category).Error
+	err := r.db.Preload("Rooms").Where("id = ?", id).First(&category).Error
 
 	if err != nil {
 		return nil, err
@@ -70,7 +70,7 @@ func (r *categoryRepo) GetById(id string) (*Category, error) {
 func (r *categoryRepo) GetBySlug(slug string) (*Category, error) {
 	var category *Category
 
-	err := r.db.Where("slug = ?", slug).First(&category).Error
+	err := r.db.Preload("Rooms").Where("slug = ?", slug).First(&category).Error
 
 	if err != nil {
 		return nil, err
