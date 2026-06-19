@@ -1,4 +1,4 @@
-<script setup lang="ts">
+   <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { roomService, type Room } from '@/services/roomService'
 import { useCategoryStore } from '@/stores/categoryStore'
