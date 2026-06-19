@@ -36,11 +36,58 @@ export interface RoomType {
 // Room (mock data — TODO: replace when backend Room module exists)
 // ============================================
 export interface Room {
-  id: number
+  id: string
+  code: string
   name: string
-  price: number
+  slug: string
   image: string
+  category_id: string
+  category?: Category
+  price: number
   capacity: number
+  size: number
+  type_id: string
+  type?: RoomType
   description: string
-  features: string[]
+  status?: string
+  availability_status?: string
+  features?: string[]
+}
+
+
+export interface Reservation {
+  id: string
+  code: string
+  full_name: string
+  email: string
+  room_id: string
+  status: string
+  number_of_guest: number
+  checkin_date: string
+  checkout_date: string
+  room: {
+    name: string
+  }
+  price: number
+  total_night: number
+  total_price: number
+  is_offer: boolean
+  offer_code: string
+}
+
+export interface Offer {
+  id: string
+  title: string
+  image: string
+  status: 'active' | 'archieved' | 'draft'
+  price?: number | null
+  discount?: number | null
+  code: string
+  discounteed?: number | null
+  valid_start?: string | null
+  valid_end?: string | null
+  max_quota?: number | null
+  description?: string | null
+  created_at?: string
+  updated_at?: string
 }

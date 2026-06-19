@@ -9,7 +9,7 @@ const loading = ref(true)
 const imageLoaded = ref(false)
 
 onMounted(async () => {
-  const roomId = Number(route.params.id)
+  const roomId = String(route.params.id)
   try {
     const data = await roomService.getRoomById(roomId)
     if (data) {

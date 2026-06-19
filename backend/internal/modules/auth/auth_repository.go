@@ -34,7 +34,7 @@ func (r *authRepository) GetById(id string) (*User, error) {
 func (r *authRepository) GetByUsername(username string) (*User, error) {
 	var user User
 
-	err := r.db.First(&user, "username = ?", username).Error
+	err := r.db.First(&user, "username = ? OR email = ?", username, username).Error
 
 	if err != nil {
 		return nil, err

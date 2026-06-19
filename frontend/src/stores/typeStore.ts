@@ -35,11 +35,56 @@ export const useTypeStore = defineStore('type', () => {
     }
   }
 
+
+  async function store(payload: { name: string }) {
+    loading.value = true
+    error.value = null
+    try {
+      await typeService.create(payload)
+      await fetchTypes()
+    } catch (err: any) {
+      loading.value = false
+      error.value = err.response?.data?.message || err.message || 'Failed to create type'
+      console.log('Failed to create type:', err)
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function update(id: string, payload: { name: string }) {
+    loading.value = true
+    error.value = null
+    try {
+      await typeService.update(id, payload)
+    } catch (err: any) {
+      error.value = err.response?.data?.message || err.message || 'Failed to update type'
+      console.error('Failed to update type:', err)
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function destroy(id: string) {
+    loading.value = true
+    error.value = null
+    try {
+      await typeService.delete(id)
+    } catch (err: any) {
+      error.value = err.response?.data?.message || err.message || 'Failed to delete type'
+      console.error('Failed to delete type:', err)
+    } finally {
+      loading.value = false
+    }
+  }
+
   return {
     types,
     currentType,
     loading,
     error,
+    store,
+    update,
+    destroy,
     fetchTypes,
     fetchTypeById,
   }

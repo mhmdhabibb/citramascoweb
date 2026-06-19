@@ -20,4 +20,13 @@ export const typeService = {
     }
     return response.data.data
   },
+  create: async (data: { name: string }): Promise<void> => {
+    await api.post('/type', data)
+  },
+  update: async (id: string, data: { name: string }): Promise<void> => {
+    await api.patch(`/type/${id}`, data)
+  },
+  delete: async (id: string): Promise<void> => {
+    await api.delete(`/type/${id}`)
+  }
 }

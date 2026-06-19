@@ -48,12 +48,52 @@ export const useCategoryStore = defineStore('category', () => {
     }
   }
 
+  async function store(payload: { name: string }) {
+    loading.value = true
+    error.value = null
+    try {
+      await categoryService.create(payload)
+    } catch (err: any) {
+      error.value = err.response?.data?.message || err.message || 'Failed to create category'
+    } finally {
+      loading.value = false
+    }
+  }
+
+
+  async function update(id: string, payload: { name: string }) {
+    loading.value = true
+    error.value = null
+    try {
+      await categoryService.update(id, payload)
+    } catch (err: any) {
+      error.value = err.response?.data?.message || err.message || 'Failed to update category'
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function destroy(id: string) {
+    loading.value = true
+    error.value = null
+    try {
+      await categoryService.delete(id)
+    } catch (err: any) {
+      error.value = err.response?.data?.message || err.message || 'Failed to delete category'
+    } finally {
+      loading.value = false
+    }
+  }
+
   return {
     categories,
     currentCategory,
     loading,
     error,
+    store,
     fetchCategories,
+    update,
+    destroy,
     fetchCategoryBySlug,
     fetchCategoryById,
   }

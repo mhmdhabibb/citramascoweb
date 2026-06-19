@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { roomService, type Room } from '@/services/roomService'
+import { reservationService } from '@/services/admin/reservationService'
 
 const route = useRoute()
 const rooms = ref<Room[]>([])
@@ -12,6 +13,11 @@ const guests = ref(1)
 const name = ref('')
 const email = ref('')
 const submitted = ref(false)
+
+const isOffer = ref(false)
+const offerCode = ref('')
+const isSubmitting = ref(false)
+const submitError = ref<string | null>(null)
 
 onMounted(async () => {
   try {
@@ -26,8 +32,39 @@ onMounted(async () => {
   }
 })
 
-const handleSubmit = () => {
-  submitted.value = true
+const formatDateToApi = (dateStr: string) => {
+  if (!dateStr) return ''
+  const parts = dateStr.split('-')
+  if (parts.length === 3) {
+    return `${parts[2]}-${parts[1]}-${parts[0]}`
+  }
+  return dateStr
+}
+
+const handleSubmit = async () => {
+  try {
+    isSubmitting.value = true
+    submitError.value = null
+
+    const payload = {
+      room_id: selectedRoomId.value,
+      full_name: name.value.trim(),
+      email: email.value.trim(),
+      check_in_date: formatDateToApi(checkIn.value),
+      check_out_date: formatDateToApi(checkOut.value),
+      number_of_guest: Number(guests.value),
+      is_offer: isOffer.value,
+      offer_code: isOffer.value ? offerCode.value.trim().toUpperCase() : ''
+    }
+
+    await reservationService.create(payload)
+    submitted.value = true
+  } catch (err: any) {
+    console.error('Failed to submit booking:', err)
+    submitError.value = err.response?.data?.message || err.message || 'Failed to submit reservation. Please try again.'
+  } finally {
+    isSubmitting.value = false
+  }
 }
 </script>
 
@@ -86,10 +123,43 @@ const handleSubmit = () => {
             <label for="email" class="block text-sm font-medium text-foreground">Email Address</label>
             <input type="email" id="email" v-model="email" required placeholder="john@example.com" class="booking-input mt-1" />
           </div>
+          
+          <!-- Promo Code Section -->
+          <div class="flex items-center gap-2 mt-4 pt-2">
+            <input 
+              type="checkbox" 
+              id="is-offer" 
+              v-model="isOffer" 
+              class="w-4 h-4 rounded border-gray-300 text-[#e15b2b] focus:ring-[#e15b2b] accent-[#e15b2b]"
+            />
+            <label for="is-offer" class="text-sm font-medium text-foreground cursor-pointer">I have a promo code</label>
+          </div>
+
+          <div v-if="isOffer" class="booking-animate mt-4">
+            <label for="offer-code" class="block text-sm font-medium text-foreground">Promo Code</label>
+            <input 
+              type="text" 
+              id="offer-code" 
+              v-model="offerCode" 
+              placeholder="e.g. CITRA5050" 
+              class="booking-input mt-1 code-input"
+              required
+            />
+          </div>
         </div>
 
-        <button type="submit" class="booking-submit booking-animate booking-delay-5">
-          Confirm Reservation
+        <!-- Error Notification -->
+        <div v-if="submitError" class="p-4 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">
+          {{ submitError }}
+        </div>
+
+        <button 
+          type="submit" 
+          :disabled="isSubmitting"
+          class="booking-submit booking-animate booking-delay-5 disabled:opacity-50"
+        >
+          <span v-if="isSubmitting">Submitting...</span>
+          <span v-else>Confirm Reservation</span>
         </button>
       </form>
     </div>
@@ -227,5 +297,12 @@ const handleSubmit = () => {
 .booking-btn-reset:hover {
   opacity: 0.9;
   transform: translateY(-1px);
+}
+
+.code-input {
+  text-transform: uppercase;
+  font-family: monospace;
+  font-weight: 700;
+  letter-spacing: 0.05em;
 }
 </style>

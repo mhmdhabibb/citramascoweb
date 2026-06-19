@@ -93,6 +93,9 @@ func (h *offerHandler) GetById(c *gin.Context) {
 func (h *offerHandler) Create(c *gin.Context) {
 	var req dto.CreateOfferRequest
 	if err := c.ShouldBind(&req); err != nil {
+		fmt.Println("=== BINDING ERROR IN CREATE OFFER ===")
+		fmt.Println(err.Error())
+		fmt.Println("=====================================")
 		c.JSON(400, gin.H{"message": "Bad Request", "error": err.Error()})
 		return
 	}
@@ -119,6 +122,9 @@ func (h *offerHandler) Update(c *gin.Context) {
 	id := c.Param("id")
 	var req dto.UpdateOfferRequest
 	if err := c.ShouldBind(&req); err != nil {
+		fmt.Println("=== BINDING ERROR IN UPDATE OFFER ===")
+		fmt.Println(err.Error())
+		fmt.Println("=====================================")
 		c.JSON(400, gin.H{"message": "Error binding JSON", "error": err.Error()})
 		return
 	}

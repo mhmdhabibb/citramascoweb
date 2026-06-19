@@ -29,11 +29,11 @@ type Reservation struct {
 
 	CheckinDate  *dto.CustomDate `json:"checkin_date"`
 	CheckoutDate *dto.CustomDate `json:"checkout_date"`
-	Price        int       `json:"price"`
-	TotalNight   int       `json:"total_night"`
-	TotalPrice   int       `json:"total_price"`
-	IsOffer      *bool     `gorm:"type:boolean;default:false" json:"is_offer"`
-	OfferCode    *string   `gorm:"type:varchar(191)" json:"offer_code"`
+	Price        int             `json:"price"`
+	TotalNight   int             `json:"total_night"`
+	TotalPrice   int             `json:"total_price"`
+	IsOffer      *bool           `gorm:"type:boolean;default:false" json:"is_offer"`
+	OfferCode    *string         `gorm:"type:varchar(191)" json:"offer_code"`
 
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
