@@ -24,7 +24,7 @@ func NewTypeRepository(db *gorm.DB) TypeRepositoryInterface {
 func (r *typeRepository) GetAll() ([]Types, error) {
 	var types []Types
 
-	err := r.db.Find(&types).Error
+	err := r.db.Preload("Rooms").Find(&types).Error
 
 	if err != nil {
 		return nil, err
@@ -36,7 +36,7 @@ func (r *typeRepository) GetAll() ([]Types, error) {
 func (r *typeRepository) GetById(id string) (*Types, error) {
 	var types Types
 
-	err := r.db.First(&types, "id = ?", id).Error
+	err := r.db.Preload("Rooms").First(&types, "id = ?", id).Error
 
 	if err != nil {
 		return nil, err
@@ -59,7 +59,7 @@ func (r *typeRepository) Delete(id string) error {
 
 func (r *typeRepository) Search(query string) ([]Types, error) {
 	var types []Types
-	err := r.db.Where("name LIKE ?", "%"+query+"%").Find(&types).Error
+	err := r.db.Preload("Rooms").Where("name LIKE ?", "%"+query+"%").Find(&types).Error
 	if err != nil {
 		return nil, err
 	}

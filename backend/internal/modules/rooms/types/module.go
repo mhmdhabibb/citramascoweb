@@ -26,7 +26,7 @@ func (m *Module) TypeRoutes(router *gin.RouterGroup) {
 
 	category := router.Group("/type")
 	category.POST("", middlewares.AuthMiddleware(), middlewares.RoleMiddleware("admin"), m.Handler.Store)
-	category.GET("/:id", middlewares.AuthMiddleware(), m.Handler.GetById)
+	category.GET("/:id", m.Handler.GetById)
 	category.PATCH("/:id", middlewares.AuthMiddleware(), middlewares.RoleMiddleware("admin"), m.Handler.Update)
 	category.DELETE("/:id", middlewares.AuthMiddleware(), middlewares.RoleMiddleware("admin"), m.Handler.Delete)
 }
