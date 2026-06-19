@@ -49,21 +49,15 @@ func (s *reservationService) Store(req *dto.CreateReservationRequest) error {
 	}
 
 	// 2. Parse check-in and check-out dates
-	checkinDate, err := time.Parse("2006-01-02", req.CheckInDate)
-	if err != nil {
-		checkinDate, err = time.Parse(time.RFC3339, req.CheckInDate)
-		if err != nil {
-			return fmt.Errorf("invalid check-in date: %v", err)
-		}
+	if req.CheckInDate == nil {
+		return errors.New("check-in date is required")
 	}
+	checkinDate := time.Time(*req.CheckInDate)
 
-	checkoutDate, err := time.Parse("2006-01-02", req.CheckOutDate)
-	if err != nil {
-		checkoutDate, err = time.Parse(time.RFC3339, req.CheckOutDate)
-		if err != nil {
-			return fmt.Errorf("invalid check-out date: %v", err)
-		}
+	if req.CheckOutDate == nil {
+		return errors.New("check-out date is required")
 	}
+	checkoutDate := time.Time(*req.CheckOutDate)
 
 	// 3. Calculate total nights
 	duration := checkoutDate.Sub(checkinDate)
@@ -90,7 +84,32 @@ func (s *reservationService) Store(req *dto.CreateReservationRequest) error {
 	}
 
 	// 4. Calculate total price
-	totalPrice := roomData.Price * totalNight
+	pricePerNight := roomData.Price
+	var offerApplied *string
+	if roomData.IsOffer != nil && *roomData.IsOffer && roomData.OfferCode != nil && *roomData.OfferCode != "" {
+		offerData, err := s.roomRepo.GetOfferByCode(*roomData.OfferCode)
+		if err == nil {
+			// Check expiration (ValidStart & ValidEnd)
+			now := time.Now()
+			if offerData.ValidStart != nil && now.Before(time.Time(*offerData.ValidStart)) {
+				return errors.New("the discount offer associated with this room is not active yet")
+			}
+			if offerData.ValidEnd != nil && now.After(time.Time(*offerData.ValidEnd)) {
+				return errors.New("the discount offer associated with this room has expired")
+			}
+
+			// Check reservation quota (MaxQuota)
+			if offerData.MaxQuota != nil && *offerData.MaxQuota <= 0 {
+				return errors.New("the discount offer for this room has reached its usage limit")
+			}
+
+			if roomData.PriceAfterDiscount != nil {
+				pricePerNight = *roomData.PriceAfterDiscount
+			}
+			offerApplied = roomData.OfferCode
+		}
+	}
+	totalPrice := pricePerNight * totalNight
 
 	// 5. Generate random reservation code
 	code, err := utils.GenerateRandomNumberCode(6)
@@ -104,9 +123,9 @@ func (s *reservationService) Store(req *dto.CreateReservationRequest) error {
 		RoomId:        req.RoomId,
 		FullName:      req.FullName,
 		Email:         req.Email,
-		CheckinDate:   checkinDate,
-		CheckoutDate:  checkoutDate,
-		Price:         roomData.Price,
+		CheckinDate:   req.CheckInDate,
+		CheckoutDate:  req.CheckOutDate,
+		Price:         pricePerNight,
 		TotalNight:    totalNight,
 		TotalPrice:    totalPrice,
 		Status:        ReservationStatusPending,
@@ -118,6 +137,11 @@ func (s *reservationService) Store(req *dto.CreateReservationRequest) error {
 		return err
 	}
 
+	// Decrement offer quota if applied
+	if offerApplied != nil {
+		_ = s.roomRepo.DecrementOfferQuota(*offerApplied)
+	}
+
 	return nil
 }
 
@@ -127,45 +151,67 @@ func (s *reservationService) Update(id string, req *dto.UpdateReservationRequest
 		return err
 	}
 
-	if req.RoomId != "" {
-		reservation.RoomId = req.RoomId
+	if req.RoomId != "" && req.RoomId != reservation.RoomId {
+		// Increment old room offer quota
+		oldRoom, err := s.roomRepo.GetById(reservation.RoomId)
+		if err == nil && oldRoom.IsOffer != nil && *oldRoom.IsOffer && oldRoom.OfferCode != nil && *oldRoom.OfferCode != "" {
+			_ = s.roomRepo.IncrementOfferQuota(*oldRoom.OfferCode)
+		}
+
 		// Recalculate price if room changes
 		roomData, err := s.roomRepo.GetById(req.RoomId)
 		if err != nil {
 			return fmt.Errorf("room not found: %v", err)
 		}
-		reservation.Price = roomData.Price
+		
+		pricePerNight := roomData.Price
+		if roomData.IsOffer != nil && *roomData.IsOffer && roomData.OfferCode != nil && *roomData.OfferCode != "" {
+			offerData, err := s.roomRepo.GetOfferByCode(*roomData.OfferCode)
+			if err == nil {
+				// Check expiration (ValidStart & ValidEnd)
+				now := time.Now()
+				if offerData.ValidStart != nil && now.Before(time.Time(*offerData.ValidStart)) {
+					return errors.New("the discount offer associated with the new room is not active yet")
+				}
+				if offerData.ValidEnd != nil && now.After(time.Time(*offerData.ValidEnd)) {
+					return errors.New("the discount offer associated with the new room has expired")
+				}
+
+				// Check reservation quota (MaxQuota)
+				if offerData.MaxQuota != nil && *offerData.MaxQuota <= 0 {
+					return errors.New("the discount offer for the new room has reached its usage limit")
+				}
+
+				if roomData.PriceAfterDiscount != nil {
+					pricePerNight = *roomData.PriceAfterDiscount
+				}
+
+				// Decrement new room offer quota
+				_ = s.roomRepo.DecrementOfferQuota(*roomData.OfferCode)
+			}
+		}
+		reservation.Price = pricePerNight
+		reservation.RoomId = req.RoomId
 	}
 
 	// Track if dates changed to recalculate total price/nights
 	datesChanged := false
 
-	if req.CheckInDate != "" {
-		checkinDate, err := time.Parse("2006-01-02", req.CheckInDate)
-		if err != nil {
-			checkinDate, err = time.Parse(time.RFC3339, req.CheckInDate)
-			if err != nil {
-				return fmt.Errorf("invalid check-in date: %v", err)
-			}
-		}
-		reservation.CheckinDate = checkinDate
+	if req.CheckInDate != nil {
+		reservation.CheckinDate = req.CheckInDate
 		datesChanged = true
 	}
 
-	if req.CheckOutDate != "" {
-		checkoutDate, err := time.Parse("2006-01-02", req.CheckOutDate)
-		if err != nil {
-			checkoutDate, err = time.Parse(time.RFC3339, req.CheckOutDate)
-			if err != nil {
-				return fmt.Errorf("invalid check-out date: %v", err)
-			}
-		}
-		reservation.CheckoutDate = checkoutDate
+	if req.CheckOutDate != nil {
+		reservation.CheckoutDate = req.CheckOutDate
 		datesChanged = true
 	}
 
 	if datesChanged {
-		duration := reservation.CheckoutDate.Sub(reservation.CheckinDate)
+		if reservation.CheckinDate == nil || reservation.CheckoutDate == nil {
+			return errors.New("check-in and check-out dates are required")
+		}
+		duration := time.Time(*reservation.CheckoutDate).Sub(time.Time(*reservation.CheckinDate))
 		totalNight := int(duration.Hours() / 24)
 		if totalNight <= 0 {
 			return errors.New("check-out date must be after check-in date")
@@ -248,6 +294,11 @@ func (s *reservationService) CancelReservation(id string) error {
 		return err
 	}
 
+	// Increment offer quota back
+	if reservation.Room.IsOffer != nil && *reservation.Room.IsOffer && reservation.Room.OfferCode != nil && *reservation.Room.OfferCode != "" {
+		_ = s.roomRepo.IncrementOfferQuota(*reservation.Room.OfferCode)
+	}
+
 	return nil
 }
 
@@ -271,26 +322,24 @@ func (s *reservationService) RejectReservation(id string) error {
 		return err
 	}
 
+	// Increment offer quota back
+	if reservation.Room.IsOffer != nil && *reservation.Room.IsOffer && reservation.Room.OfferCode != nil && *reservation.Room.OfferCode != "" {
+		_ = s.roomRepo.IncrementOfferQuota(*reservation.Room.OfferCode)
+	}
+
 	return nil
 }
 
 func (s *reservationService) CheckAvailability(req *dto.CheckAvailabilityRequest) (interface{}, error) {
-	// Parse check-in and check-out dates
-	checkinDate, err := time.Parse("2006-01-02", req.CheckInDate)
-	if err != nil {
-		checkinDate, err = time.Parse(time.RFC3339, req.CheckInDate)
-		if err != nil {
-			return nil, fmt.Errorf("invalid check-in date: %v", err)
-		}
+	if req.CheckInDate == nil {
+		return nil, errors.New("check-in date is required")
 	}
+	checkinDate := time.Time(*req.CheckInDate)
 
-	checkoutDate, err := time.Parse("2006-01-02", req.CheckOutDate)
-	if err != nil {
-		checkoutDate, err = time.Parse(time.RFC3339, req.CheckOutDate)
-		if err != nil {
-			return nil, fmt.Errorf("invalid check-out date: %v", err)
-		}
+	if req.CheckOutDate == nil {
+		return nil, errors.New("check-out date is required")
 	}
+	checkoutDate := time.Time(*req.CheckOutDate)
 
 	if checkoutDate.Before(checkinDate) || checkoutDate.Equal(checkinDate) {
 		return nil, errors.New("check-out date must be after check-in date")

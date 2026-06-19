@@ -1,6 +1,10 @@
 package rooms
 
-import "gorm.io/gorm"
+import (
+	"citramascoweb-backend/internal/modules/offer"
+
+	"gorm.io/gorm"
+)
 
 type RoomRepositoryInterface interface {
 	GetAll() ([]Room, error)
@@ -11,6 +15,10 @@ type RoomRepositoryInterface interface {
 	GetLastRoom() (*Room, error)
 	FilerByCategory(categoryId string) ([]Room, error)
 	FilterByType(typeId string) ([]Room, error)
+	GetOfferByCode(code string) (*offer.Offer, error)
+	CountRoomsWithOfferCode(code string, excludeRoomId string) (int64, error)
+	DecrementOfferQuota(code string) error
+	IncrementOfferQuota(code string) error
 }
 
 type roomRepo struct {
@@ -92,4 +100,34 @@ func (r *roomRepo) FilterByType(typeId string) ([]Room, error) {
 	}
 	return rooms, nil
 
+}
+
+func (r *roomRepo) GetOfferByCode(code string) (*offer.Offer, error) {
+	var o offer.Offer
+	err := r.db.Where("code = ?", code).First(&o).Error
+	if err != nil {
+		return nil, err
+	}
+	return &o, nil
+}
+
+func (r *roomRepo) CountRoomsWithOfferCode(code string, excludeRoomId string) (int64, error) {
+	var count int64
+	query := r.db.Model(&Room{}).Where("offer_code = ?", code)
+	if excludeRoomId != "" {
+		query = query.Where("id != ?", excludeRoomId)
+	}
+	err := query.Count(&count).Error
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+func (r *roomRepo) DecrementOfferQuota(code string) error {
+	return r.db.Model(&offer.Offer{}).Where("code = ? AND max_quota IS NOT NULL AND max_quota > 0", code).UpdateColumn("max_quota", gorm.Expr("max_quota - ?", 1)).Error
+}
+
+func (r *roomRepo) IncrementOfferQuota(code string) error {
+	return r.db.Model(&offer.Offer{}).Where("code = ? AND max_quota IS NOT NULL", code).UpdateColumn("max_quota", gorm.Expr("max_quota + ?", 1)).Error
 }

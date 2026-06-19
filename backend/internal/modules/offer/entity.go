@@ -1,6 +1,9 @@
 package offer
 
-import "time"
+import (
+	"citramascoweb-backend/internal/dto"
+	"time"
+)
 
 type OfferStatus string
 
@@ -17,7 +20,11 @@ type Offer struct {
 	Status      OfferStatus `gorm:"default:'draft'"`
 	Price       *int        `json:"price"`
 	Discount    *int        `json:"discount"`
+	Code        string      `json:"code"`
 	Discounted  *int        `json:"discounteed"`
+	ValidStart  *dto.CustomDate `json:"valid_start"`
+	ValidEnd    *dto.CustomDate `json:"valid_end"`
+	MaxQuota    *int        `json:"max_quota"`
 	Description *string     `json:"description"`
 	CreatedAt   time.Time   `json:"created_at"`
 	UpdatedAt   time.Time   `json:"updated_at"`

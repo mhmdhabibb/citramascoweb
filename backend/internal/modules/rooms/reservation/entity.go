@@ -1,6 +1,7 @@
 package reservation
 
 import (
+	"citramascoweb-backend/internal/dto"
 	"citramascoweb-backend/internal/modules/rooms"
 	"time"
 )
@@ -26,8 +27,8 @@ type Reservation struct {
 	Status        ReservationStatus `gorm:"type:varchar(191);default:'pending'" json:"status"`
 	NumberOfGuest int               `json:"number_of_guest"`
 
-	CheckinDate  time.Time `json:"checkin_date"`
-	CheckoutDate time.Time `json:"checkout_date"`
+	CheckinDate  *dto.CustomDate `json:"checkin_date"`
+	CheckoutDate *dto.CustomDate `json:"checkout_date"`
 	Price        int       `json:"price"`
 	TotalNight   int       `json:"total_night"`
 	TotalPrice   int       `json:"total_price"`
