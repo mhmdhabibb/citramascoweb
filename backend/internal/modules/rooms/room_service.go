@@ -127,10 +127,10 @@ func (s *roomService) calculateOfferDiscount(isOffer *bool, offerCode *string, p
 
 	// Check ValidStart and ValidEnd ranges
 	now := time.Now()
-	if offerData.ValidStart != nil && now.Before(*offerData.ValidStart) {
+	if offerData.ValidStart != nil && now.Before(time.Time(*offerData.ValidStart)) {
 		return nil, nil, nil, errors.New("Offer code is not active yet!")
 	}
-	if offerData.ValidEnd != nil && now.After(*offerData.ValidEnd) {
+	if offerData.ValidEnd != nil && now.After(time.Time(*offerData.ValidEnd)) {
 		return nil, nil, nil, errors.New("Offer code has expired!")
 	}
 

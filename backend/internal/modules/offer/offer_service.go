@@ -110,6 +110,7 @@ func (s *offerService) Update(id string, req *dto.UpdateOfferRequest) error {
 	offer.ValidStart = req.ValidStart
 	offer.ValidEnd = req.ValidEnd
 	offer.MaxQuota = req.MaxQuota
+	offer.Code = req.Code
 
 	if offer.Price != nil {
 		priceVal := *offer.Price
