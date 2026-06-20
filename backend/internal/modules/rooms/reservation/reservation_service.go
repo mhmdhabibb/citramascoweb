@@ -164,6 +164,10 @@ func (s *reservationService) Store(req *dto.CreateReservationRequest) error {
 		_ = s.roomRepo.DecrementOfferQuota(*offerApplied)
 	}
 
+	// Send confirmation email
+	newReservation.Room = *roomData
+	s.sendReservationEmail(newReservation, "Booking Confirmation - Citramasco Hotel", "Your booking has been successfully created and is currently awaiting approval.")
+
 	return nil
 }
 
@@ -282,8 +286,14 @@ func (s *reservationService) Update(id string, req *dto.UpdateReservationRequest
 
 	reservation.TotalPrice = totalPrice
 
+	statusChanged := false
+	var oldStatus ReservationStatus
 	if req.Status != "" {
-		reservation.Status = ReservationStatus(req.Status)
+		oldStatus = reservation.Status
+		if ReservationStatus(req.Status) != oldStatus {
+			reservation.Status = ReservationStatus(req.Status)
+			statusChanged = true
+		}
 	}
 
 	if req.NumberOfGuest != 0 {
@@ -293,6 +303,27 @@ func (s *reservationService) Update(id string, req *dto.UpdateReservationRequest
 	err = s.reservationRepo.Update(reservation, id)
 	if err != nil {
 		return err
+	}
+
+	if statusChanged {
+		var subject string
+		var message string
+
+		switch reservation.Status {
+		case ReservationStatusApproved:
+			subject = "Booking Approved - Citramasco Hotel"
+			message = "Congratulations! Your booking has been approved. We look forward to your arrival."
+		case ReservationStatusCancel:
+			subject = "Booking Cancelled - Citramasco Hotel"
+			message = "Your booking has been successfully cancelled."
+		case ReservationStatusRejected:
+			subject = "Booking Rejected - Citramasco Hotel"
+			message = "We regret to inform you that your booking has been rejected."
+		}
+
+		if message != "" {
+			s.sendReservationEmail(reservation, subject, message)
+		}
 	}
 
 	return nil
@@ -329,6 +360,8 @@ func (s *reservationService) ApproveReservation(id string) error {
 		return err
 	}
 
+	s.sendReservationEmail(reservation, "Booking Approved - Citramasco Hotel", "Congratulations! Your booking has been approved. We look forward to your arrival.")
+
 	return nil
 }
 
@@ -359,6 +392,8 @@ func (s *reservationService) CancelReservation(id string) error {
 		_ = s.roomRepo.IncrementOfferQuota(*reservation.OfferCode)
 	}
 
+	s.sendReservationEmail(reservation, "Booking Cancelled - Citramasco Hotel", "Your booking has been successfully cancelled.")
+
 	return nil
 }
 
@@ -386,6 +421,8 @@ func (s *reservationService) RejectReservation(id string) error {
 	if reservation.IsOffer != nil && *reservation.IsOffer && reservation.OfferCode != nil && *reservation.OfferCode != "" {
 		_ = s.roomRepo.IncrementOfferQuota(*reservation.OfferCode)
 	}
+
+	s.sendReservationEmail(reservation, "Booking Rejected - Citramasco Hotel", "We regret to inform you that your booking has been rejected.")
 
 	return nil
 }
@@ -457,4 +494,138 @@ func (s *reservationService) CheckAvailability(req *dto.CheckAvailabilityRequest
 	}
 
 	return allRooms, nil
+}
+
+func (s *reservationService) sendReservationEmail(r *Reservation, subject, message string) {
+	go func() {
+		var roomName string = "Kamar"
+		if r.Room.Name != "" {
+			roomName = r.Room.Name
+		} else {
+			room, err := s.roomRepo.GetById(r.RoomId)
+			if err == nil && room != nil {
+				roomName = room.Name
+			}
+		}
+
+		htmlContent := fmt.Sprintf(`
+			<table cellpadding="0" cellspacing="0" width="100%%" style="font-family: 'Plus Jakarta Sans', 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f7f5f0; padding: 40px 20px;">
+				<tr>
+					<td align="center">
+						<table cellpadding="0" cellspacing="0" width="100%%" style="max-width: 600px; background-color: #ffffff; border-radius: 16px; box-shadow: 0 8px 30px rgba(28, 22, 18, 0.06); overflow: hidden; border: 1px solid #ebdccb;">
+							<!-- Header Banner -->
+							<tr>
+								<td align="center" style="background: linear-gradient(135deg, #1e1713 0%%, #3e332c 100%%); padding: 40px 30px; border-bottom: 3px solid #bfa280;">
+									<h1 style="color: #ffffff; font-family: 'Playfair Display', Georgia, serif; font-size: 28px; font-weight: 600; letter-spacing: 2px; margin: 0 0 5px 0; text-transform: uppercase;">Citramasco Hotel</h1>
+									<p style="color: #bfa280; font-size: 13px; font-weight: 500; letter-spacing: 3px; margin: 0; text-transform: uppercase;">Luxury & Comfort Await</p>
+								</td>
+							</tr>
+
+							<!-- Content Area -->
+							<tr>
+								<td style="padding: 40px 35px 30px 35px;">
+									<h2 style="color: #1e1713; font-size: 20px; font-weight: 600; margin-top: 0; margin-bottom: 15px;">Hello %s,</h2>
+									<p style="color: #5c544e; font-size: 15px; line-height: 1.6; margin-bottom: 30px;">%s</p>
+
+									<!-- Info Card Container -->
+									<table cellpadding="0" cellspacing="0" width="100%%" style="background-color: #faf8f5; border: 1px solid #ebdccb; border-radius: 12px; padding: 25px; margin-bottom: 30px;">
+										<!-- Booking Code Row -->
+										<tr>
+											<td align="center" style="border-bottom: 1px dashed #ebdccb; padding-bottom: 15px; margin-bottom: 15px;">
+												<span style="color: #8c7355; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; display: block; margin-bottom: 5px;">Booking Code</span>
+												<strong style="color: #1e1713; font-size: 24px; font-weight: 700; letter-spacing: 1px;">%s</strong>
+											</td>
+										</tr>
+										
+										<!-- Spacing -->
+										<tr><td height="15"></td></tr>
+
+										<!-- Details Table -->
+										<tr>
+											<td>
+												<table cellpadding="0" cellspacing="0" width="100%%">
+													<!-- Guest Name -->
+													<tr>
+														<td align="left" style="color: #8c837a; font-size: 14px; font-weight: 500; padding: 6px 0;">Guest Name</td>
+														<td align="right" style="color: #1e1713; font-size: 14px; font-weight: 600; padding: 6px 0;">%s</td>
+													</tr>
+													<!-- Guest Email -->
+													<tr>
+														<td align="left" style="color: #8c837a; font-size: 14px; font-weight: 500; padding: 6px 0;">Guest Email</td>
+														<td align="right" style="color: #1e1713; font-size: 14px; font-weight: 600; padding: 6px 0;">%s</td>
+													</tr>
+													<!-- Room Type -->
+													<tr>
+														<td align="left" style="color: #8c837a; font-size: 14px; font-weight: 500; padding: 6px 0;">Room Type</td>
+														<td align="right" style="color: #1e1713; font-size: 14px; font-weight: 600; padding: 6px 0;">%s</td>
+													</tr>
+													<!-- Check-In -->
+													<tr>
+														<td align="left" style="color: #8c837a; font-size: 14px; font-weight: 500; padding: 6px 0;">Check-In Date</td>
+														<td align="right" style="color: #1e1713; font-size: 14px; font-weight: 600; padding: 6px 0;">%s</td>
+													</tr>
+													<!-- Check-Out -->
+													<tr>
+														<td align="left" style="color: #8c837a; font-size: 14px; font-weight: 500; padding: 6px 0;">Check-Out Date</td>
+														<td align="right" style="color: #1e1713; font-size: 14px; font-weight: 600; padding: 6px 0;">%s</td>
+													</tr>
+													<!-- Number of Guests -->
+													<tr>
+														<td align="left" style="color: #8c837a; font-size: 14px; font-weight: 500; padding: 6px 0;">Guests</td>
+														<td align="right" style="color: #1e1713; font-size: 14px; font-weight: 600; padding: 6px 0;">%d Guest(s)</td>
+													</tr>
+													<!-- Duration of Stay -->
+													<tr>
+														<td align="left" style="color: #8c837a; font-size: 14px; font-weight: 500; padding: 6px 0;">Duration of Stay</td>
+														<td align="right" style="color: #1e1713; font-size: 14px; font-weight: 600; padding: 6px 0;">%d Night(s)</td>
+													</tr>
+												</table>
+											</td>
+										</tr>
+
+										<!-- Spacing -->
+										<tr><td height="15"></td></tr>
+
+										<!-- Total Price -->
+										<tr>
+											<td style="border-top: 1px dashed #ebdccb; padding-top: 15px;">
+												<table cellpadding="0" cellspacing="0" width="100%%">
+													<tr>
+														<td align="left" style="color: #1e1713; font-size: 16px; font-weight: 700;">Total Price</td>
+														<td align="right" style="color: #bfa280; font-size: 20px; font-weight: 700;">Rp %s</td>
+													</tr>
+												</table>
+											</td>
+										</tr>
+									</table>
+
+									<!-- Decorative Quote -->
+									<table cellpadding="0" cellspacing="0" width="100%%" style="text-align: center; margin-top: 35px;">
+										<tr>
+											<td style="color: #8c837a; font-size: 13px; line-height: 1.5; font-style: italic;">
+												"A true sanctuary of comfort and elegance, designed for your ultimate peace of mind."
+											</td>
+										</tr>
+									</table>
+								</td>
+							</tr>
+
+							<!-- Footer -->
+							<tr>
+								<td align="center" style="background-color: #1e1713; padding: 25px 30px; border-top: 1px solid #2e2621;">
+									<p style="color: #a89f97; font-size: 11px; margin: 0 0 8px 0;">© 2026 Citramasco Hotel. All rights reserved.</p>
+									<p style="color: #8c837a; font-size: 10px; margin: 0;">If you have any questions, please contact our customer support.</p>
+								</td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+			</table>
+		`, r.FullName, message, r.Code, r.FullName, r.Email, roomName,
+			time.Time(*r.CheckinDate).Format("02-01-2006"),
+			time.Time(*r.CheckoutDate).Format("02-01-2006"),
+			r.NumberOfGuest, r.TotalNight, utils.FormatDotSeparator(r.TotalPrice))
+
+		_ = utils.SendEmail(r.Email, subject, htmlContent)
+	}()
 }
