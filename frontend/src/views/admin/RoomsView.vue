@@ -100,10 +100,6 @@ const closeModal = () => {
 }
 
 const saveRoom = async () => {
-  if (!form.value.name.trim()) {
-    toastStore.warning("Mohon masukkan nama kamar.")
-    return
-  }
   if (!form.value.category_id) {
     toastStore.warning("Mohon pilih kategori kamar.")
     return
@@ -113,10 +109,20 @@ const saveRoom = async () => {
     return
   }
 
+  // Set room name to category name automatically
+  const selectedCategory = roomCategories.value.find(c => c.id === form.value.category_id)
+  const roomName = selectedCategory ? selectedCategory.name : ''
+  form.value.name = roomName
+
+  if (!roomName.trim()) {
+    toastStore.warning("Mohon pilih kategori kamar.")
+    return
+  }
+
   try {
     loading.value = true
     const formData = new FormData()
-    formData.append('name', form.value.name.trim())
+    formData.append('name', roomName.trim())
     formData.append('category_id', form.value.category_id)
     formData.append('type_id', form.value.type_id)
     formData.append('price', String(form.value.price))
@@ -246,6 +252,7 @@ onMounted(async () => {
               <th>Type</th>
               <th>Price/Night</th>
               <th>Image</th>
+              <th>Description</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -264,6 +271,7 @@ onMounted(async () => {
                 />
                 <span v-else class="text-muted">No Image</span>
               </td>
+                           <td>{{ room.description }}</td>
               <td>
                 <div class="action-buttons">
                   <button 
@@ -276,6 +284,8 @@ onMounted(async () => {
                   >Delete</button>
                 </div>
               </td>
+
+      
             </tr>
             <tr v-if="filteredRooms.length === 0">
               <td colspan="7" class="no-data">No rooms found.</td>
@@ -294,13 +304,10 @@ onMounted(async () => {
         </div>
         <div class="modal-body">
           <div class="form-group">
-            <label class="form-label">Room Name</label>
-            <input 
-              v-model="form.name" 
-              type="text" 
-              placeholder="e.g. Deluxe Room #104" 
-              class="form-input"
-            />
+            <label class="form-label">Room Category</label>
+            <select v-model="form.category_id" class="form-select">
+              <option v-for="category in roomCategories" :key="category.id" :value="category.id">{{ category.name }}</option>
+            </select>
           </div>
           <div class="form-group">
             <label class="form-label">Room Type</label>
