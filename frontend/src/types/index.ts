@@ -79,7 +79,7 @@ export interface Offer {
   id: string
   title: string
   image: string
-  status: 'active' | 'archieved' | 'draft'
+  status: string
   price?: number | null
   discount?: number | null
   code: string

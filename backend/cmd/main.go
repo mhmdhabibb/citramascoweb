@@ -23,6 +23,9 @@ func main() {
 
 	db := config.ConnectDB()
 
+	// Auto migrate entities
+	db.AutoMigrate(&offer.Offer{})
+
 	corsConfig := cors.Config{
 		AllowOrigins:     []string{"*"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},

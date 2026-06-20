@@ -65,7 +65,7 @@ func (r *offerRepository) Update(id string, offer *Offer) error {
 }
 
 func (r *offerRepository) Delete(id string) error {
-	err := r.db.Where("id = ?").Delete(&Offer{}).Error
+	err := r.db.Where("id = ?", id).Delete(&Offer{}).Error
 	if err != nil {
 		return err
 	}
