@@ -18,7 +18,8 @@ const editingId = ref('')
 const imageFile = ref(null)
 
 const form = ref({
-  name: '',
+  title: '',
+  subtitle:'',
   code: '',
   type: 'Percentage',
   value: 10,
@@ -64,6 +65,7 @@ const loadPromotions = async () => {
   try {
     loading.value = true
     await offerStore.fetchAdminOffers()
+    console.log(offerStore.offers)
     promotions.value = offerStore.offers
   } catch (error) {
     console.error('Failed to load offers:', error)
@@ -94,7 +96,8 @@ const openCreateModal = () => {
   editingId.value = ''
   imageFile.value = null
   form.value = {
-    name: '',
+    title: '',
+    subtitle: '',
     code: '',
     type: 'Percentage',
     value: 10,
@@ -124,13 +127,14 @@ const openEditModal = (item) => {
   }
 
   form.value = {
-    name: item.title || '',
+    title: item.title || '',
+    subtitle: item.subtitle || '',
     code: item.code || '',
     type: discType,
     value: discValue,
     startDate: formatDateToInput(item.valid_start),
     endDate: formatDateToInput(item.valid_end),
-    status: item.status === 'active' ? 'Active' : 'Expired',
+    status: item.status,
     max_quota: item.max_quota || 0,
     description: item.description || '',
     image: item.image || ''
@@ -150,7 +154,7 @@ const handleImageUpload = (event) => {
 }
 
 const savePromotion = async () => {
-  if (!form.value.name.trim()) {
+  if (!form.value.title.trim()) {
     toastStore.warning("Mohon masukkan nama promosi.")
     return
   }
@@ -162,7 +166,8 @@ const savePromotion = async () => {
   try {
     loading.value = true
     const formData = new FormData()
-    formData.append('title', form.value.name.trim())
+    formData.append('title', form.value.title.trim())
+    formData.append('subtitle', form.value.subtitle.trim())
     formData.append('code', form.value.code.trim().toUpperCase())
     
     // Fixed amount vs percentage mapping
@@ -184,9 +189,9 @@ const savePromotion = async () => {
     formData.append('max_quota', String(form.value.max_quota))
     formData.append('description', form.value.description)
     
-    // Status mapping
-    const apiStatus = form.value.status === 'Active' ? 'active' : 'archieved'
-    formData.append('status', apiStatus)
+    if (form.value.status) {
+      formData.append('status', form.value.status)
+    }
 
     if (imageFile.value) {
       formData.append('image', imageFile.value)
@@ -306,10 +311,8 @@ const deletePromotion = async (id) => {
               <td>{{ p.valid_end || 'Ongoing' }}</td>
               <td>{{ p.max_quota !== null && p.max_quota !== undefined ? p.max_quota : 'Unlimited' }}</td>
               <td>
-                <span class="badge" :class="{
-                  'badge-success': p.status === 'active',
-                  'badge-danger': p.status !== 'active'
-                }">{{ p.status === 'active' ? 'Active' : 'Expired/Draft' }}</span>
+                <span
+                >{{ p.status  }}</span>
               </td>
               <td>
                 <div class="action-buttons">
@@ -341,9 +344,18 @@ const deletePromotion = async (id) => {
         </div>
         <div class="modal-body">
           <div class="form-group">
-            <label class="form-label">Promotion Name</label>
+            <label class="form-label">Promotion Title</label>
             <input 
-              v-model="form.name" 
+              v-model="form.title" 
+              type="text" 
+              placeholder="e.g. Summer Special Deal" 
+              class="form-input"
+            />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Promotion Sub Title</label>
+            <input 
+              v-model="form.subtitle" 
               type="text" 
               placeholder="e.g. Summer Special Deal" 
               class="form-input"
@@ -398,6 +410,18 @@ const deletePromotion = async (id) => {
                 class="form-input"
               />
             </div>
+           
+          </div>
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label class="form-label">Status</label>
+              <select name="" id="" v-model="form.status" class="form-input">
+                 <option value="">Select Status</option>
+                 <option value="draft">Draft</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </div>  
            
           </div>
           <div class="form-group">

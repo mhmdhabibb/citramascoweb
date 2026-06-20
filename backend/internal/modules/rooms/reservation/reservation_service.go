@@ -49,15 +49,23 @@ func (s *reservationService) Store(req *dto.CreateReservationRequest) error {
 	}
 
 	// 2. Parse check-in and check-out dates
-	if req.CheckInDate == nil {
+	if req.CheckInDate == "" {
 		return errors.New("check-in date is required")
 	}
-	checkinDate := time.Time(*req.CheckInDate)
+	checkinCustom, err := dto.ParseCustomDate(req.CheckInDate)
+	if err != nil || checkinCustom == nil {
+		return errors.New("invalid check-in date format")
+	}
+	checkinDate := time.Time(*checkinCustom)
 
-	if req.CheckOutDate == nil {
+	if req.CheckOutDate == "" {
 		return errors.New("check-out date is required")
 	}
-	checkoutDate := time.Time(*req.CheckOutDate)
+	checkoutCustom, err := dto.ParseCustomDate(req.CheckOutDate)
+	if err != nil || checkoutCustom == nil {
+		return errors.New("invalid check-out date format")
+	}
+	checkoutDate := time.Time(*checkoutCustom)
 
 	// 3. Calculate total nights
 	duration := checkoutDate.Sub(checkinDate)
@@ -135,8 +143,8 @@ func (s *reservationService) Store(req *dto.CreateReservationRequest) error {
 		RoomId:        req.RoomId,
 		FullName:      req.FullName,
 		Email:         req.Email,
-		CheckinDate:   req.CheckInDate,
-		CheckoutDate:  req.CheckOutDate,
+		CheckinDate:   checkinCustom,
+		CheckoutDate:  checkoutCustom,
 		Price:         pricePerNight,
 		TotalNight:    totalNight,
 		TotalPrice:    totalPrice,
@@ -179,13 +187,21 @@ func (s *reservationService) Update(id string, req *dto.UpdateReservationRequest
 	// Track if dates changed to recalculate total price/nights
 	datesChanged := false
 
-	if req.CheckInDate != nil {
-		reservation.CheckinDate = req.CheckInDate
+	if req.CheckInDate != "" {
+		checkinCustom, err := dto.ParseCustomDate(req.CheckInDate)
+		if err != nil {
+			return errors.New("invalid check-in date format")
+		}
+		reservation.CheckinDate = checkinCustom
 		datesChanged = true
 	}
 
-	if req.CheckOutDate != nil {
-		reservation.CheckoutDate = req.CheckOutDate
+	if req.CheckOutDate != "" {
+		checkoutCustom, err := dto.ParseCustomDate(req.CheckOutDate)
+		if err != nil {
+			return errors.New("invalid check-out date format")
+		}
+		reservation.CheckoutDate = checkoutCustom
 		datesChanged = true
 	}
 
@@ -375,15 +391,23 @@ func (s *reservationService) RejectReservation(id string) error {
 }
 
 func (s *reservationService) CheckAvailability(req *dto.CheckAvailabilityRequest) (interface{}, error) {
-	if req.CheckInDate == nil {
+	if req.CheckInDate == "" {
 		return nil, errors.New("check-in date is required")
 	}
-	checkinDate := time.Time(*req.CheckInDate)
+	checkinCustom, err := dto.ParseCustomDate(req.CheckInDate)
+	if err != nil || checkinCustom == nil {
+		return nil, errors.New("invalid check-in date format")
+	}
+	checkinDate := time.Time(*checkinCustom)
 
-	if req.CheckOutDate == nil {
+	if req.CheckOutDate == "" {
 		return nil, errors.New("check-out date is required")
 	}
-	checkoutDate := time.Time(*req.CheckOutDate)
+	checkoutCustom, err := dto.ParseCustomDate(req.CheckOutDate)
+	if err != nil || checkoutCustom == nil {
+		return nil, errors.New("invalid check-out date format")
+	}
+	checkoutDate := time.Time(*checkoutCustom)
 
 	if checkoutDate.Before(checkinDate) || checkoutDate.Equal(checkinDate) {
 		return nil, errors.New("check-out date must be after check-in date")

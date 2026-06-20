@@ -70,23 +70,45 @@ func (s *offerService) Create(req *dto.CreateOfferRequest) error {
 		discounted = &calculated
 	}
 
+	validStart, err := dto.ParseCustomDate(req.ValidStart)
+	if err != nil {
+		return errors.New("Invalid valid_start date format")
+	}
+
+	validEnd, err := dto.ParseCustomDate(req.ValidEnd)
+	if err != nil {
+		return errors.New("Invalid valid_end date format")
+	}
+
+	statusVal := OfferStatusDraft
+	if req.Status != nil && *req.Status != "" {
+		statusVal = OfferStatus(*req.Status)
+	}
+
+	var subtitle string
+	if req.SubTitle != nil {
+		subtitle = *req.SubTitle
+	}
+
 	offer := &Offer{
 		Id:          uuid.New().String(),
 		Title:       req.Title,
+		SubTitle:    subtitle,
 		Price:       req.Price,
 		Discount:    req.Discount,
 		Code:        req.Code,
-		ValidStart:  req.ValidStart,
-		ValidEnd:    req.ValidEnd,
+		ValidStart:  validStart,
+		ValidEnd:    validEnd,
 		MaxQuota:    req.MaxQuota,
 		Description: req.Description,
 		Discounted:  discounted,
 		Image:       image,
+		Status:      statusVal,
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}
 
-	err := s.repo.Create(offer)
+	err = s.repo.Create(offer)
 
 	if err != nil {
 		return errors.New("Error when inserting the offer data")
@@ -103,12 +125,25 @@ func (s *offerService) Update(id string, req *dto.UpdateOfferRequest) error {
 		return errors.New("Offer Not Found!")
 	}
 
+	validStart, err := dto.ParseCustomDate(req.ValidStart)
+	if err != nil {
+		return errors.New("Invalid valid_start date format")
+	}
+
+	validEnd, err := dto.ParseCustomDate(req.ValidEnd)
+	if err != nil {
+		return errors.New("Invalid valid_end date format")
+	}
+
 	offer.Title = req.Title
 	offer.Discount = req.Discount
+	if req.SubTitle != nil {
+		offer.SubTitle = *req.SubTitle
+	}
 	offer.Price = req.Price
 	offer.Description = req.Description
-	offer.ValidStart = req.ValidStart
-	offer.ValidEnd = req.ValidEnd
+	offer.ValidStart = validStart
+	offer.ValidEnd = validEnd
 	offer.MaxQuota = req.MaxQuota
 	offer.Code = req.Code
 
