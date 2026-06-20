@@ -5,7 +5,7 @@ const { elementRef: headerRef, isVisible: headerVisible } = useScrollReveal(0.2)
 const { elementRef: cardsRef, isVisible: cardsVisible } = useScrollReveal(0.1)
 
 const offers = [
-  {
+  { 
     id: 1,
     category: 'RENEWAL',
     title: 'Spa Rituals',
