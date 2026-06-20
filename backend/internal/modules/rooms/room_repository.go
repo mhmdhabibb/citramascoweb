@@ -2,6 +2,8 @@ package rooms
 
 import (
 	"citramascoweb-backend/internal/modules/offer"
+	"strings"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -15,6 +17,7 @@ type RoomRepositoryInterface interface {
 	GetLastRoom() (*Room, error)
 	FilerByCategory(categoryId string) ([]Room, error)
 	FilterByType(typeId string) ([]Room, error)
+	Filter(status, availabilityStatus string, checkinDate, checkoutDate time.Time) ([]Room, error)
 	GetOfferByCode(code string) (*offer.Offer, error)
 	CountRoomsWithOfferCode(code string, excludeRoomId string) (int64, error)
 	DecrementOfferQuota(code string) error
@@ -99,6 +102,93 @@ func (r *roomRepo) FilterByType(typeId string) ([]Room, error) {
 		return nil, err
 	}
 	return rooms, nil
+
+}
+
+func (r *roomRepo) Filter(status, availabilityStatus string, checkinDate, checkoutDate time.Time) ([]Room, error) {
+
+	var rooms []Room
+
+	// Fetch all rooms
+	err := r.db.Preload("Type").Preload("Category").Find(&rooms).Error
+	if err != nil {
+		return nil, err
+	}
+
+	// Default date range if not specified
+	if checkinDate.IsZero() {
+		checkinDate = time.Now()
+	}
+	if checkoutDate.IsZero() {
+		checkoutDate = checkinDate.Add(24 * time.Hour)
+	}
+
+	// Query available room IDs for the period
+	var availableRooms []Room
+	subQuery := r.db.Table("reservations").
+		Select("room_id").
+		Where("room_id IS NOT NULL AND room_id != ''").
+		Where("checkin_date < ? AND checkout_date > ? AND status IN ?",
+			checkoutDate,
+			checkinDate,
+			[]string{"pending", "approved", "checked-in"},
+		)
+
+	// Fetch all rooms not in overlapping reservations
+	err = r.db.Select("id").Table("rooms").Where("id NOT IN (?)", subQuery).Find(&availableRooms).Error
+	if err != nil {
+		return nil, err
+	}
+
+	availableMap := make(map[string]bool)
+	for _, room := range availableRooms {
+		availableMap[room.Id] = true
+	}
+
+	// Populate virtual fields: Status and AvailabilityStatus
+	for i := range rooms {
+		if availableMap[rooms[i].Id] {
+			rooms[i].Status = "tersedia"
+			rooms[i].AvailabilityStatus = "tersedia"
+		} else {
+			rooms[i].Status = "tidak tersedia"
+			rooms[i].AvailabilityStatus = "tidak tersedia"
+		}
+	}
+
+	// Helper helper match function to handle various status naming conventions
+	isStatusMatch := func(roomVal, queryVal string) bool {
+		q := strings.ToLower(queryVal)
+		rv := strings.ToLower(roomVal)
+
+		if q == "available" || q == "tersedia" {
+			return rv == "tersedia" || rv == "available"
+		}
+		if q == "occupied" || q == "tidak tersedia" || q == "tidak_tersedia" {
+			return rv == "tidak tersedia" || rv == "tidak_tersedia" || rv == "occupied"
+		}
+		return rv == q
+	}
+
+	// Perform in-memory filtering if filter params are set
+	var filteredRooms []Room
+	for _, room := range rooms {
+		matchesStatus := true
+		matchesAvailability := true
+
+		if status != "" {
+			matchesStatus = isStatusMatch(room.Status, status)
+		}
+		if availabilityStatus != "" {
+			matchesAvailability = isStatusMatch(room.AvailabilityStatus, availabilityStatus)
+		}
+
+		if matchesStatus && matchesAvailability {
+			filteredRooms = append(filteredRooms, room)
+		}
+	}
+
+	return filteredRooms, nil
 
 }
 
