@@ -335,7 +335,7 @@ onMounted(async () => {
             />
           </div>
           <div class="form-group">
-            <label class="form-label">Room Size (sqm)</label>
+            <label class="form-label">Room Size (sq2)</label>
             <input 
               v-model.number="form.size" 
               type="number" 
