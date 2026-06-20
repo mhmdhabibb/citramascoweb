@@ -159,3 +159,35 @@ func (h *roomHandler) FilterByType(c *gin.Context) {
 	}
 	c.JSON(200, gin.H{"success": true, "message": "Room filtered by type successfully", "data": rooms})
 }
+
+func (h *roomHandler) Filter(c *gin.Context) {
+	status := c.Query("status")
+	availabilityStatus := c.Query("availability_status")
+	checkinStr := c.Query("check_in_date")
+	checkoutStr := c.Query("check_out_date")
+
+	var checkinDate, checkoutDate time.Time
+	var err error
+
+	if checkinStr != "" {
+		checkinDate, err = time.Parse("02-01-2006", checkinStr)
+		if err != nil {
+			checkinDate, err = time.Parse(time.RFC3339, checkinStr)
+		}
+	}
+	if checkoutStr != "" {
+		checkoutDate, err = time.Parse("02-01-2006", checkoutStr)
+		if err != nil {
+			checkoutDate, err = time.Parse(time.RFC3339, checkoutStr)
+		}
+	}
+
+	rooms, err := h.roomService.Filter(status, availabilityStatus, checkinDate, checkoutDate)
+
+	if err != nil {
+		c.JSON(400, gin.H{"success": false, "message": "Failed to Filter Rooms", "error": err.Error()})
+		return
+	}
+
+	c.JSON(200, gin.H{"success": true, "message": "Rooms filtered successfully", "data": rooms})
+}

@@ -75,7 +75,6 @@ const openCreateModal = () => {
     capacity: 2,
     size: 30,
     description: '',
-    status: 'Available'
   }
   isModalOpen.value = true
 }
@@ -92,7 +91,6 @@ const openEditModal = (item) => {
     capacity: item.capacity || 2,
     size: item.size || 30,
     description: item.description || '',
-    status: item.status || 'Available'
   }
   isModalOpen.value = true
 }
@@ -230,14 +228,14 @@ onMounted(async () => {
           class="search-input"
         />
       </div>
-      <div class="filter-box">
+      <!-- <div class="filter-box">
         <select v-model="statusFilter" class="filter-select">
           <option value="All">All Statuses</option>
           <option value="Available">Available</option>
           <option value="Occupied">Occupied</option>
           <option value="Maintenance">Maintenance</option>
         </select>
-      </div>
+      </div> -->
       <button @click="openCreateModal" class="btn btn-primary add-btn">
         + Add Room
       </button>
@@ -363,12 +361,12 @@ onMounted(async () => {
               accept="image/*"
             />
           </div>
-          <div class="form-group">
+          <!-- <div class="form-group">
             <label class="form-label">Status</label>
             <select v-model="form.status" class="form-select">
               <option v-for="stat in roomStatusesOptions" :key="stat" :value="stat">{{ stat }}</option>
             </select>
-          </div>
+          </div> -->
         </div>
         <div class="modal-footer">
           <button @click="closeModal" class="btn btn-secondary">Cancel</button>

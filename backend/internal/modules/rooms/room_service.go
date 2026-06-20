@@ -155,3 +155,12 @@ func (s *roomService) FilterByType(typeId string) ([]Room, error) {
 	}
 	return rooms, nil
 }
+
+func (s *roomService) Filter(status, availabilityStatus string, checkinDate, checkoutDate time.Time) ([]Room, error) {
+	rooms, err := s.roomRepo.Filter(status, availabilityStatus, checkinDate, checkoutDate)
+	if err != nil {
+		return nil, err
+	}
+
+	return rooms, nil
+}
