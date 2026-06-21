@@ -4,6 +4,9 @@ import (
 	"citramascoweb-backend/internal/dto"
 	"citramascoweb-backend/pkg/utils"
 	"errors"
+	"fmt"
+	"log"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -163,4 +166,32 @@ func (s *roomService) Filter(status, availabilityStatus string, checkinDate, che
 	}
 
 	return rooms, nil
+}
+
+func (s *roomService) UpdateStatus(id string, statusStr string) error {
+	log.Printf("[DEBUG][ROOM-SERVICE] Memproses request perubahan status kamar ID: %s, Payload: '%s'", id, statusStr)
+
+	// Konversi string input menjadi tipe typed-enum RoomStatus
+	var targetStatus RoomStatus
+	switch strings.ToLower(statusStr) {
+	case "active", "available":
+		targetStatus = RoomStatusActive
+	case "maintenance":
+		targetStatus = RoomStatusMaintenance
+	case "dirty":
+		targetStatus = RoomStatusDirty
+	default:
+		log.Printf("[WARN][ROOM-SERVICE] Payload status tidak dikenal: '%s'", statusStr)
+		return fmt.Errorf("status fisik kamar '%s' tidak valid", statusStr)
+	}
+
+	// Ambil data kamar terlebih dahulu untuk memastikan unitnya eksis
+	room, err := s.roomRepo.GetById(id)
+	if err != nil {
+		log.Printf("[ERROR][ROOM-SERVICE] Kamar dengan ID %s tidak ditemukan di sistem", id)
+		return fmt.Errorf("unit kamar tidak ditemukan: %v", err)
+	}
+
+	log.Printf("[DEBUG][ROOM-SERVICE] Kamar '%s' ditemukan. Mengubah status lama '%s' -> '%s'", room.Code, room.Status, targetStatus)
+	return s.roomRepo.UpdateStatus(id, targetStatus)
 }

@@ -3,6 +3,7 @@ package rooms
 import (
 	"citramascoweb-backend/internal/dto"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"time"
@@ -190,4 +191,43 @@ func (h *roomHandler) Filter(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{"success": true, "message": "Rooms filtered successfully", "data": rooms})
+}
+
+// Buat struct DTO lokal ringkas untuk menerima payload status
+type UpdateRoomStatusPayload struct {
+	Status string `json:"status" binding:"required"`
+}
+
+func (h *roomHandler) UpdateStatus(c *gin.Context) {
+	id := c.Param("id")
+	log.Printf("[DEBUG][ROOM-HANDLER] Incoming request HTTP PATCH /room/status/%s", id)
+
+	var payload UpdateRoomStatusPayload
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		log.Printf("[WARN][ROOM-HANDLER] Validation failed for incoming JSON payload: %v", err)
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"message": "Invalid request payload. The 'status' field is required.",
+		})
+		return
+	}
+
+	log.Printf("[DEBUG][ROOM-HANDLER] Payload extracted successfully. Target status: '%s'", payload.Status)
+
+	// Execute service mutation
+	if err := h.roomService.UpdateStatus(id, payload.Status); err != nil {
+		log.Printf("[ERROR][ROOM-HANDLER] Service failed to update room status: %v", err)
+
+		// Professional Error Handling Replacement: Avoiding misleading 404s
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"message": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": fmt.Sprintf("Room operational status has been updated successfully to '%s'.", payload.Status),
+	})
 }
