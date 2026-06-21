@@ -112,7 +112,7 @@ watch(
       chartSeries.value = [
         {
           name: 'Revenue',
-          data: newData.revenue_chart.map((item) => item.income),
+          data: newData.revenue_chart?.map((item) => item.income),
         },
       ]
 
@@ -120,7 +120,7 @@ watch(
         ...chartOptions.value,
         xaxis: {
           ...chartOptions.value.xaxis,
-          categories: newData.revenue_chart.map((item) => item.month),
+          categories: newData.revenue_chart?.map((item) => item.month),
         },
       }
 
