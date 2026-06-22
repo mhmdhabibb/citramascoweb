@@ -18,6 +18,8 @@ type ReservationRepositoryInterface interface {
 	CancelReservation(id string) error
 	RejectReservation(id string) error
 	CheckAvailability(checkInDate time.Time, checkOutDate time.Time) ([]rooms.Room, error)
+	CheckIn(id string, roomId string) error
+	CheckOut(id string, roomId string) error
 }
 
 type reservationRepo struct {
@@ -95,10 +97,40 @@ func (r *reservationRepo) CheckAvailability(checkInDate time.Time, checkOutDate 
 	// Fetch all rooms that are not in the subquery result
 	err := r.db.Preload("Category").Preload("Type").
 		Where("id NOT IN (?)", subQuery).
+		Where("LOWER(status) != ?", "maintenance"). // Pengunci utama agar kamar rusak tidak bisa di-reservasi
 		Find(&availableRooms).Error
 
 	if err != nil {
 		return nil, err
 	}
 	return availableRooms, nil
+}
+
+func (r *reservationRepo) CheckIn(id string, roomId string) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		// 1. Ubah status reservasi menjadi checked-in
+		if err := tx.Model(&Reservation{}).Where("id = ?", id).Update("status", ReservationStatusCheckedIn).Error; err != nil {
+			return err
+		}
+		// 2. Ubah status kamar terkait menjadi Occupied
+		if err := tx.Table("rooms").Where("id = ?", roomId).Update("status", "Occupied").Error; err != nil {
+			return err
+		}
+		return nil
+	})
+}
+
+// Implementasi fungsi CheckOut
+func (r *reservationRepo) CheckOut(id string, roomId string) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		// 1. Ubah status reservasi menjadi checked-out
+		if err := tx.Model(&Reservation{}).Where("id = ?", id).Update("status", ReservationStatusCheckedOut).Error; err != nil {
+			return err
+		}
+		// 2. Kembalikan status kamar terkait menjadi Available
+		if err := tx.Table("rooms").Where("id = ?", roomId).Update("status", "Available").Error; err != nil {
+			return err
+		}
+		return nil
+	})
 }

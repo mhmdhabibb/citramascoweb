@@ -32,4 +32,5 @@ func (m *Module) RoomRoutes(router *gin.RouterGroup) {
 	room.GET("/filter/category/:id", m.Handler.FilerByCategory)
 	room.GET("/filter/type/:id", m.Handler.FilterByType)
 	room.GET("/filter", m.Handler.Filter)
+	room.PATCH("/status/:id", middlewares.AuthMiddleware(), middlewares.RoleMiddleware("admin", "manager"), m.Handler.UpdateStatus)
 }

@@ -13,7 +13,7 @@ const pageTitle = computed(() => {
   if (route && route.meta && route.meta.title) {
     return route.meta.title
   }
-  
+
   const path = route ? route.path : ''
   if (path.includes('dashboard')) return 'Dashboard'
   if (path.includes('reservations')) return 'Reservations'
@@ -28,7 +28,7 @@ const pageTitle = computed(() => {
   if (path.includes('platform')) return 'Platform Settings'
   if (path.includes('upgrade')) return 'Upgrade Plan'
   if (path.includes('settings')) return 'Settings'
-  
+
   return 'Admin Portal'
 })
 
@@ -46,7 +46,7 @@ const fetchProfile = async () => {
       last_name: 'Mock',
       username: 'admin',
       role: 'admin',
-      email: 'admin@citramas.com'
+      email: 'admin@citramas.com',
     }
     return
   }
@@ -75,22 +75,33 @@ onMounted(() => {
     <!-- Main Content Container -->
     <main class="admin-main">
       <!-- Admin Top Header -->
-      <header class="admin-header">
+      <header class="admin-header-modern">
         <div class="header-left">
           <h1 class="page-title">{{ pageTitle }}</h1>
         </div>
+
         <div class="header-right">
-          <!-- Quick profile block -->
-          <div class="user-profile">
-            <div class="profile-avatar">
-              {{ (userProfile?.first_name?.[0] || userProfile?.username?.[0] || 'A').toUpperCase() }}
+          <div class="profile-pill">
+            <div class="avatar-wrapper">
+              <div class="profile-avatar">
+                {{
+                  (userProfile?.first_name?.[0] || userProfile?.username?.[0] || 'A').toUpperCase()
+                }}
+              </div>
+              <span class="status-indicator online"></span>
             </div>
-            <div class="profile-details">
-              <span class="profile-name">
-                {{ userProfile ? `${userProfile.first_name} ${userProfile.last_name}` : 'Loading...' }}
+            <div class="profile-meta">
+              <span class="user-name">
+                {{
+                  userProfile ? `${userProfile.first_name} ${userProfile.last_name}` : 'Loading...'
+                }}
               </span>
-              <span class="profile-role">
-                {{ userProfile?.role ? userProfile.role.charAt(0).toUpperCase() + userProfile.role.slice(1) : 'Please wait...' }}
+              <span class="user-role">
+                {{
+                  userProfile?.role
+                    ? userProfile.role.charAt(0).toUpperCase() + userProfile.role.slice(1)
+                    : 'Please wait...'
+                }}
               </span>
             </div>
           </div>
@@ -127,65 +138,70 @@ onMounted(() => {
   overflow: hidden;
 }
 
-.admin-header {
-  height: 72px;
-  background-color: #ffffff;
-  border-bottom: 1px solid rgba(228, 228, 231, 0.8); /* zinc-200/80 */
+.admin-header-modern {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  padding: 0 32px;
-  flex-shrink: 0;
-  box-sizing: border-box;
+  align-items: center;
+  padding: 10px 32px;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
 }
-
 .page-title {
-  font-size: 1.25rem; /* text-xl */
+  font-size: 1.4rem;
   font-weight: 700;
-  color: #0f172a; /* slate-900 */
-  margin: 0;
+  color: #0f172a;
 }
-
-.header-right {
+.profile-pill {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
+  padding: 6px 14px 6px 6px;
+  border-radius: 9999px;
+  background-color: #f8fafc;
+  border: 1px solid #f1f5f9;
 }
-
-.user-profile {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+.avatar-wrapper {
+  position: relative;
 }
-
 .profile-avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background-color: #e15b2b; /* primary stayhub orange */
+  width: 38px;
+  height: 38px;
+  background: orangered;
   color: #ffffff;
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 0.95rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.875rem;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(79, 70, 229, 0.15);
 }
-
-.profile-details {
+.status-indicator {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid #f8fafc;
+}
+.status-indicator.online {
+  background-color: #10b981;
+}
+.profile-meta {
   display: flex;
   flex-direction: column;
-  line-height: 1.2;
 }
-
-.profile-name {
+.user-name {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #0f172a;
+  color: #1e293b;
+  line-height: 1.25;
 }
-
-.profile-role {
+.user-role {
   font-size: 0.75rem;
-  color: #64748b; /* slate-500 */
+  font-weight: 500;
+  color: #64748b;
 }
 
 .admin-content-pane {
@@ -197,11 +213,15 @@ onMounted(() => {
 
 /* Page transitions inside admin layout */
 .page-enter-active {
-  transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .page-leave-active {
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
 }
 
 .page-enter-from {

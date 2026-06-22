@@ -54,7 +54,6 @@ export interface Room {
   features?: string[]
 }
 
-
 export interface Reservation {
   id: string
   code: string
@@ -90,4 +89,30 @@ export interface Offer {
   description?: string | null
   created_at?: string
   updated_at?: string
+}
+
+export interface BookingBreakdown {
+  booked: number
+  canceled: number
+  pending_confirmation: number
+  no_show: number
+  total_bookings: number
+  booked_percentage: number
+  canceled_percentage: number
+  pending_percentage: number
+  no_show_percentage: number
+}
+
+export interface RevenueMonthly {
+  month: string
+  income: number
+}
+
+export interface DashboardData {
+  occupancy_rate: number
+  available_rooms: number
+  total_rooms: number
+  total_revenue: number
+  booking_breakdown: BookingBreakdown
+  revenue_chart: RevenueMonthly[]
 }
