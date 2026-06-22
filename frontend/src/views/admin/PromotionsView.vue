@@ -343,26 +343,28 @@ const deletePromotion = async (id) => {
           <button @click="closeModal" class="close-btn">&times;</button>
         </div>
         <div class="modal-body">
-          <div class="form-group">
-            <label class="form-label">Promotion Title</label>
-            <input 
-              v-model="form.title" 
-              type="text" 
-              placeholder="e.g. Summer Special Deal" 
-              class="form-input"
-            />
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label class="form-label">Promotion Title  <span class="required-fields">*</span></label>
+              <input 
+                v-model="form.title" 
+                type="text" 
+                placeholder="e.g. Summer Special Deal" 
+                class="form-input"
+              />
+            </div>
+            <div class="form-group flex-1">
+              <label class="form-label">Promotion Sub Title</label>
+              <input 
+                v-model="form.subtitle" 
+                type="text" 
+                placeholder="e.g. Summer Special Deal" 
+                class="form-input"
+              />
+            </div>
           </div>
           <div class="form-group">
-            <label class="form-label">Promotion Sub Title</label>
-            <input 
-              v-model="form.subtitle" 
-              type="text" 
-              placeholder="e.g. Summer Special Deal" 
-              class="form-input"
-            />
-          </div>
-          <div class="form-group">
-            <label class="form-label">Promo Code</label>
+            <label class="form-label">Promo Code <span class="required-fields">*</span></label>
             <input 
               v-model="form.code" 
               type="text" 
@@ -373,7 +375,7 @@ const deletePromotion = async (id) => {
           <div class="form-row">
             
             <div class="form-group flex-1">
-              <label class="form-label">Discount Value</label>
+              <label class="form-label">Discount Value <span class="required-fields">*</span></label>
               <input 
                 v-model.number="form.value" 
                 type="number" 
@@ -384,7 +386,7 @@ const deletePromotion = async (id) => {
           </div>
           <div class="form-row">
             <div class="form-group flex-1">
-              <label class="form-label">Start Date</label>
+              <label class="form-label">Start Date  <span class="required-fields">*</span></label>
               <input 
                 v-model="form.startDate" 
                 type="date" 
@@ -392,7 +394,7 @@ const deletePromotion = async (id) => {
               />
             </div>
             <div class="form-group flex-1">
-              <label class="form-label">End Date</label>
+              <label class="form-label">End Date  <span class="required-fields">*</span></label>
               <input 
                 v-model="form.endDate" 
                 type="date" 
@@ -402,7 +404,7 @@ const deletePromotion = async (id) => {
           </div>
           <div class="form-row">
             <div class="form-group flex-1">
-              <label class="form-label">Quota Limit</label>
+              <label class="form-label">Quota Limit  <span class="required-fields">*</span></label>
               <input 
                 v-model.number="form.max_quota" 
                 type="number" 
@@ -414,7 +416,7 @@ const deletePromotion = async (id) => {
           </div>
           <div class="form-row">
             <div class="form-group flex-1">
-              <label class="form-label">Status</label>
+              <label class="form-label">Status <span class="required-fields">*</span></label>
               <select name="" id="" v-model="form.status" class="form-input">
                  <option value="">Select Status</option>
                  <option value="draft">Draft</option>
@@ -425,7 +427,7 @@ const deletePromotion = async (id) => {
            
           </div>
           <div class="form-group">
-            <label class="form-label">Description</label>
+            <label class="form-label">Description <span class="required-fields">*</span></label>
             <textarea 
               v-model="form.description" 
               placeholder="Provide offer description here..." 
@@ -779,6 +781,12 @@ const deletePromotion = async (id) => {
 
 .btn-secondary:hover {
   background-color: #f1f5f9;
+}
+
+
+.required-fields {
+  color: red;
+  font-weight: 700;
 }
 
 @keyframes fadeIn {

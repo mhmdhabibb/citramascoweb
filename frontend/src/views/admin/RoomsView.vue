@@ -466,7 +466,7 @@ onMounted(async () => {
         </div>
         <div class="modal-body">
           <div class="form-group">
-            <label class="form-label">Room Category</label>
+            <label class="form-label">Room Category <span class="required-fields">*</span>  </label>
             <select v-model="form.category_id" class="form-select">
               <option v-for="category in roomCategories" :key="category.id" :value="category.id">
                 {{ category.name }}
@@ -474,7 +474,7 @@ onMounted(async () => {
             </select>
           </div>
           <div class="form-group">
-            <label class="form-label">Room Type</label>
+            <label class="form-label">Room Type <span class="required-fields">*</span> </label>
             <select v-model="form.type_id" class="form-select">
               <option v-for="type in roomTypes" :key="type.id" :value="type.id">
                 {{ type.name }}
@@ -482,21 +482,21 @@ onMounted(async () => {
             </select>
           </div>
           <div class="form-group">
-            <label class="form-label">Price per Night (Rp)</label>
+            <label class="form-label">Price per Night (Rp) <span class="required-fields">*</span> </label>
             <input v-model.number="form.price" type="number" min="0" class="form-input" />
           </div>
           <div class="form-grid-2">
             <div class="form-group">
-              <label class="form-label">Capacity (persons)</label>
+              <label class="form-label">Capacity (persons) <span class="required-fields">*</span> </label>
               <input v-model.number="form.capacity" type="number" min="1" class="form-input" />
             </div>
             <div class="form-group">
-              <label class="form-label">Room Size (m²)</label>
+              <label class="form-label">Room Size (m²) <span class="required-fields">*</span> </label>
               <input v-model.number="form.size" type="number" min="1" class="form-input" />
             </div>
           </div>
           <div class="form-group">
-            <label class="form-label">Description</label>
+            <label class="form-label">Description <span class="required-fields">*</span> </label>
             <textarea
               v-model="form.description"
               class="form-input"
@@ -505,7 +505,7 @@ onMounted(async () => {
             ></textarea>
           </div>
           <div class="form-group">
-            <label class="form-label">Room Image File</label>
+            <label class="form-label">Room Image File <span class="required-fields">*</span> </label>
             <input
               type="file"
               @change="handleImageUpload"
@@ -1071,7 +1071,12 @@ onMounted(async () => {
 }
 .form-input-file {
   font-size: 0.8rem;
+  border: 1px solid #cbd5e1;
+  padding: 8px 14px;
   color: #64748b;
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: 8px;
 }
 .modal-footer {
   padding: 14px 24px;
@@ -1112,6 +1117,11 @@ onMounted(async () => {
 .drawer-slide-leave-to {
   opacity: 0;
   transform: translateX(20px);
+}
+
+.required-fields {
+  color: red;
+  font-weight: 700;
 }
 @keyframes fadeIn {
   from {
