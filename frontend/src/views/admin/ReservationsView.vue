@@ -185,7 +185,7 @@ onMounted(async () => {
             <input
               v-model="searchQuery"
               type="text"
-              placeholder="Cari nama tamu, nomor kamar, atau ID..."
+              placeholder="Search..."
               class="search-input"
             />
           </div>
@@ -306,9 +306,17 @@ onMounted(async () => {
             </div>
 
             <div class="info-block-card">
+              <label>OFFER CODE</label>
+              <p class="val-small">
+                {{ selectedReservation.offer_code || 'No Offer Code' }}
+              </p>
+            </div>
+
+            <div class="info-block-card">
               <label>Stay Schedule</label>
               <p class="val-small">
-                📅 {{ selectedReservation.checkin_date }} — {{ selectedReservation.checkout_date }}
+                📅 {{ selectedReservation.checkin_date }} — {{ selectedReservation.checkout_date }} |
+                ({{ selectedReservation.total_night }}) nights
               </p>
             </div>
 

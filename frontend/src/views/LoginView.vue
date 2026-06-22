@@ -34,25 +34,19 @@ const handleLogin = async () => {
     
     // Developer Fallback: If network connection is refused (backend not running)
     const isNetworkError = error.message === 'Network Error' || 
-                           error.code === 'ERR_NETWORK' || 
+                           error.code === '500' || 
                            error.message?.includes('Network Error') ||
                            error.message?.includes('NetworkError')
-                           
+    console.log(isNetworkError)
+
     if (isNetworkError) {
-      if ((username.value === 'admin' || username.value === 'admin@citramas.com') && password.value === 'admin123') {
-        localStorage.setItem('token', 'mock-developer-token-citramas')
-        successMessage.value = 'Offline/Mock Sign in successful! Redirecting...'
-        setTimeout(() => {
-          router.push('/admin')
-        }, 1000)
-        return
-      } else {
-        errorMessage.value = 'Database/Server offline. Try offline mock login: admin / admin123'
-        return
-      }
+      errorMessage.value = 'Cannot connect to the server. Please check your internet connection.'
+      return
     }
+                           
     
-    errorMessage.value = error.response?.data?.message || error.message || 'Invalid credentials. Please try again.'
+    
+    errorMessage.value =  'Invalid credentials. Please try again.'
   } finally {
     isLoading.value = false
   }
@@ -88,7 +82,7 @@ const handleLogin = async () => {
         <!-- Header -->
         <div class="login-header">
           <h2>Sign in </h2>
-          <p>Access your Citra Mas account to manage bookings, rooms, and hotel operations.</p>
+          <p>Access your Citra Mas account to manage data.</p>
         </div>
 
         <!-- Feedback Messages -->
@@ -126,7 +120,7 @@ const handleLogin = async () => {
             <input 
               v-model="username" 
               type="text" 
-              placeholder="Email or Username" 
+              placeholder="Username" 
               required
               :disabled="isLoading"
               class="form-input"
@@ -423,7 +417,7 @@ const handleLogin = async () => {
   width: 100%;
   padding: 15px 24px;
   box-sizing: border-box;
-  background: #18181b;
+  background: #E15B2B;
   border: none;
   border-radius: 14px;
   color: #ffffff;
@@ -439,7 +433,8 @@ const handleLogin = async () => {
 }
 
 .submit-btn:hover:not(:disabled) {
-  background: #000000;
+  background: #E15B2B;
+  opacity: 50;
   transform: translateY(-1px);
   box-shadow: 
     0 12px 24px -10px rgba(24, 24, 27, 0.25),

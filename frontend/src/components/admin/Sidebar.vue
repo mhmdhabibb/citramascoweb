@@ -1,4 +1,6 @@
 <script setup>
+import { authService } from '@/services/authService'
+import { useToastStore } from '@/stores/toastStore'
 import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -6,6 +8,7 @@ import { useRoute, useRouter } from 'vue-router'
 const isCollapsed = ref(false)
 const searchQuery = ref('')
 const activeItem = ref('Dashboard')
+const toastStore = useToastStore()
 
 const route = useRoute()
 const router = useRouter()
@@ -185,9 +188,11 @@ const handleSubItemClick = (parentName, subItem) => {
 }
 
 // Handle Logout
-const handleLogout = () => {
-  alert('Logging out...')
-  // Add logout logic here (e.g. clearing store, redirecting to login, etc.)
+const handleLogout = async () => {
+  await authService.logout()
+  localStorage.removeItem('token')
+  toastStore.success('Logout success')
+  router.push('/login')
 }
 </script>
 
