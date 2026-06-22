@@ -68,7 +68,7 @@ const offers = computed(() => offerStore.offers)
           <!-- Text Content -->
           <div class="p-6">
             <div class="text-accent text-[11px] font-bold tracking-[0.15em] uppercase mb-2.5">
-              {{ offer.code || 'PROMOTION' }}
+              {{ offer.code ? 'Promo Code: ' + offer.code : 'PROMOTION' }}
             </div>
             <h3 class="text-[26px] font-serif text-primary-dark mb-3">
               {{ offer.title }}

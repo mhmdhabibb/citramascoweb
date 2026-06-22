@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { roomService, type Room } from '@/services/roomService'
 import { reservationService } from '@/services/admin/reservationService'
@@ -13,7 +13,8 @@ const types = ref<any[]>([])
 const offerStore = useOfferStore()
 const typeStore = useTypeStore()
 
-const selectedRoomId = ref<string>('')
+const selectedRoomName = ref<string>('')
+const selectedTypeId = ref<string>('')
 const checkInDate = ref('')
 const checkOutDate = ref('')
 const guests = ref(1)
@@ -43,9 +44,14 @@ onMounted(async () => {
     types.value = typeStore.types
 
     if (route.query.roomId) {
-      selectedRoomId.value = String(route.query.roomId)
+      const r = rooms.value.find(x => String(x.id) === String(route.query.roomId))
+      if (r) {
+        selectedRoomName.value = r.name
+        selectedTypeId.value = String(r.type_id)
+      }
     } else if (rooms.value.length > 0 && rooms.value[0]) {
-      selectedRoomId.value = String(rooms!.value[0].id)
+      selectedRoomName.value = rooms.value[0].name
+      selectedTypeId.value = String(rooms.value[0].type_id)
     }
   } catch (error) {
     console.error('Error loading data:', error)
@@ -54,17 +60,43 @@ onMounted(async () => {
   }
 })
 
-const selectedRoom = computed(() => {
-  return rooms.value.find(r => String(r.id) === selectedRoomId.value)
+const uniqueRoomNames = computed(() => {
+  const names = new Set<string>()
+  rooms.value.forEach(r => names.add(r.name))
+  return Array.from(names)
 })
 
-const selectedType = computed(() => {
-  if (!selectedRoom.value) return ''
-  const typeId = selectedRoom.value.type_id
-  const type = types.value.find(t => String(t.id) === String(typeId))
-  // Fallback to room.type.name if populated directly
-  return type ? type.name : (selectedRoom.value.type?.name || 'Standard')
+const availableTypesForRoom = computed(() => {
+  const matchingRooms = rooms.value.filter(r => r.name === selectedRoomName.value)
+  return matchingRooms.map(r => {
+    const type = types.value.find(t => String(t.id) === String(r.type_id))
+    return {
+      id: String(r.type_id),
+      name: type ? type.name : (r.type?.name || 'Standard')
+    }
+  })
 })
+
+watch(selectedRoomName, (newName) => {
+  if (newName) {
+    const typesForRoom = availableTypesForRoom.value
+    if (typesForRoom.length > 0) {
+      const isValid = typesForRoom.find(t => t.id === selectedTypeId.value)
+      if (!isValid) {
+        selectedTypeId.value = typesForRoom[0].id
+      }
+    } else {
+      selectedTypeId.value = ''
+    }
+  }
+})
+
+const selectedRoom = computed(() => {
+  return rooms.value.find(r => r.name === selectedRoomName.value && String(r.type_id) === selectedTypeId.value) 
+    || rooms.value.find(r => r.name === selectedRoomName.value)
+})
+
+const selectedRoomId = computed(() => selectedRoom.value ? String(selectedRoom.value.id) : '')
 
 const selectedOffer = computed(() => {
   if (!promoCode.value) return null
@@ -193,20 +225,24 @@ const handleSubmit = async () => {
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div>
                     <label class="block text-[11px] font-bold tracking-[0.1em] text-gray-500 uppercase mb-2">Select Room</label>
-                    <select v-model="selectedRoomId" class="w-full bg-[#FAF7F2] border border-[#EAE1D8] text-[#1C1612] rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#8C7A6B] transition-colors appearance-none">
-                      <option v-for="room in rooms" :key="room.id" :value="String(room.id)">
-                        {{ room.name }}
+                    <select v-model="selectedRoomName" class="w-full bg-[#FAF7F2] border border-[#EAE1D8] text-[#1C1612] rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#8C7A6B] transition-colors appearance-none">
+                      <option v-for="name in uniqueRoomNames" :key="name" :value="name">
+                        {{ name }}
                       </option>
                     </select>
                   </div>
                   <div>
                     <label class="block text-[11px] font-bold tracking-[0.1em] text-gray-500 uppercase mb-2">Bed Type</label>
-                    <input 
-                      type="text" 
-                      :value="selectedType" 
-                      disabled 
-                      class="w-full bg-[#FAF7F2] border border-[#EAE1D8] text-[#1C1612] rounded-lg px-4 py-3 text-sm opacity-80 cursor-not-allowed font-medium"
+                    <select 
+                      v-model="selectedTypeId" 
+                      :disabled="availableTypesForRoom.length <= 1" 
+                      :class="{'opacity-80 cursor-not-allowed': availableTypesForRoom.length <= 1}" 
+                      class="w-full bg-[#FAF7F2] border border-[#EAE1D8] text-[#1C1612] rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#8C7A6B] transition-colors appearance-none"
                     >
+                      <option v-for="type in availableTypesForRoom" :key="type.id" :value="type.id">
+                        {{ type.name }}
+                      </option>
+                    </select>
                   </div>
                 </div>
                 
@@ -265,10 +301,10 @@ const handleSubmit = async () => {
                 <h4 class="text-2xl font-serif text-[#1C1612] mb-2" style="font-family: 'Playfair Display', ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;">{{ selectedRoom.name }}</h4>
                 <p class="text-gray-500 text-sm mb-6">{{ selectedRoom.capacity }} Guests Maximum</p>
                 
-                <div class="flex justify-between items-end border-t border-[#EAE1D8] pt-6">
+                <div class="flex justify-between items-center border-t border-[#EAE1D8] pt-6">
                   <span class="text-gray-500 text-[11px] font-bold tracking-[0.1em] uppercase">Rate</span>
-                  <div class="text-right">
-                    <span class="block text-2xl font-serif text-[#1C1612]" style="font-family: 'Playfair Display', ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;">
+                  <div class="text-right flex items-baseline gap-1">
+                    <span class="text-2xl font-serif text-[#1C1612]" style="font-family: 'Playfair Display', ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;">
                       Rp {{ selectedRoom.price.toLocaleString('id-ID') }}
                     </span>
                     <span class="text-gray-500 text-xs">/ night</span>
