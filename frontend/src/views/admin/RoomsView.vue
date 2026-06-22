@@ -231,12 +231,7 @@ onMounted(async () => {
 
 <template>
   <div class="rooms-view">
-    <div class="view-header">
-      <h1>Room Management</h1>
-      <p class="subtitle">
-        Atur ketersediaan unit kamar fisik, konfigurasi kapasitas, dan harga operasional per malam.
-      </p>
-    </div>
+   
 
     <div class="stats-grid">
       <div class="stat-card">
@@ -282,7 +277,7 @@ onMounted(async () => {
           </div>
           <div class="filter-box">
             <select v-model="statusFilter" class="filter-select">
-              <option value="All">Semua Status</option>
+              <option value="All">Status</option>
               <option value="active">Active / Available</option>
               <option value="Occupied">Occupied</option>
               <option value="maintenance">Maintenance</option>
@@ -537,18 +532,7 @@ onMounted(async () => {
   background-color: #f8fafc;
   font-family: 'Plus Jakarta Sans', sans-serif;
 }
-.view-header h1 {
-  font-size: 1.6rem;
-  font-weight: 800;
-  color: #0f172a;
-  margin: 0 0 4px 0;
-  letter-spacing: -0.02em;
-}
-.subtitle {
-  color: #64748b;
-  font-size: 0.9rem;
-  margin: 0;
-}
+
 
 .stats-grid {
   display: grid;
