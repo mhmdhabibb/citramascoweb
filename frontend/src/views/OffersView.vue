@@ -1,32 +1,18 @@
 <script setup lang="ts">
+import { onMounted, computed } from 'vue'
 import { useScrollReveal } from '@/composables/useScrollReveal'
+import { useOfferStore } from '@/stores/offerStore'
 
 const { elementRef: headerRef, isVisible: headerVisible } = useScrollReveal(0.2)
 const { elementRef: cardsRef, isVisible: cardsVisible } = useScrollReveal(0.1)
 
-const offers = [
-  { 
-    id: 1,
-    category: 'RENEWAL',
-    title: 'Spa Rituals',
-    description: 'Restorative spa rituals inspired by calm, warmth, and deep relaxation.',
-    image: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?q=80&w=800&auto=format&fit=crop'
-  },
-  {
-    id: 2,
-    category: 'ATMOSPHERE',
-    title: 'Coastal Dining',
-    description: 'Seasonal coastal dining crafted with refined flavors and regional ingredients.',
-    image: 'https://images.unsplash.com/photo-1544148103-0773bf10d330?q=80&w=800&auto=format&fit=crop'
-  },
-  {
-    id: 3,
-    category: 'DISCOVERY',
-    title: 'Curated Escapes',
-    description: 'Private coastal escapes designed for immersive journeys and peaceful exploration.',
-    image: 'https://images.unsplash.com/photo-1506501139174-099022df5260?q=80&w=800&auto=format&fit=crop'
-  }
-]
+const offerStore = useOfferStore()
+
+onMounted(async () => {
+  await offerStore.fetchOffers()
+})
+
+const offers = computed(() => offerStore.offers)
 </script>
 
 <template>
@@ -82,7 +68,7 @@ const offers = [
           <!-- Text Content -->
           <div class="p-6">
             <div class="text-accent text-[11px] font-bold tracking-[0.15em] uppercase mb-2.5">
-              {{ offer.category }}
+              {{ offer.code || 'PROMOTION' }}
             </div>
             <h3 class="text-[26px] font-serif text-primary-dark mb-3">
               {{ offer.title }}

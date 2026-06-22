@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
-import axios from 'axios'
 import { roomService, type Room } from '@/services/roomService'
 import { reservationService } from '@/services/admin/reservationService'
+import { useOfferStore } from '@/stores/offerStore'
 
 const route = useRoute()
 const rooms = ref<Room[]>([])
 const offers = ref<any[]>([])
+const offerStore = useOfferStore()
 
 const selectedRoomId = ref<string>('')
 const checkInDate = ref('')
@@ -29,14 +30,12 @@ const submitError = ref<string | null>(null)
 
 onMounted(async () => {
   try {
-    const [fetchedRooms, offersRes] = await Promise.all([
+    const [fetchedRooms] = await Promise.all([
       roomService.getRooms(),
-      axios.get('/api/offers').catch(() => ({ data: { data: [] } }))
+      offerStore.fetchOffers()
     ])
     rooms.value = fetchedRooms
-    if (offersRes.data?.success) {
-      offers.value = offersRes.data.data.filter((o: any) => o.code)
-    }
+    offers.value = offerStore.offers.filter((o: any) => o.code)
 
     if (route.query.roomId) {
       selectedRoomId.value = String(route.query.roomId)
@@ -52,6 +51,29 @@ onMounted(async () => {
 
 const selectedRoom = computed(() => {
   return rooms.value.find(r => String(r.id) === selectedRoomId.value)
+})
+
+const selectedOffer = computed(() => {
+  if (!promoCode.value) return null
+  return offers.value.find(o => o.code === promoCode.value) || null
+})
+
+const normalPrice = computed(() => selectedRoom.value ? selectedRoom.value.price : 0)
+
+const discountAmount = computed(() => {
+  if (!selectedOffer.value || !selectedRoom.value) return 0
+  
+  if (selectedOffer.value.discount && selectedOffer.value.discount > 0) {
+    return normalPrice.value * (selectedOffer.value.discount / 100)
+  } else if (selectedOffer.value.price && selectedOffer.value.price > 0) {
+    return selectedOffer.value.price
+  }
+  return 0
+})
+
+const finalPrice = computed(() => {
+  const final = normalPrice.value - discountAmount.value
+  return final > 0 ? final : 0
 })
 
 const formatDateToApi = (dateStr: string) => {
@@ -226,6 +248,32 @@ const handleSubmit = async () => {
                       Rp {{ selectedRoom.price.toLocaleString('id-ID') }}
                     </span>
                     <span class="text-gray-500 text-xs">/ night</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Price Summary Card -->
+            <div v-if="selectedRoom" class="mt-6 bg-white rounded-[24px] border border-[#EAE1D8] p-8 shadow-sm">
+              <h4 class="text-lg font-serif text-[#1C1612] mb-6" style="font-family: 'Playfair Display', ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;">Price Summary</h4>
+              
+              <div class="space-y-4 text-[15px]">
+                <div class="flex justify-between items-start text-gray-600 gap-4">
+                  <span class="leading-tight">Normal Rate / night</span>
+                  <span class="whitespace-nowrap">Rp {{ normalPrice.toLocaleString('id-ID') }}</span>
+                </div>
+                
+                <div v-if="discountAmount > 0" class="flex justify-between items-start text-[#10b981] font-medium gap-4">
+                  <span class="leading-tight break-all">Discount <span class="text-xs opacity-80 font-normal block mt-0.5">({{ promoCode }})</span></span>
+                  <span class="whitespace-nowrap">- Rp {{ discountAmount.toLocaleString('id-ID') }}</span>
+                </div>
+                
+                <div class="pt-5 mt-5 border-t border-[#EAE1D8] flex justify-between items-end gap-4">
+                  <span class="text-[11px] font-bold tracking-[0.1em] uppercase text-gray-500 leading-tight">Total Rate<br>per night</span>
+                  <div class="text-right whitespace-nowrap">
+                    <span class="block text-3xl font-serif text-[#1C1612]" style="font-family: 'Playfair Display', ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;">
+                      Rp {{ finalPrice.toLocaleString('id-ID') }}
+                    </span>
                   </div>
                 </div>
               </div>
