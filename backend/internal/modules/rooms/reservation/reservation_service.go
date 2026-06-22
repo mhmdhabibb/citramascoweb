@@ -108,21 +108,30 @@ func (s *reservationService) Store(req *dto.CreateReservationRequest) error {
 	if req.IsOffer != nil && *req.IsOffer && req.OfferCode != nil && *req.OfferCode != "" {
 		offerData, err := s.roomRepo.GetOfferByCode(*req.OfferCode)
 		if err != nil {
-			return errors.New("invalid promo code")
+			return errors.New("invalid offer code")
 		}
 
 		// Check expiration (ValidStart & ValidEnd)
-		now := time.Now()
-		if offerData.ValidStart != nil && now.Before(time.Time(*offerData.ValidStart)) {
-			return errors.New("the discount offer associated with this promo code is not active yet")
+		now := time.Now().UTC()
+		today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
+		if offerData.ValidStart != nil && today.Before(time.Time(*offerData.ValidStart)) {
+			return errors.New("offer code is not active yet")
 		}
-		if offerData.ValidEnd != nil && now.After(time.Time(*offerData.ValidEnd)) {
-			return errors.New("the discount offer associated with this promo code has expired")
+		if offerData.ValidEnd != nil && today.After(time.Time(*offerData.ValidEnd)) {
+			return errors.New("offer code has expired")
+		}
+
+		// Validate stay check-in date is within offer validity range
+		if offerData.ValidStart != nil && checkinDate.Before(time.Time(*offerData.ValidStart)) {
+			return errors.New("offer code is not active ")
+		}
+		if offerData.ValidEnd != nil && checkinDate.After(time.Time(*offerData.ValidEnd)) {
+			return errors.New("offer code has expired ")
 		}
 
 		// Check reservation quota (MaxQuota)
 		if offerData.MaxQuota != nil && *offerData.MaxQuota <= 0 {
-			return errors.New("the discount offer for this promo code has reached its usage limit")
+			return errors.New("offer code has reached its usage limit")
 		}
 
 		discountVal := 0
@@ -256,17 +265,29 @@ func (s *reservationService) Update(id string, req *dto.UpdateReservationRequest
 	if isOffer && offerCode != "" {
 		offerData, err := s.roomRepo.GetOfferByCode(offerCode)
 		if err == nil {
+			// Always validate checkin date against offer validity period
+			if reservation.CheckinDate != nil {
+				checkinDate := time.Time(*reservation.CheckinDate)
+				if offerData.ValidStart != nil && checkinDate.Before(time.Time(*offerData.ValidStart)) {
+					return errors.New("offer code is not active for the selected check-in date")
+				}
+				if offerData.ValidEnd != nil && checkinDate.After(time.Time(*offerData.ValidEnd)) {
+					return errors.New("offer code has expired for the selected check-in date")
+				}
+			}
+
 			// If code is different from before, we validate & decrement quota
 			if reservation.OfferCode == nil || *reservation.OfferCode != offerCode {
-				now := time.Now()
-				if offerData.ValidStart != nil && now.Before(time.Time(*offerData.ValidStart)) {
-					return errors.New("the discount offer associated with this promo code is not active yet")
+				now := time.Now().UTC()
+				today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
+				if offerData.ValidStart != nil && today.Before(time.Time(*offerData.ValidStart)) {
+					return errors.New("offer code is not active yet")
 				}
-				if offerData.ValidEnd != nil && now.After(time.Time(*offerData.ValidEnd)) {
-					return errors.New("the discount offer associated with this promo code has expired")
+				if offerData.ValidEnd != nil && today.After(time.Time(*offerData.ValidEnd)) {
+					return errors.New("offer code has expired")
 				}
 				if offerData.MaxQuota != nil && *offerData.MaxQuota <= 0 {
-					return errors.New("the discount offer for this promo code has reached its usage limit")
+					return errors.New("offer code has reached its usage limit")
 				}
 				_ = s.roomRepo.DecrementOfferQuota(offerCode)
 			}
@@ -282,7 +303,7 @@ func (s *reservationService) Update(id string, req *dto.UpdateReservationRequest
 			reservation.IsOffer = &isTrue
 			reservation.OfferCode = &offerCode
 		} else {
-			return errors.New("invalid promo code")
+			return errors.New("invalid offer code")
 		}
 	}
 
