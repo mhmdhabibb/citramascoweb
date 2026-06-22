@@ -183,7 +183,7 @@ const deleteRoomCategory = async (index) => {
         </div>
         <div class="modal-body">
           <div class="form-group">
-            <label class="form-label">Category Name</label>
+            <label class="form-label">Category Name  <span class="required-fields">*</span></label>
             <input 
               v-model="form.name" 
               type="text" 
@@ -460,6 +460,13 @@ const deleteRoomCategory = async (index) => {
 
 .btn-secondary:hover {
   background-color: #f1f5f9;
+}
+
+
+
+.required-fields {
+  color: red;
+  font-weight: 700;
 }
 
 @keyframes fadeIn {
