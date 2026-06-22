@@ -664,6 +664,7 @@ onMounted(async () => {
   overflow-x: auto;
 }
 .premium-table {
+text-align: left;
   width: 100%;
   border-collapse: collapse;
 }
