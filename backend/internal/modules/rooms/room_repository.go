@@ -2,6 +2,7 @@ package rooms
 
 import (
 	"citramascoweb-backend/internal/modules/offer"
+	"log"
 	"strings"
 	"time"
 
@@ -22,6 +23,7 @@ type RoomRepositoryInterface interface {
 	CountRoomsWithOfferCode(code string, excludeRoomId string) (int64, error)
 	DecrementOfferQuota(code string) error
 	IncrementOfferQuota(code string) error
+	UpdateStatus(id string, status RoomStatus) error
 }
 
 type roomRepo struct {
@@ -106,16 +108,15 @@ func (r *roomRepo) FilterByType(typeId string) ([]Room, error) {
 }
 
 func (r *roomRepo) Filter(status, availabilityStatus string, checkinDate, checkoutDate time.Time) ([]Room, error) {
-
 	var rooms []Room
 
-	// Fetch all rooms
+	// 1. Fetch all rooms (Termasuk status fisiknya dari DB jika nanti kamu simpan status fisik ke DB)
 	err := r.db.Preload("Type").Preload("Category").Find(&rooms).Error
 	if err != nil {
 		return nil, err
 	}
 
-	// Default date range if not specified
+	// Default date range jika tidak dispesifikasikan
 	if checkinDate.IsZero() {
 		checkinDate = time.Now()
 	}
@@ -123,64 +124,72 @@ func (r *roomRepo) Filter(status, availabilityStatus string, checkinDate, checko
 		checkoutDate = checkinDate.Add(24 * time.Hour)
 	}
 
-	// Query available room IDs for the period
-	var availableRooms []Room
-	subQuery := r.db.Table("reservations").
+	// 2. Query ID kamar yang OVERLAP / SEDANG TERISI pada periode tersebut
+	var occupiedRoomIds []string
+	err = r.db.Table("reservations").
 		Select("room_id").
 		Where("room_id IS NOT NULL AND room_id != ''").
+		// Logika overlap: Checkin kustomer baru < Checkout reservasi lama DAN Checkout kustomer baru > Checkin reservasi lama
 		Where("checkin_date < ? AND checkout_date > ? AND status IN ?",
 			checkoutDate,
 			checkinDate,
 			[]string{"pending", "approved", "checked-in"},
-		)
+		).
+		Distinct("room_id").
+		Pluck("room_id", &occupiedRoomIds).Error // Menggunakan Pluck langsung ke slice string agar lebih efisien
 
-	// Fetch all rooms not in overlapping reservations
-	err = r.db.Select("id").Table("rooms").Where("id NOT IN (?)", subQuery).Find(&availableRooms).Error
 	if err != nil {
 		return nil, err
 	}
 
-	availableMap := make(map[string]bool)
-	for _, room := range availableRooms {
-		availableMap[room.Id] = true
+	// Buat map pencarian untuk kamar yang terisi (occupied)
+	occupiedMap := make(map[string]bool)
+	for _, id := range occupiedRoomIds {
+		occupiedMap[id] = true
 	}
 
-	// Populate virtual fields: Status and AvailabilityStatus
+	// 3. Populasi field virtual menggunakan ENUM yang baru
 	for i := range rooms {
-		if availableMap[rooms[i].Id] {
-			rooms[i].Status = "tersedia"
-			rooms[i].AvailabilityStatus = "tersedia"
+		// Set Availability Status berdasarkan transaksi booking
+		if occupiedMap[rooms[i].Id] {
+			rooms[i].AvailabilityStatus = RoomAvailabilityOccupied
 		} else {
-			rooms[i].Status = "tidak tersedia"
-			rooms[i].AvailabilityStatus = "tidak tersedia"
+			rooms[i].AvailabilityStatus = RoomAvailabilityAvailable
+		}
+
+		// Set Status Fisik (Contoh logika: jika di DB tidak maintenance, default ke Active)
+		// Jika ke depannya kamu simpan status fisik ke DB, bagian ini tinggal menyesuaikan kolom DB-mu
+		if rooms[i].Status == "" {
+			rooms[i].Status = RoomStatusActive
 		}
 	}
 
-	// Helper helper match function to handle various status naming conventions
+	// 4. Helper match function menggunakan Enum string
 	isStatusMatch := func(roomVal, queryVal string) bool {
 		q := strings.ToLower(queryVal)
 		rv := strings.ToLower(roomVal)
 
-		if q == "available" || q == "tersedia" {
-			return rv == "tersedia" || rv == "available"
+		// Normalisasi pencarian bahasa Indonesia ke Enum internasional kamu
+		if q == "tersedia" {
+			q = "available"
+		} else if q == "tidak tersedia" || q == "tidak_tersedia" {
+			q = "occupied"
 		}
-		if q == "occupied" || q == "tidak tersedia" || q == "tidak_tersedia" {
-			return rv == "tidak tersedia" || rv == "tidak_tersedia" || rv == "occupied"
-		}
+
 		return rv == q
 	}
 
-	// Perform in-memory filtering if filter params are set
+	// 5. In-memory filtering berdasarkan parameter filter
 	var filteredRooms []Room
 	for _, room := range rooms {
 		matchesStatus := true
 		matchesAvailability := true
 
 		if status != "" {
-			matchesStatus = isStatusMatch(room.Status, status)
+			matchesStatus = isStatusMatch(string(room.Status), status)
 		}
 		if availabilityStatus != "" {
-			matchesAvailability = isStatusMatch(room.AvailabilityStatus, availabilityStatus)
+			matchesAvailability = isStatusMatch(string(room.AvailabilityStatus), availabilityStatus)
 		}
 
 		if matchesStatus && matchesAvailability {
@@ -189,7 +198,6 @@ func (r *roomRepo) Filter(status, availabilityStatus string, checkinDate, checko
 	}
 
 	return filteredRooms, nil
-
 }
 
 func (r *roomRepo) GetOfferByCode(code string) (*offer.Offer, error) {
@@ -220,4 +228,17 @@ func (r *roomRepo) DecrementOfferQuota(code string) error {
 
 func (r *roomRepo) IncrementOfferQuota(code string) error {
 	return r.db.Model(&offer.Offer{}).Where("code = ? AND max_quota IS NOT NULL", code).UpdateColumn("max_quota", gorm.Expr("max_quota + ?", 1)).Error
+}
+
+func (r *roomRepo) UpdateStatus(id string, status RoomStatus) error {
+	log.Printf("[DEBUG][ROOM-REPO] Memulai update status fisik kamar ID: %s menjadi '%s'", id, status)
+
+	result := r.db.Model(&Room{}).Where("id = ?", id).Update("status", status)
+	if result.Error != nil {
+		log.Printf("[ERROR][ROOM-REPO] Gagal update status kamar ID: %s. Error: %v", id, result.Error)
+		return result.Error
+	}
+
+	log.Printf("[DEBUG][ROOM-REPO] Sukses update status kamar ID: %s. Rows affected: %d", id, result.RowsAffected)
+	return nil
 }

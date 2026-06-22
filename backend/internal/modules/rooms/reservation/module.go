@@ -36,4 +36,7 @@ func (m *Module) ReservationRoutes(router *gin.RouterGroup) {
 	res.PATCH("/approve/:id", middlewares.AuthMiddleware(), middlewares.RoleMiddleware("admin", "manager"), m.Handler.ApproveReservation)
 	res.PATCH("/cancel/:id", middlewares.AuthMiddleware(), middlewares.RoleMiddleware("admin", "manager"), m.Handler.CancelReservation)
 	res.PATCH("/reject/:id", middlewares.AuthMiddleware(), middlewares.RoleMiddleware("admin", "manager"), m.Handler.RejectReservation)
+	res.PATCH("/check-in/:id", middlewares.AuthMiddleware(), middlewares.RoleMiddleware("admin", "manager"), m.Handler.CheckIn)
+	res.PATCH("/check-out/:id", middlewares.AuthMiddleware(), middlewares.RoleMiddleware("admin", "manager"), m.Handler.CheckOut)
+
 }

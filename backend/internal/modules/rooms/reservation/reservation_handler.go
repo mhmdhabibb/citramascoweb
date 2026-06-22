@@ -2,6 +2,8 @@ package reservation
 
 import (
 	"citramascoweb-backend/internal/dto"
+	"log"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -109,18 +111,53 @@ func (h *reservationHandler) RejectReservation(c *gin.Context) {
 }
 
 func (h *reservationHandler) CheckAvailability(c *gin.Context) {
+	log.Printf("[DEBUG][RESERVATION-HANDLER] Processing availability check request")
+
 	var req dto.CheckAvailabilityRequest
-	err := c.ShouldBindQuery(&req)
-	if err != nil {
-		c.JSON(400, gin.H{"success": false, "message": err.Error()})
+	// Menggunakan ShouldBindQuery untuk membaca query parameters (?check_in_date=...&check_out_date=...)
+	if err := c.ShouldBindQuery(&req); err != nil {
+		log.Printf("[WARN][RESERVATION-HANDLER] Query binding failed: %v", err)
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"message": "Invalid query parameters. Please provide valid check-in and check-out dates.",
+		})
 		return
 	}
 
+	log.Printf("[DEBUG][RESERVATION-HANDLER] Checking dates range: %s to %s (Room ID: '%s')", req.CheckInDate, req.CheckOutDate, req.RoomId)
+
+	// Memanggil fungsi service yang sudah disinkronkan dengan status maintenance
 	result, err := h.reservationService.CheckAvailability(&req)
 	if err != nil {
-		c.JSON(400, gin.H{"success": false, "message": err.Error()})
+		log.Printf("[ERROR][RESERVATION-HANDLER] Service failed to check room availability: %v", err)
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"message": err.Error(), // Mengembalikan pesan error validasi dalam bahasa Inggris dari service
+		})
 		return
 	}
 
-	c.JSON(200, gin.H{"success": true, "message": "Availability checked successfully", "data": result})
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "Room availability has been checked successfully.",
+		"data":    result,
+	})
+}
+
+func (h *reservationHandler) CheckIn(c *gin.Context) {
+	id := c.Param("id")
+	if err := h.reservationService.CheckIn(id); err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(200, gin.H{"message": "Proses check-in berhasil, status kamar diubah menjadi Occupied"})
+}
+
+func (h *reservationHandler) CheckOut(c *gin.Context) {
+	id := c.Param("id")
+	if err := h.reservationService.CheckOut(id); err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(200, gin.H{"message": "Proses check-out berhasil, status kamar kembali Available"})
 }

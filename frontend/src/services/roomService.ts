@@ -56,5 +56,14 @@ export const roomService = {
       throw new Error(response.data.message || 'Deletion failed!')
     }
     return response.data.message
-  }
+  },
+
+  // Tambahkan method ini di dalam objek roomService
+  updateStatus: async (id: string, status: string): Promise<string> => {
+    const response = await api.patch<ApiResponse<any>>(`/room/status/${id}`, { status })
+    if (!response.data.success) {
+      throw new Error(response.data.message || 'Gagal memperbarui status operasional!')
+    }
+    return response.data.message
+  },
 }
