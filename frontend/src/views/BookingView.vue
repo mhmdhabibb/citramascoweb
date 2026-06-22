@@ -4,11 +4,14 @@ import { useRoute } from 'vue-router'
 import { roomService, type Room } from '@/services/roomService'
 import { reservationService } from '@/services/admin/reservationService'
 import { useOfferStore } from '@/stores/offerStore'
+import { useTypeStore } from '@/stores/typeStore'
 
 const route = useRoute()
 const rooms = ref<Room[]>([])
 const offers = ref<any[]>([])
+const types = ref<any[]>([])
 const offerStore = useOfferStore()
+const typeStore = useTypeStore()
 
 const selectedRoomId = ref<string>('')
 const checkInDate = ref('')
@@ -32,10 +35,12 @@ onMounted(async () => {
   try {
     const [fetchedRooms] = await Promise.all([
       roomService.getRooms(),
-      offerStore.fetchOffers()
+      offerStore.fetchOffers(),
+      typeStore.fetchTypes()
     ])
     rooms.value = fetchedRooms
     offers.value = offerStore.offers.filter((o: any) => o.code)
+    types.value = typeStore.types
 
     if (route.query.roomId) {
       selectedRoomId.value = String(route.query.roomId)
@@ -51,6 +56,14 @@ onMounted(async () => {
 
 const selectedRoom = computed(() => {
   return rooms.value.find(r => String(r.id) === selectedRoomId.value)
+})
+
+const selectedType = computed(() => {
+  if (!selectedRoom.value) return ''
+  const typeId = selectedRoom.value.type_id
+  const type = types.value.find(t => String(t.id) === String(typeId))
+  // Fallback to room.type.name if populated directly
+  return type ? type.name : (selectedRoom.value.type?.name || 'Standard')
 })
 
 const selectedOffer = computed(() => {
@@ -177,13 +190,24 @@ const handleSubmit = async () => {
             <div>
               <h3 class="text-lg font-serif text-[#1C1612] mb-6 border-b border-[#EAE1D8] pb-3 mt-8" style="font-family: 'Playfair Display', ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;">Stay Details</h3>
               <div class="space-y-6">
-                <div>
-                  <label class="block text-[11px] font-bold tracking-[0.1em] text-gray-500 uppercase mb-2">Select Room</label>
-                  <select v-model="selectedRoomId" class="w-full bg-[#FAF7F2] border border-[#EAE1D8] text-[#1C1612] rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#8C7A6B] transition-colors appearance-none">
-                    <option v-for="room in rooms" :key="room.id" :value="String(room.id)">
-                      {{ room.name }}
-                    </option>
-                  </select>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div>
+                    <label class="block text-[11px] font-bold tracking-[0.1em] text-gray-500 uppercase mb-2">Select Room</label>
+                    <select v-model="selectedRoomId" class="w-full bg-[#FAF7F2] border border-[#EAE1D8] text-[#1C1612] rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#8C7A6B] transition-colors appearance-none">
+                      <option v-for="room in rooms" :key="room.id" :value="String(room.id)">
+                        {{ room.name }}
+                      </option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-[11px] font-bold tracking-[0.1em] text-gray-500 uppercase mb-2">Bed Type</label>
+                    <input 
+                      type="text" 
+                      :value="selectedType" 
+                      disabled 
+                      class="w-full bg-[#FAF7F2] border border-[#EAE1D8] text-[#1C1612] rounded-lg px-4 py-3 text-sm opacity-80 cursor-not-allowed font-medium"
+                    >
+                  </div>
                 </div>
                 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
