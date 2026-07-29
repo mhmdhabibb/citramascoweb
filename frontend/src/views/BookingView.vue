@@ -83,7 +83,7 @@ watch(selectedRoomName, (newName) => {
     if (typesForRoom.length > 0) {
       const isValid = typesForRoom.find(t => t.id === selectedTypeId.value)
       if (!isValid) {
-        selectedTypeId.value = typesForRoom[0].id
+        selectedTypeId.value = typesForRoom[0]?.id || ''
       }
     } else {
       selectedTypeId.value = ''
