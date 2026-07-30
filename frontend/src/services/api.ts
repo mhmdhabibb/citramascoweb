@@ -2,13 +2,18 @@ import axios from 'axios'
 
 
 const api = axios.create({
-  baseURL: 'https://citramas-production.up.railway.app/api',
+  baseURL: 'https://citramas-production.up.railway.app/api/',
   timeout: 10000,
 })
 
 // Request interceptor — attach auth token if available
 api.interceptors.request.use(
   (config) => {
+    // Prevent absolute path resolution from overriding the /api/ baseURL path
+    if (config.url && config.url.startsWith('/')) {
+      config.url = config.url.substring(1)
+    }
+
     const token = localStorage.getItem('token')
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
