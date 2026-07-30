@@ -2,8 +2,7 @@ import axios from 'axios'
 
 
 const api = axios.create({
-  baseURL: '/api',
-  timeout: 10000,
+  baseURL: 'https://citramas-production.up.railway.app/api',
 })
 
 // Request interceptor — attach auth token if available
