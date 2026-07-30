@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { authService } from '@/services/authService'
 
@@ -11,6 +11,15 @@ const isPasswordVisible = ref(false)
 const isLoading = ref(false)
 const errorMessage = ref('')
 const successMessage = ref('')
+const rememberMe = ref(false)
+
+onMounted(() => {
+  if (localStorage.getItem('rememberMe') === 'true') {
+    rememberMe.value = true
+    username.value = localStorage.getItem('savedUsername') || ''
+    password.value = localStorage.getItem('savedPassword') || ''
+  }
+})
 
 const handleLogin = async () => {
   try {
@@ -23,6 +32,16 @@ const handleLogin = async () => {
     // Store token
     localStorage.setItem('token', data.access_token)
     
+    if (rememberMe.value) {
+      localStorage.setItem('savedUsername', username.value)
+      localStorage.setItem('savedPassword', password.value)
+      localStorage.setItem('rememberMe', 'true')
+    } else {
+      localStorage.removeItem('savedUsername')
+      localStorage.removeItem('savedPassword')
+      localStorage.removeItem('rememberMe')
+    }
+
     successMessage.value = 'Sign in successful! Redirecting...'
     
     // Brief delay to let the user see the success message
@@ -164,7 +183,13 @@ const handleLogin = async () => {
             </button>
           </div>
 
-         
+          <!-- Remember Me -->
+          <div class="remember-me-container">
+            <label class="remember-me-label">
+              <input type="checkbox" v-model="rememberMe" class="remember-me-checkbox" />
+              Ingat Saya
+            </label>
+          </div>
 
           <!-- Submit Button -->
           <button type="submit" class="submit-btn" :disabled="isLoading">
@@ -410,6 +435,59 @@ const handleLogin = async () => {
 
 .forgot-link:hover {
   color: #0f172a;
+}
+
+/* Remember me container */
+.remember-me-container {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin-bottom: 24px;
+  margin-top: 8px;
+}
+
+.remember-me-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: #475569;
+  cursor: pointer;
+  user-select: none;
+}
+
+.remember-me-checkbox {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #94a3b8;
+  border-radius: 4px;
+  outline: none;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+  background: transparent;
+}
+
+.remember-me-checkbox:checked {
+  background: #E15B2B;
+  border-color: #E15B2B;
+}
+
+.remember-me-checkbox:checked::after {
+  content: '';
+  position: absolute;
+  top: 1px;
+  left: 4px;
+  width: 4px;
+  height: 8px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.remember-me-label:hover .remember-me-checkbox:not(:checked) {
+  border-color: #E15B2B;
 }
 
 /* Main action button */
