@@ -1,6 +1,8 @@
 <script setup>
 import { authService } from '@/services/authService'
 import { useToastStore } from '@/stores/toastStore'
+import { useAuthStore } from '@/stores/authStore'
+import { canAccess } from '@/config/access'
 import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -9,6 +11,7 @@ const isCollapsed = ref(false)
 const searchQuery = ref('')
 const activeItem = ref('Dashboard')
 const toastStore = useToastStore()
+const authStore = useAuthStore()
 
 const route = useRoute()
 const router = useRouter()
@@ -21,12 +24,22 @@ const menuGroups = ref([
       {
         name: 'Dashboard',
         icon: 'LayoutDashboard',
-        route: '/admin/dashboard'
+        route: '/admin/dashboard',
+      },
+      {
+        name: 'Users',
+        icon: 'Users',
+        route: '/admin/users',
       },
       {
         name: 'Reservation',
         icon: 'CalendarCheck',
-        route: '/admin/reservations'
+        route: '/admin/reservations',
+      },
+      {
+        name: 'Inventory',
+        icon: 'Boxes',
+        route: '/admin/inventory',
       },
       {
         name: 'Manage Rooms',
@@ -36,9 +49,9 @@ const menuGroups = ref([
           { name: 'Room List', route: '/admin/rooms' },
           { name: 'Room Types', route: '/admin/room-types' },
           { name: 'Room Categories', route: '/admin/room-categories' },
-        ]
+        ],
       },
-    
+
       // {
       //   name: 'Manage Staff',
       //   icon: 'UserCog',
@@ -51,13 +64,10 @@ const menuGroups = ref([
       {
         name: 'Promotions',
         icon: 'Percent',
-        route: '/admin/promotions'
+        route: '/admin/promotions',
       },
-     
-    ]
+    ],
   },
-  
-  
 ])
 
 // Bottom Items
@@ -65,31 +75,44 @@ const bottomItems = [
   {
     name: 'Help & Center',
     icon: 'HelpCircle',
-    route: '/admin/help'
-  }
+    route: '/admin/help',
+  },
 ]
 
 // Inline SVG Icon Paths
 const icons = {
-  LayoutDashboard: '<rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>',
-  CalendarCheck: '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="m9 16 2 2 4-4"/>',
+  LayoutDashboard:
+    '<rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>',
+  CalendarCheck:
+    '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="m9 16 2 2 4-4"/>',
   Bed: '<path d="M2 4v16"/><path d="M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 14h20"/><path d="M6 8v6"/>',
-  Users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
-  UserCog: '<circle cx="9" cy="7" r="4"/><path d="M10 15H6a4 4 0 0 0-4 4v2"/><circle cx="19" cy="16" r="2"/><path d="M19 13v1"/><path d="M19 18v1"/><path d="M18 15h-1"/><path d="M21 17h-1"/><path d="M18 17l-.7-.7"/><path d="M20.7 15.3l-.7-.7"/><path d="M18 15.3l-.7.7"/><path d="M20.7 17l-.7.7"/>',
-  Percent: '<line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/>',
+  Users:
+    '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  UserCog:
+    '<circle cx="9" cy="7" r="4"/><path d="M10 15H6a4 4 0 0 0-4 4v2"/><circle cx="19" cy="16" r="2"/><path d="M19 13v1"/><path d="M19 18v1"/><path d="M18 15h-1"/><path d="M21 17h-1"/><path d="M18 17l-.7-.7"/><path d="M20.7 15.3l-.7-.7"/><path d="M18 15.3l-.7.7"/><path d="M20.7 17l-.7.7"/>',
+  Percent:
+    '<line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/>',
   MessageSquare: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
   BarChart3: '<path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/>',
-  Wrench: '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>',
-  Calendar: '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
-  Monitor: '<rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>',
-  Sparkles: '<path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="m5 3 1 2.5L8.5 6 6 7 5 9.5 4 7 1.5 6 4 5.5Z"/><path d="M19 17l1 2.5 2.5.5-2.5 1-1 2.5-1-2.5-2.5-1 2.5-1Z"/>',
-  Settings: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>',
-  HelpCircle: '<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
-  LogOut: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>',
+  Wrench:
+    '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>',
+  Calendar:
+    '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
+  Monitor:
+    '<rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>',
+  Sparkles:
+    '<path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="m5 3 1 2.5L8.5 6 6 7 5 9.5 4 7 1.5 6 4 5.5Z"/><path d="M19 17l1 2.5 2.5.5-2.5 1-1 2.5-1-2.5-2.5-1 2.5-1Z"/>',
+  Settings:
+    '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>',
+  HelpCircle:
+    '<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+  LogOut:
+    '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>',
   ChevronLeft: '<polyline points="15 18 9 12 15 6"/>',
   ChevronRight: '<polyline points="9 18 15 12 9 6"/>',
   ChevronDown: '<polyline points="6 9 12 15 18 9"/>',
-  Search: '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>'
+  Search: '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',
+  Boxes: '<path d="M2.97 12.92A2 2 0 0 0 2 14.63v3.24a2 2 0 0 0 .97 1.71l3 1.8a2 2 0 0 0 2.06 0L12 19v-5.5l-5-3-4.03 2.42Z"/><path d="m7 16.5-4.74-2.85"/><path d="m7 16.5 5-3"/><path d="M7 16.5v5.17"/><path d="M12 13.5V19l3.97 2.38a2 2 0 0 0 2.06 0l3-1.8a2 2 0 0 0 .97-1.71v-3.24a2 2 0 0 0-.97-1.71L17 10.5l-5 3Z"/><path d="m17 16.5-5-3"/><path d="m17 16.5 4.74-2.85"/><path d="M17 16.5v5.17"/><path d="M7.97 4.42A2 2 0 0 0 7 6.13v4.37l5 3 5-3V6.13a2 2 0 0 0-.97-1.71l-3-1.8a2 2 0 0 0-2.06 0l-3 1.8Z"/><path d="M12 8 7.26 5.15"/><path d="m12 8 4.74-2.85"/><path d="M12 13.5V8"/>',
 }
 
 // Toggle Sidebar Collapse
@@ -130,12 +153,37 @@ watch(
       }
     }
   },
-  { immediate: true }
+  { immediate: true },
 )
 
-// Search filtering logic
+// Role-based filtering (single source of truth: src/config/access.ts)
+const allowedMenuGroups = computed(() => {
+  const role = authStore.role
+  return menuGroups.value
+    .map((group) => ({
+      ...group,
+      items: group.items
+        .map((item) => {
+          if (item.route) {
+            // main item with a direct route
+            return canAccess(role, item.route) ? item : null
+          }
+          if (item.children) {
+            // group item: keep only children the role may access
+            const visibleChildren = item.children.filter((sub) => canAccess(role, sub.route))
+            return visibleChildren.length ? { ...item, children: visibleChildren } : null
+          }
+          return item
+        })
+        .filter(Boolean),
+    }))
+    .filter((group) => group.items.length > 0)
+})
+
+// Search filtering logic (applied after role filtering)
 const filteredMenuGroups = computed(() => {
-  if (!searchQuery.value) return menuGroups.value
+  const roleAllowed = allowedMenuGroups.value
+  if (!searchQuery.value) return roleAllowed
 
   const query = searchQuery.value.toLowerCase()
   return menuGroups.value
@@ -144,9 +192,7 @@ const filteredMenuGroups = computed(() => {
         // Match main item name
         const matchName = item.name.toLowerCase().includes(query)
         // Match sub-items name
-        const matchChildren = item.children?.some((sub) =>
-          sub.name.toLowerCase().includes(query)
-        )
+        const matchChildren = item.children?.some((sub) => sub.name.toLowerCase().includes(query))
         return matchName || matchChildren
       })
 
@@ -155,13 +201,13 @@ const filteredMenuGroups = computed(() => {
         items: filteredItems.map((item) => {
           // If query matches sub-items, automatically open this dropdown
           const hasMatchingChildren = item.children?.some((sub) =>
-            sub.name.toLowerCase().includes(query)
+            sub.name.toLowerCase().includes(query),
           )
           return {
             ...item,
-            isOpen: hasMatchingChildren ? true : item.isOpen
+            isOpen: hasMatchingChildren ? true : item.isOpen,
           }
-        })
+        }),
       }
     })
     .filter((group) => group.items.length > 0)
@@ -191,13 +237,19 @@ const handleSubItemClick = (parentName, subItem) => {
 const handleLogout = async () => {
   await authService.logout()
   localStorage.removeItem('token')
+  authStore.reset()
   toastStore.success('Logout success')
   router.push('/login')
 }
+
+// Bottom items filtered by role
+const visibleBottomItems = computed(() =>
+  bottomItems.filter((item) => canAccess(authStore.role, item.route)),
+)
 </script>
 
 <template>
-  <aside class="sidebar" :class="{ 'collapsed': isCollapsed }">
+  <aside class="sidebar" :class="{ collapsed: isCollapsed }">
     <!-- Header / Brand Logo -->
     <div class="header" :class="{ 'header-collapsed': isCollapsed }">
       <div class="brand">
@@ -256,7 +308,6 @@ const handleLogout = async () => {
       </button>
     </div>
 
-   
     <!-- Scrollable Menu Items -->
     <div class="menu-container sidebar-scroll">
       <div v-for="group in filteredMenuGroups" :key="group.groupName" class="menu-group">
@@ -275,7 +326,7 @@ const handleLogout = async () => {
             <button
               @click="handleItemClick(item)"
               class="menu-item"
-              :class="{ 'active': activeItem === item.name }"
+              :class="{ active: activeItem === item.name }"
             >
               <!-- Icon -->
               <svg
@@ -335,13 +386,13 @@ const handleLogout = async () => {
     <!-- Bottom Section -->
     <div class="bottom-section">
       <!-- Help and Center -->
-      <div v-for="item in bottomItems" :key="item.name" class="menu-item-wrapper">
+      <div v-for="item in visibleBottomItems" :key="item.name" class="menu-item-wrapper">
         <div v-if="activeItem === item.name" class="active-indicator"></div>
 
         <button
           @click="handleItemClick(item)"
           class="menu-item"
-          :class="{ 'active': activeItem === item.name }"
+          :class="{ active: activeItem === item.name }"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -381,8 +432,8 @@ const handleLogout = async () => {
 <style scoped>
 /* Color Palette Variables */
 .sidebar {
-  --primary-orange: #E15B2B;
-  --primary-orange-gradient-end: #F17B50;
+  --primary-orange: #e15b2b;
+  --primary-orange-gradient-end: #f17b50;
   --bg-orange-light: rgba(225, 91, 43, 0.05);
   --border-orange-light: rgba(225, 91, 43, 0.1);
   --bg-sidebar: #ffffff;
@@ -691,7 +742,9 @@ const handleLogout = async () => {
   height: 20px;
   color: var(--text-light);
   flex-shrink: 0;
-  transition: transform 0.2s ease, color 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    color 0.2s ease;
 }
 
 .menu-item:hover .item-icon {

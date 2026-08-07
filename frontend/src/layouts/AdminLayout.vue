@@ -1,12 +1,13 @@
 <script setup>
-import { computed, ref, onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import Sidebar from '@/components/admin/Sidebar.vue'
-import { authService } from '@/services/authService'
+import { useAuthStore } from '@/stores/authStore'
 
 const route = useRoute()
 const router = useRouter()
-const userProfile = ref(null)
+const authStore = useAuthStore()
+const userProfile = computed(() => authStore.user)
 
 // Computes the current page title based on the active route
 const pageTitle = computed(() => {
@@ -39,24 +40,8 @@ const fetchProfile = async () => {
     return
   }
 
-  // Developer mock session check
-  if (token === 'mock-developer-token-citramas') {
-    userProfile.value = {
-      first_name: 'Developer',
-      last_name: 'Mock',
-      username: 'admin',
-      role: 'admin',
-      email: 'admin@citramas.com',
-    }
-    return
-  }
-
-  try {
-    const data = await authService.getProfile()
-    userProfile.value = data
-  } catch (error) {
-    console.error('Failed to load user profile:', error)
-    // Clear invalid session token and force redirection
+  const profile = await authStore.fetchProfile(true)
+  if (!profile) {
     localStorage.removeItem('token')
     router.push('/login')
   }
