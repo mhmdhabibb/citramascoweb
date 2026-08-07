@@ -70,6 +70,7 @@ export interface Reservation {
   price: number
   total_night: number
   total_price: number
+  deposit?: number
   is_offer: boolean
   offer_code: string
 }
@@ -185,4 +186,15 @@ export interface InventoryReport {
   to: string
   summary: InventoryReportItem[]
   low_stock: InventoryReportItem[]
+}
+
+export interface AppNotification {
+  id: string
+  user_id: string
+  type: string
+  title: string
+  message: string
+  reference_id: string
+  is_read: boolean
+  created_at: string
 }

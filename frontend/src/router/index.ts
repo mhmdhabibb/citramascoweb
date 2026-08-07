@@ -12,8 +12,9 @@ import { useAuthStore } from '@/stores/authStore'
 import { canAccess, firstAllowedPage } from '@/config/access'
 
 // Admin Views
-import DashboardView from '@/views/admin/DashboardView.vue'
+import DashboardHub from '@/views/admin/DashboardHub.vue'
 import ReservationsView from '@/views/admin/ReservationsView.vue'
+import ReservationFormView from '@/views/admin/ReservationFormView.vue'
 import AdminRoomsView from '@/views/admin/RoomsView.vue'
 import RoomTypesView from '@/views/admin/RoomTypesView.vue'
 import RoomCategoriesView from '@/views/admin/RoomCategoriesView.vue'
@@ -21,6 +22,7 @@ import StaffView from '@/views/admin/StaffView.vue'
 import PromotionsView from '@/views/admin/PromotionsView.vue'
 import UsersView from '@/views/admin/UsersView.vue'
 import InventoryView from '@/views/admin/InventoryView.vue'
+import FinanceView from '@/views/admin/FinanceView.vue'
 import ForbiddenView from '@/views/admin/ForbiddenView.vue'
 
 const router = createRouter({
@@ -84,17 +86,23 @@ const router = createRouter({
           path: '',
           redirect: '/admin/dashboard',
         },
-        {
+{
           path: 'dashboard',
           name: 'admin-dashboard',
-          component: DashboardView,
-          meta: { title: 'Dashboard' },
+          component: DashboardHub,
+          meta: { title: 'Dashboard' }
         },
         {
           path: 'reservations',
           name: 'admin-reservations',
           component: ReservationsView,
           meta: { title: 'Reservations' },
+        },
+        {
+          path: 'reservations/new',
+          name: 'admin-reservation-new',
+          component: ReservationFormView,
+          meta: { title: 'New Reservation' },
         },
 {
           path: 'users',
@@ -107,6 +115,12 @@ const router = createRouter({
           name: 'admin-inventory',
           component: InventoryView,
           meta: { title: 'Inventory' }
+        },
+        {
+          path: 'finance',
+          name: 'admin-finance',
+          component: FinanceView,
+          meta: { title: 'Finance' }
         },
         {
           path: 'rooms',

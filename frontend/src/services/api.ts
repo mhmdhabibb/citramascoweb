@@ -1,8 +1,8 @@
 import axios from 'axios'
 
-
 const api = axios.create({
-  baseURL: 'https://citramas-production.up.railway.app/api/',
+  // baseURL: 'https://citramas-production.up.railway.app/api/',
+  baseURL: 'http://localhost:4000/api/',
   timeout: 10000,
 })
 

@@ -5,6 +5,11 @@
  *  - the router guard (blocks navigation to disallowed admin pages)
  *  - the Sidebar menu (hides disallowed items)
  *
+ * Access model:
+ *  - admin / manager / inventory : dashboard + all pages
+ *  - reception                   : dashboard + reservations (front desk) only
+ *  - finance                     : the dedicated Finance page only
+ *
  * Tweak the arrays below to change which roles can access which page.
  */
 
@@ -21,16 +26,18 @@ export type AppRole =
  * A role not listed for an admin path is blocked from that page.
  */
 export const ROUTE_ACCESS: Record<string, AppRole[]> = {
-  '/admin/dashboard': ['admin', 'manager'],
-  '/admin/reservations': ['admin', 'manager', 'reception'],
-  '/admin/rooms': ['admin', 'manager'],
-  '/admin/room-types': ['admin', 'manager'],
-  '/admin/room-categories': ['admin', 'manager'],
+  '/admin/dashboard': ['admin', 'manager', 'inventory', 'reception'],
+  '/admin/finance': ['finance'],
+  '/admin/reservations': ['admin', 'manager', 'inventory', 'reception'],
+  '/admin/reservations/new': ['admin', 'manager', 'reception'],
+  '/admin/rooms': ['admin', 'manager', 'inventory'],
+  '/admin/room-types': ['admin', 'manager', 'inventory'],
+  '/admin/room-categories': ['admin', 'manager', 'inventory'],
   '/admin/inventory': ['admin', 'manager', 'inventory'],
-  '/admin/promotions': ['admin', 'manager'],
-  '/admin/users': ['admin'],
-  '/admin/staff': ['admin', 'manager'],
-  '/admin/help': ['admin', 'manager', 'reception', 'finance', 'inventory', 'user'],
+  '/admin/promotions': ['admin', 'manager', 'inventory'],
+  '/admin/users': ['admin', 'manager', 'inventory'],
+  '/admin/staff': ['admin', 'manager', 'inventory'],
+  '/admin/help': ['admin', 'manager', 'inventory', 'finance'],
 }
 
 export function canAccess(role: string | undefined, path: string): boolean {
@@ -55,7 +62,9 @@ export function firstAllowedPage(role: string | undefined, fallback = 'admin-das
 function pathToRouteName(path: string): string {
   const names: Record<string, string> = {
     '/admin/dashboard': 'admin-dashboard',
+    '/admin/finance': 'admin-finance',
     '/admin/reservations': 'admin-reservations',
+    '/admin/reservations/new': 'admin-reservation-new',
     '/admin/rooms': 'admin-rooms',
     '/admin/room-types': 'admin-room-types',
     '/admin/room-categories': 'admin-room-categories',

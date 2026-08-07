@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"log"
 
 	"gorm.io/driver/postgres"
@@ -12,15 +11,10 @@ import (
 var DB *gorm.DB
 
 func ConnectDB() *gorm.DB {
-	host := Config("DB_HOST")
-	user := Config("DB_USER")
-	password := Config("DB_PASSWORD")
-	port := Config("DB_PORT")
-	dbname := Config("DB_NAME")
+	dsn := Config("DB_URL")
 
 	// Rangkai menjadi format DSN PostgreSQL yang resmi
-	dsn := fmt.Sprintf("host=%s user=%s password=%s port=%s dbname=%s sslmode=require",
-		host, user, password, port, dbname)
+
 	if dsn == "" {
 		log.Fatalf("Database connection failed: DB_URL environment variable is missing or empty")
 	}

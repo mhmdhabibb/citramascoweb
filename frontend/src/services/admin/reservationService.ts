@@ -80,6 +80,7 @@ export const reservationService = {
     number_of_guest: number
     is_offer?: boolean
     offer_code?: string
+    deposit?: number
   }): Promise<string> => {
     const response = await api.post<ApiResponse<any>>('/reservation', data)
     if (!response.data.success) {
