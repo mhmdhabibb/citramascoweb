@@ -23,7 +23,15 @@ import PromotionsView from '@/views/admin/PromotionsView.vue'
 import UsersView from '@/views/admin/UsersView.vue'
 import InventoryView from '@/views/admin/InventoryView.vue'
 import FinanceView from '@/views/admin/FinanceView.vue'
+import CashBankView from '@/views/admin/CashBankView.vue'
+import GeneralJournalView from '@/views/admin/GeneralJournalView.vue'
+import COAView from '@/views/admin/COAView.vue'
+import GeneralLedgerView from '@/views/admin/finance/GeneralLedgerView.vue'
+import ApArView from '@/views/admin/finance/ApArView.vue'
+import ProfitLossView from '@/views/admin/finance/ProfitLossView.vue'
+import BalanceSheetView from '@/views/admin/finance/BalanceSheetView.vue'
 import ForbiddenView from '@/views/admin/ForbiddenView.vue'
+import GuestBookView from '@/views/admin/GuestBookView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -99,6 +107,12 @@ const router = createRouter({
           meta: { title: 'Reservations' },
         },
         {
+          path: 'guestbook',
+          name: 'admin-guestbook',
+          component: GuestBookView,
+          meta: { title: 'Guest Book' },
+        },
+        {
           path: 'reservations/new',
           name: 'admin-reservation-new',
           component: ReservationFormView,
@@ -117,10 +131,58 @@ const router = createRouter({
           meta: { title: 'Inventory' }
         },
         {
+          path: 'inventory-usage',
+          name: 'admin-inventory-usage',
+          component: () => import('@/views/admin/InventoryUsageView.vue'),
+          meta: { title: 'Inventory Usage' }
+        },
+        {
           path: 'finance',
           name: 'admin-finance',
           component: FinanceView,
-          meta: { title: 'Finance' }
+          meta: { title: 'Finance Dashboard' }
+        },
+        {
+          path: 'finance/cash-bank',
+          name: 'admin-finance-cash',
+          component: CashBankView,
+          meta: { title: 'Kas & Bank' }
+        },
+        {
+          path: 'finance/general-journal',
+          name: 'admin-finance-journal',
+          component: GeneralJournalView,
+          meta: { title: 'Jurnal Umum' }
+        },
+        {
+          path: 'finance/coa',
+          name: 'admin-finance-coa',
+          component: COAView,
+          meta: { title: 'Chart of Accounts' }
+        },
+        {
+          path: 'finance/ap-ar',
+          name: 'admin-finance-apar',
+          component: ApArView,
+          meta: { title: 'Hutang & Piutang' }
+        },
+        {
+          path: 'finance/general-ledger',
+          name: 'admin-finance-gl',
+          component: GeneralLedgerView,
+          meta: { title: 'Buku Besar' }
+        },
+        {
+          path: 'finance/profit-loss',
+          name: 'admin-finance-pl',
+          component: ProfitLossView,
+          meta: { title: 'Laba Rugi' }
+        },
+        {
+          path: 'finance/balance-sheet',
+          name: 'admin-finance-bs',
+          component: BalanceSheetView,
+          meta: { title: 'Neraca & Arus Kas' }
         },
         {
           path: 'rooms',

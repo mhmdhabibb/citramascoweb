@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { reservationService } from '@/services/admin/reservationService'
 import { useToastStore } from '@/stores/toastStore'
+import { financeService } from '@/services/admin/financeService'
 import type { Reservation } from '@/types'
 
 const toastStore = useToastStore()
@@ -14,7 +15,9 @@ const nonCancelled = computed(() =>
 )
 
 const totalRevenue = computed(() =>
-  nonCancelled.value.reduce((sum, r) => sum + (r.total_price || 0), 0),
+  reservations.value
+    .filter((r) => ['checked-in', 'checked-out'].includes(r.status))
+    .reduce((sum, r) => sum + (r.total_price || 0), 0),
 )
 
 const totalBookings = computed(() => reservations.value.length)
@@ -53,6 +56,20 @@ function formatIDR(n: number) {
 
 function formatDate(d?: string) {
   if (!d) return '-'
+  
+  // Handle DD-MM-YYYY format from backend
+  const parts = d.split('-')
+  if (parts.length === 3 && parts[0]?.length === 2) {
+    // Convert DD-MM-YYYY to YYYY-MM-DD for standard JS parsing
+    const isoString = `${parts[2]}-${parts[1]}-${parts[0]}`
+    return new Date(isoString).toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    })
+  }
+
+  // Fallback for standard ISO dates
   return new Date(d).toLocaleDateString('en-GB', {
     day: '2-digit',
     month: 'short',
@@ -94,6 +111,18 @@ const fetchAll = async () => {
     toastStore.error((error as Error).message || 'Failed to load finance data')
   } finally {
     loading.value = false
+  }
+}
+
+async function verifyPayment(id: string, status: 'confirmed' | 'rejected') {
+  if (confirm(`Are you sure you want to mark this payment as ${status}?`)) {
+    try {
+      await financeService.verifyPayment(id, status)
+      toastStore.success(`Payment ${status} successfully`)
+      fetchAll()
+    } catch (error: any) {
+      toastStore.error(error.message || `Failed to ${status} payment`)
+    }
   }
 }
 
@@ -147,6 +176,7 @@ onMounted(fetchAll)
               <th>Check-out</th>
               <th>Status</th>
               <th>Total</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -158,9 +188,16 @@ onMounted(fetchAll)
               <td>{{ row.checkout }}</td>
               <td><span class="badge" :class="statusClass(row.status)">{{ statusLabel(row.status) }}</span></td>
               <td class="bold">{{ formatIDR(row.total) }}</td>
+              <td>
+                <div v-if="row.status === 'pending'" class="actions-group">
+                  <button class="btn-sm btn-confirm" @click="verifyPayment(row.id, 'confirmed')">Confirm</button>
+                  <button class="btn-sm btn-reject" @click="verifyPayment(row.id, 'rejected')">Reject</button>
+                </div>
+                <span v-else class="text-xs text-gray-500">-</span>
+              </td>
             </tr>
-            <tr v-if="loading"><td colspan="7" class="no-data">Loading...</td></tr>
-            <tr v-else-if="rows.length === 0"><td colspan="7" class="no-data">No bookings yet.</td></tr>
+            <tr v-if="loading"><td colspan="8" class="no-data">Loading...</td></tr>
+            <tr v-else-if="rows.length === 0"><td colspan="8" class="no-data">No bookings yet.</td></tr>
           </tbody>
         </table>
       </div>
@@ -248,6 +285,23 @@ onMounted(fetchAll)
 .s-active { background-color: #d1fae5; color: #065f46; }
 .s-done { background-color: #e2e8f0; color: #334155; }
 .s-cancel { background-color: #fee2e2; color: #991b1b; }
+
+.actions-group {
+  display: flex;
+  gap: 8px;
+}
+.btn-sm {
+  padding: 6px 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+}
+.btn-confirm { background-color: #dcfce7; color: #166534; }
+.btn-reject { background-color: #fee2e2; color: #991b1b; }
+.text-xs { font-size: 0.75rem; }
+.text-gray-500 { color: #64748b; }
 
 .no-data { text-align: center; color: #64748b; padding: 32px !important; }
 </style>

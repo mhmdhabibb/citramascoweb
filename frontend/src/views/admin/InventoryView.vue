@@ -2,9 +2,13 @@
 import { ref, computed, onMounted } from 'vue'
 import { inventoryService } from '@/services/admin/inventoryService'
 import { useToastStore } from '@/stores/toastStore'
+import { useAuthStore } from '@/stores/authStore'
 import type { InventoryItem, InventoryReport, InventoryTransaction } from '@/types'
 
 const toastStore = useToastStore()
+const authStore = useAuthStore()
+
+const isAdminOrManager = computed(() => ['admin', 'manager'].includes(authStore.role || ''))
 
 const activeTab = ref('items')
 const loading = ref(false)
@@ -16,7 +20,7 @@ const report = ref<InventoryReport | null>(null)
 const tabs = [
   { value: 'items', label: 'Inventory Items' },
   { value: 'usage', label: 'Usage Log (Book)' },
-  { value: 'balance', label: 'Stock Balance Check' },
+  { value: 'balance', label: 'Stock Opname' },
   { value: 'report', label: 'Usage Report' },
 ]
 
@@ -265,7 +269,7 @@ onMounted(() => {
         <div class="low-stock-alert" v-if="lowStockItems.length">
           <strong>{{ lowStockItems.length }}</strong> item(s) below reorder level
         </div>
-        <button class="btn btn-primary" @click="openAddItem">+ Add Item</button>
+        <button v-if="isAdminOrManager" class="btn btn-primary" @click="openAddItem">+ Add Item</button>
       </div>
 
       <div class="table-card">
@@ -303,7 +307,7 @@ onMounted(() => {
                   <div class="action-buttons">
                     <button class="btn btn-sm btn-outline" @click="openRecord(item, 'stock-in')">Stock In</button>
                     <button class="btn btn-sm btn-primary-outline" @click="openRecord(item, 'usage')">Usage</button>
-                    <button class="btn btn-sm btn-danger-outline" @click="deleteItem(item)">Delete</button>
+                    <button v-if="isAdminOrManager" class="btn btn-sm btn-danger-outline" @click="deleteItem(item)">Delete</button>
                   </div>
                 </td>
               </tr>
@@ -360,11 +364,11 @@ onMounted(() => {
       </div>
     </div>
 
-    <!-- ============ STOCK BALANCE CHECK ============ -->
+    <!-- ============ STOCK OPNAME ============ -->
     <div v-if="activeTab === 'balance'" class="pane">
       <div class="table-card">
         <div class="card-heading">
-          <h3 class="card-title">Check Items Balance</h3>
+          <h3 class="card-title">Stock Opname</h3>
           <p class="card-sub">Count the actual stock and reconcile against the system to verify items are balanced with usage/orders.</p>
         </div>
         <div class="table-container">
@@ -532,7 +536,7 @@ onMounted(() => {
     <div v-if="showBalanceModal" class="modal-overlay" @click.self="showBalanceModal = false">
       <div class="modal-card modal-card-sm">
         <div class="modal-header">
-          <h3 class="modal-title">Stock Balance Check</h3>
+          <h3 class="modal-title">Stock Opname</h3>
           <button class="modal-close" @click="showBalanceModal = false" aria-label="Close">&times;</button>
         </div>
         <div class="modal-body">

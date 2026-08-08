@@ -37,14 +37,19 @@ const menuGroups = ref([
         route: '/admin/reservations',
       },
       {
+        name: 'Guest Book',
+        icon: 'Users',
+        route: '/admin/guestbook',
+      },
+      {
         name: 'Inventory',
         icon: 'Boxes',
         route: '/admin/inventory',
       },
       {
-        name: 'Finance',
-        icon: 'Banknote',
-        route: '/admin/finance',
+        name: 'Inventory Usage',
+        icon: 'FileText',
+        route: '/admin/inventory-usage',
       },
       {
         name: 'Manage Rooms',
@@ -73,6 +78,51 @@ const menuGroups = ref([
       },
     ],
   },
+  {
+    groupName: 'Finance & Accounting',
+    items: [
+      {
+        name: 'Dashboard',
+        icon: 'LayoutDashboard',
+        route: '/admin/finance',
+      },
+      {
+        name: 'Master Data',
+        icon: 'Database',
+        isOpen: false,
+        children: [
+          { name: 'Chart of Accounts', route: '/admin/finance/coa' }
+        ]
+      },
+      {
+        name: 'Transaksi',
+        icon: 'CreditCard',
+        isOpen: false,
+        children: [
+          { name: 'Jurnal Umum', route: '/admin/finance/general-journal' },
+          { name: 'Kas & Bank', route: '/admin/finance/cash-bank' },
+          { name: 'Hutang & Piutang', route: '/admin/finance/ap-ar' }
+        ]
+      },
+      {
+        name: 'Buku & Buku Besar',
+        icon: 'BookOpen',
+        isOpen: false,
+        children: [
+          { name: 'Buku Besar', route: '/admin/finance/general-ledger' }
+        ]
+      },
+      {
+        name: 'Laporan',
+        icon: 'FileText',
+        isOpen: false,
+        children: [
+          { name: 'Laba Rugi', route: '/admin/finance/profit-loss' },
+          { name: 'Neraca & Arus Kas', route: '/admin/finance/balance-sheet' }
+        ]
+      }
+    ]
+  }
 ])
 
 // Bottom Items
@@ -119,6 +169,10 @@ const icons = {
   Search: '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',
   Boxes: '<path d="M2.97 12.92A2 2 0 0 0 2 14.63v3.24a2 2 0 0 0 .97 1.71l3 1.8a2 2 0 0 0 2.06 0L12 19v-5.5l-5-3-4.03 2.42Z"/><path d="m7 16.5-4.74-2.85"/><path d="m7 16.5 5-3"/><path d="M7 16.5v5.17"/><path d="M12 13.5V19l3.97 2.38a2 2 0 0 0 2.06 0l3-1.8a2 2 0 0 0 .97-1.71v-3.24a2 2 0 0 0-.97-1.71L17 10.5l-5 3Z"/><path d="m17 16.5-5-3"/><path d="m17 16.5 4.74-2.85"/><path d="M17 16.5v5.17"/><path d="M7.97 4.42A2 2 0 0 0 7 6.13v4.37l5 3 5-3V6.13a2 2 0 0 0-.97-1.71l-3-1.8a2 2 0 0 0-2.06 0l-3 1.8Z"/><path d="M12 8 7.26 5.15"/><path d="m12 8 4.74-2.85"/><path d="M12 13.5V8"/>',
   Banknote: '<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/>',
+  Database: '<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>',
+  CreditCard: '<rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/>',
+  BookOpen: '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',
+  FileText: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>',
 }
 
 // Toggle Sidebar Collapse
@@ -128,12 +182,18 @@ const toggleCollapse = () => {
 
 // Toggle Dropdown (only works if sidebar is expanded)
 const toggleDropdown = (item) => {
-  if (isCollapsed.value) {
-    isCollapsed.value = false
-    item.isOpen = true
-    return
+  for (const group of menuGroups.value) {
+    const originalItem = group.items.find(i => i.name === item.name)
+    if (originalItem) {
+      if (isCollapsed.value) {
+        isCollapsed.value = false
+        originalItem.isOpen = true
+        return
+      }
+      originalItem.isOpen = !originalItem.isOpen
+      return
+    }
   }
-  item.isOpen = !item.isOpen
 }
 
 // Check route and activate matching item
@@ -177,6 +237,14 @@ const allowedMenuGroups = computed(() => {
           if (item.children) {
             // group item: keep only children the role may access
             const visibleChildren = item.children.filter((sub) => canAccess(role, sub.route))
+            if (visibleChildren.length === 1) {
+              // Flatten if only 1 child is visible
+              return {
+                name: visibleChildren[0].name,
+                icon: item.icon,
+                route: visibleChildren[0].route,
+              }
+            }
             return visibleChildren.length ? { ...item, children: visibleChildren } : null
           }
           return item
