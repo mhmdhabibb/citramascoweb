@@ -1,15 +1,22 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { reservationService } from '@/services/admin/reservationService'
 import { authService } from '@/services/authService'
 import { useToastStore } from '@/stores/toastStore'
 
+const router = useRouter()
 const reservations = ref([])
 const searchQuery = ref('')
 const statusFilter = ref('All')
 const loading = ref(false)
 const currentUser = ref(null)
 const toastStore = useToastStore()
+
+// Receptionists (and above) may operate the front-desk reservation actions
+const canManage = computed(() =>
+  ['admin', 'manager', 'reception'].includes(currentUser.value?.role),
+)
 
 // State melacak baris yang sedang dipilih/diklik
 const selectedReservation = ref(null)
@@ -200,6 +207,9 @@ onMounted(async () => {
               <option value="rejected">Rejected</option>
             </select>
           </div>
+          <button v-if="canManage" class="btn-new" @click="router.push('/admin/reservations/new')">
+            + New Reservation
+          </button>
         </div>
 
         <div class="dashboard-card table-card">
@@ -327,7 +337,7 @@ onMounted(async () => {
               </p>
             </div>
 
-            <div v-if="currentUser?.role === 'admin'" class="drawer-actions-container">
+            <div v-if="canManage" class="drawer-actions-container">
               <div v-if="selectedReservation.status === 'pending'" class="btn-group-row">
                 <button
                   @click="approveReservation(selectedReservation.id)"
@@ -498,6 +508,21 @@ onMounted(async () => {
   background-repeat: no-repeat;
   background-position: right 14px center;
   background-size: 14px;
+}
+.btn-new {
+  background: #e4793b;
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s;
+}
+.btn-new:hover {
+  background: #d16627;
 }
 
 /* Premium Design Table Layout */

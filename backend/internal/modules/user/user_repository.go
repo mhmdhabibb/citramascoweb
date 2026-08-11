@@ -10,6 +10,9 @@ type UserRepositoryInterface interface {
 	GetAllCustomer() ([]auth.User, error)
 	GetAllByRole(role string) ([]auth.User, error)
 	Delete(id string) error
+	Create(user *auth.User) error
+	CheckUsername(username string) (bool, error)
+	UpdateRole(id string, role auth.Role) error
 }
 
 type userRepository struct {
@@ -52,4 +55,24 @@ func (r *userRepository) Delete(id string) error {
 	}
 
 	return nil
+}
+
+func (r *userRepository) Create(user *auth.User) error {
+	return r.db.Create(user).Error
+}
+
+func (r *userRepository) CheckUsername(username string) (bool, error) {
+	var count int64
+
+	err := r.db.Model(&auth.User{}).Where("username = ? OR email = ?", username, username).Count(&count).Error
+
+	if err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
+}
+
+func (r *userRepository) UpdateRole(id string, role auth.Role) error {
+	return r.db.Model(&auth.User{}).Where("id = ?", id).Update("role", role).Error
 }

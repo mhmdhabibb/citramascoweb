@@ -1,8 +1,10 @@
 package config
 
 import (
-	"fmt"
+	"citramascoweb-backend/internal/modules/rooms/reservation"
+	"citramascoweb-backend/internal/modules/finance"
 	"log"
+	"time"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -12,15 +14,10 @@ import (
 var DB *gorm.DB
 
 func ConnectDB() *gorm.DB {
-	host := Config("DB_HOST")
-	user := Config("DB_USER")
-	password := Config("DB_PASSWORD")
-	port := Config("DB_PORT")
-	dbname := Config("DB_NAME")
+	dsn := Config("DB_URL")
 
 	// Rangkai menjadi format DSN PostgreSQL yang resmi
-	dsn := fmt.Sprintf("host=%s user=%s password=%s port=%s dbname=%s sslmode=require",
-		host, user, password, port, dbname)
+
 	if dsn == "" {
 		log.Fatalf("Database connection failed: DB_URL environment variable is missing or empty")
 	}
@@ -42,5 +39,30 @@ func ConnectDB() *gorm.DB {
 		log.Fatalf("Database migration failed: %v", err)
 	}
 
+	db.AutoMigrate(&reservation.Reservation{})
+	db.AutoMigrate(&finance.ChartOfAccount{}, &finance.CashTransaction{}, &finance.GeneralJournal{}, &finance.Invoice{})
+
+	seedCOA(db)
+
 	return db
+}
+
+func seedCOA(db *gorm.DB) {
+	coas := []finance.ChartOfAccount{
+		{Code: "1-100", Name: "Kas Finance", Type: "Asset"},
+		{Code: "1-101", Name: "Kas Front Desk", Type: "Asset"},
+		{Code: "1-102", Name: "Bank BCA", Type: "Asset"},
+		{Code: "4-100", Name: "Pendapatan Sewa", Type: "Revenue"},
+	}
+
+	for _, coa := range coas {
+		var existing finance.ChartOfAccount
+		if err := db.Where("code = ?", coa.Code).First(&existing).Error; err != nil {
+			if err == gorm.ErrRecordNotFound {
+				coa.CreatedAt = time.Now()
+				coa.UpdatedAt = time.Now()
+				db.Create(&coa)
+			}
+		}
+	}
 }

@@ -1,6 +1,11 @@
 package user
 
 import (
+	"strings"
+
+	"citramascoweb-backend/internal/dto"
+	"citramascoweb-backend/internal/modules/auth"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -42,4 +47,42 @@ func (h *userHandler) Delete(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{"message": "User deleted successfully"})
+}
+
+func (h *userHandler) Create(c *gin.Context) {
+	var req dto.CreateUserRequest
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		c.JSON(400, gin.H{"success": false, "message": err.Error()})
+		return
+	}
+
+	user, err := h.userService.CreateUser(&req)
+	if err != nil {
+		c.JSON(400, gin.H{"success": false, "message": err.Error()})
+		return
+	}
+
+	c.JSON(200, gin.H{"success": true, "message": "User created successfully!", "data": user})
+}
+
+func (h *userHandler) UpdateRole(c *gin.Context) {
+	id := c.Param("id")
+
+	var req dto.UpdateUserRoleRequest
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		c.JSON(400, gin.H{"success": false, "message": err.Error()})
+		return
+	}
+
+	role := auth.Role(strings.ToLower(req.Role))
+
+	err = h.userService.UpdateRole(id, role)
+	if err != nil {
+		c.JSON(400, gin.H{"success": false, "message": "Error updating user role!", "error": err.Error()})
+		return
+	}
+
+	c.JSON(200, gin.H{"success": true, "message": "User role updated successfully!"})
 }

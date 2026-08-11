@@ -2,6 +2,7 @@ package reservation
 
 import (
 	"citramascoweb-backend/internal/dto"
+	"citramascoweb-backend/internal/modules/notification"
 	"citramascoweb-backend/internal/modules/rooms"
 	"citramascoweb-backend/pkg/utils"
 	"errors"
@@ -15,12 +16,14 @@ import (
 type reservationService struct {
 	reservationRepo ReservationRepositoryInterface
 	roomRepo        rooms.RoomRepositoryInterface
+	notifier        *notification.NotificationService
 }
 
-func NewReservationService(reservationRepo ReservationRepositoryInterface, roomRepo rooms.RoomRepositoryInterface) *reservationService {
+func NewReservationService(reservationRepo ReservationRepositoryInterface, roomRepo rooms.RoomRepositoryInterface, notifier *notification.NotificationService) *reservationService {
 	return &reservationService{
 		reservationRepo: reservationRepo,
 		roomRepo:        roomRepo,
+		notifier:        notifier,
 	}
 }
 
@@ -167,11 +170,17 @@ func (s *reservationService) Store(req *dto.CreateReservationRequest) error {
 		NumberOfGuest: req.NumberOfGuest,
 		IsOffer:       &isOfferVal,
 		OfferCode:     offerApplied,
+		Deposit:       req.Deposit,
 	}
 
 	err = s.reservationRepo.Create(newReservation)
 	if err != nil {
 		return err
+	}
+
+	// Notify finance users when a deposit was recorded on the reservation
+	if newReservation.Deposit > 0 && s.notifier != nil {
+		_ = s.notifier.NotifyFinanceDeposit(newReservation.Deposit, newReservation.FullName, newReservation.Code, newReservation.Id)
 	}
 
 	// Decrement offer quota if applied

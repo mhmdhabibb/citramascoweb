@@ -70,6 +70,7 @@ export interface Reservation {
   price: number
   total_night: number
   total_price: number
+  deposit?: number
   is_offer: boolean
   offer_code: string
 }
@@ -89,6 +90,27 @@ export interface Offer {
   description?: string | null
   created_at?: string
   updated_at?: string
+}
+
+export type UserRole =
+  | 'admin'
+  | 'manager'
+  | 'user'
+  | 'reception'
+  | 'finance'
+  | 'inventory'
+
+export interface User {
+  id: string
+  first_name: string
+  last_name: string
+  username: string
+  phone: string
+  email: string
+  address: string
+  role: UserRole
+  created_at: string
+  updated_at: string
 }
 
 export interface BookingBreakdown {
@@ -115,4 +137,64 @@ export interface DashboardData {
   total_revenue: number
   booking_breakdown: BookingBreakdown
   revenue_chart: RevenueMonthly[]
+}
+
+export type InventoryTransactionType = 'stock-in' | 'usage' | 'adjustment'
+
+export interface InventoryItem {
+  id: string
+  name: string
+  category: string
+  unit: string
+  current_stock: number
+  reorder_level: number
+  status: string
+  created_at: string
+  updated_at: string
+}
+
+export interface InventoryTransaction {
+  id: string
+  item_id: string
+  item: InventoryItem
+  type: InventoryTransactionType
+  quantity: number
+  balance_after: number
+  reference: string
+  note: string
+  created_by: string
+  created_at: string
+}
+
+export interface InventoryReportItem {
+  item: {
+    id: string
+    name: string
+    category: string
+    unit: string
+    reorder_level: number
+  }
+  opening_stock: number
+  stock_in: number
+  usage: number
+  closing_stock: number
+  is_low_stock: boolean
+}
+
+export interface InventoryReport {
+  from: string
+  to: string
+  summary: InventoryReportItem[]
+  low_stock: InventoryReportItem[]
+}
+
+export interface AppNotification {
+  id: string
+  user_id: string
+  type: string
+  title: string
+  message: string
+  reference_id: string
+  is_read: boolean
+  created_at: string
 }

@@ -28,6 +28,6 @@ func (m *DashboardModule) DashboardRoutes(router *gin.RouterGroup) {
 	api := router.Group("/dashboard")
 	{
 
-		api.GET("/summary", middlewares.AuthMiddleware(), middlewares.RoleMiddleware("admin"), m.Handler.GetDashboardData)
+		api.GET("/summary", middlewares.AuthMiddleware(), middlewares.RoleMiddleware("admin", "manager", "finance", "reception"), m.Handler.GetDashboardData)
 	}
 }

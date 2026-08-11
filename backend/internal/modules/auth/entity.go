@@ -9,6 +9,8 @@ const (
 	RoleManager   Role = "manager"
 	RoleUser      Role = "user"
 	RoleReception Role = "reception"
+	RoleFinance   Role = "finance"
+	RoleInventory Role = "inventory"
 )
 
 type User struct {

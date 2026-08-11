@@ -9,6 +9,7 @@ type CreateReservationRequest struct {
 	NumberOfGuest int     `json:"number_of_guest" form:"number_of_guest" binding:"required"`
 	IsOffer       *bool   `json:"is_offer" form:"is_offer"`
 	OfferCode     *string `json:"offer_code" form:"offer_code"`
+	Deposit       int     `json:"deposit" form:"deposit"`
 }
 
 type UpdateReservationRequest struct {

@@ -6,11 +6,14 @@ import (
 	"citramascoweb-backend/config"
 	"citramascoweb-backend/internal/modules/auth"
 	"citramascoweb-backend/internal/modules/dashboard"
+	"citramascoweb-backend/internal/modules/inventory"
+	"citramascoweb-backend/internal/modules/notification"
 	"citramascoweb-backend/internal/modules/offer"
 	"citramascoweb-backend/internal/modules/rooms"
 	"citramascoweb-backend/internal/modules/rooms/category"
 	"citramascoweb-backend/internal/modules/rooms/reservation"
 	"citramascoweb-backend/internal/modules/rooms/types"
+	"citramascoweb-backend/internal/modules/finance"
 
 	"citramascoweb-backend/internal/modules/user"
 
@@ -25,7 +28,9 @@ func main() {
 	db := config.ConnectDB()
 
 	// Auto migrate entities
-	db.AutoMigrate(&offer.Offer{})
+	// db.AutoMigrate(&offer.Offer{})
+	// db.AutoMigrate(&inventory.InventoryItem{}, &inventory.InventoryTransaction{}, &inventory.InventoryStockTake{})
+	// db.AutoMigrate(&notification.Notification{})
 
 	corsConfig := cors.Config{
 		AllowOrigins:     []string{"*"},
@@ -49,6 +54,9 @@ func main() {
 	reservationModule := reservation.InitModule(db)
 	offerModule := offer.InitModule(db)
 	dashboardModule := dashboard.InitModule(db)
+	inventoryModule := inventory.InitModule(db)
+	notificationModule := notification.InitModule(db)
+	financeModule := finance.InitModule(db)
 
 	api := app.Group("/api")
 
@@ -60,6 +68,9 @@ func main() {
 	reservationModule.ReservationRoutes(api)
 	offerModule.OfferRoutes(api)
 	dashboardModule.DashboardRoutes(api)
+	inventoryModule.InventoryRoutes(api)
+	notificationModule.NotificationRoutes(api)
+	financeModule.FinanceRoutes(api)
 
 	api.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{

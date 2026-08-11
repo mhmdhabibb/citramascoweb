@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { authService } from '@/services/authService'
+import { useAuthStore } from '@/stores/authStore'
 
 const router = useRouter()
 
@@ -44,6 +45,9 @@ const handleLogin = async () => {
 
     successMessage.value = 'Sign in successful! Redirecting...'
     
+    // reset cached profile so the guard picks up the new user's role
+    useAuthStore().reset()
+
     // Brief delay to let the user see the success message
     setTimeout(() => {
       router.push('/admin')

@@ -27,5 +27,7 @@ func (m *Module) UserRoutes(router *gin.RouterGroup) {
 	users := router.Group("/users")
 
 	users.GET("/", middlewares.AuthMiddleware(), middlewares.RoleMiddleware("admin"), m.Handler.GetAllByRole)
+	users.POST("/", middlewares.AuthMiddleware(), middlewares.RoleMiddleware("admin"), m.Handler.Create)
 	users.DELETE("/:id", middlewares.AuthMiddleware(), middlewares.RoleMiddleware("admin"), m.Handler.Delete)
+	users.PATCH("/:id/role", middlewares.AuthMiddleware(), middlewares.RoleMiddleware("admin"), m.Handler.UpdateRole)
 }
