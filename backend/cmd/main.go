@@ -28,9 +28,9 @@ func main() {
 	db := config.ConnectDB()
 
 	// Auto migrate entities
-	db.AutoMigrate(&offer.Offer{})
-	db.AutoMigrate(&inventory.InventoryItem{}, &inventory.InventoryTransaction{}, &inventory.InventoryStockTake{})
-	db.AutoMigrate(&notification.Notification{})
+	// db.AutoMigrate(&offer.Offer{})
+	// db.AutoMigrate(&inventory.InventoryItem{}, &inventory.InventoryTransaction{}, &inventory.InventoryStockTake{})
+	// db.AutoMigrate(&notification.Notification{})
 
 	corsConfig := cors.Config{
 		AllowOrigins:     []string{"*"},
