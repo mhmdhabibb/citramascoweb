@@ -32,6 +32,9 @@ import ProfitLossView from '@/views/admin/finance/ProfitLossView.vue'
 import BalanceSheetView from '@/views/admin/finance/BalanceSheetView.vue'
 import ForbiddenView from '@/views/admin/ForbiddenView.vue'
 import GuestBookView from '@/views/admin/GuestBookView.vue'
+import ChannelsView from '@/views/admin/ChannelsView.vue'
+import CalendarView from '@/views/admin/CalendarView.vue'
+import MonthlyReportView from '@/views/admin/MonthlyReportView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -118,11 +121,27 @@ const router = createRouter({
           component: ReservationFormView,
           meta: { title: 'New Reservation' },
         },
-{
+        {
           path: 'users',
           name: 'admin-users',
           component: UsersView,
           meta: { title: 'Manage Users' }
+        },
+        {
+          path: 'channels',
+          name: 'admin-channels',
+          component: ChannelsView,
+          meta: { title: 'Manage Channels' }
+        },
+        {
+          path: 'calendar',
+          name: 'admin-calendar',
+          component: CalendarView,
+          meta: { title: 'Calendar' }
+        },
+        {
+          path: 'monthly-report',
+          redirect: '/admin/dashboard',
         },
         {
           path: 'inventory',

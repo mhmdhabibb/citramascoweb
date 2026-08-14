@@ -45,6 +45,9 @@ export const ROUTE_ACCESS: Record<string, AppRole[]> = {
   '/admin/inventory-usage': ['admin', 'manager', 'inventory'],
   '/admin/promotions': ['admin', 'manager'],
   '/admin/users': ['admin', 'manager'],
+  '/admin/channels': ['admin', 'manager'],
+  '/admin/calendar': ['admin', 'manager', 'reception'],
+  '/admin/monthly-report': ['admin', 'manager', 'finance'],
   '/admin/staff': ['admin', 'manager'],
   '/admin/help': ['admin', 'manager', 'inventory', 'finance'],
 }
@@ -88,6 +91,9 @@ function pathToRouteName(path: string): string {
     '/admin/inventory': 'admin-inventory',
     '/admin/promotions': 'admin-promotions',
     '/admin/users': 'admin-users',
+    '/admin/channels': 'admin-channels',
+    '/admin/calendar': 'admin-calendar',
+    '/admin/monthly-report': 'admin-monthly-report',
     '/admin/staff': 'admin-staff',
     '/admin/help': 'admin-help',
   }

@@ -3,13 +3,15 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { roomService } from '@/services/roomService'
 import { reservationService } from '@/services/admin/reservationService'
+import { channelService } from '@/services/admin/channelService'
 import { useToastStore } from '@/stores/toastStore'
-import type { Room } from '@/types'
+import type { Room, Channel } from '@/types'
 
 const router = useRouter()
 const toastStore = useToastStore()
 
 const rooms = ref<Room[]>([])
+const channels = ref<Channel[]>([])
 const loadingRooms = ref(true)
 const submitting = ref(false)
 
@@ -17,6 +19,7 @@ const form = ref({
   full_name: '',
   email: '',
   room_id: '',
+  channel_id: '',
   check_in_date: '',
   check_out_date: '',
   number_of_guest: 1,
@@ -73,6 +76,7 @@ const submit = async () => {
       deposit: depositNum,
       is_offer: form.value.offer_code ? true : false,
       offer_code: form.value.offer_code || undefined,
+      channel_id: form.value.channel_id || undefined,
     })
 
     toastStore.success(
@@ -91,7 +95,12 @@ const submit = async () => {
 onMounted(async () => {
   try {
     loadingRooms.value = true
-    rooms.value = await roomService.getAll()
+    const [rList, cList] = await Promise.all([
+      roomService.getAll(),
+      channelService.getAll().catch(() => []),
+    ])
+    rooms.value = rList
+    channels.value = cList
   } finally {
     loadingRooms.value = false
   }
@@ -155,6 +164,15 @@ onMounted(async () => {
             Max deposit is {{ maxDeposit.toLocaleString('id-ID') }} (full stay). A deposit is
             automatically sent to the finance team.
           </p>
+        </div>
+        <div class="field">
+          <label>Booking Channel (optional)</label>
+          <select v-model="form.channel_id">
+            <option value="">Direct / Walk-In</option>
+            <option v-for="ch in channels" :key="ch.id" :value="ch.id">
+              {{ ch.name }} ({{ ch.code }})
+            </option>
+          </select>
         </div>
         <div class="field">
           <label>Offer Code (optional)</label>

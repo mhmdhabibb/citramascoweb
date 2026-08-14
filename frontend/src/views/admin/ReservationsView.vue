@@ -218,11 +218,13 @@ onMounted(async () => {
               <thead>
                 <tr>
                   <th>Guest Name</th>
+                  <th>Channel</th>
                   <th>Room</th>
                   <th>Check In</th>
                   <th>Check Out</th>
                   <th>Total Price</th>
-                  <th class="text-center">Status</th>
+                  <th class="text-center">Pembayaran</th>
+                  <th class="text-center">Status Approval</th>
                 </tr>
               </thead>
               <tbody>
@@ -234,6 +236,11 @@ onMounted(async () => {
                   class="clickable-row"
                 >
                   <td class="bold-name">{{ res.full_name }}</td>
+                  <td>
+                    <span class="channel-badge-pill">
+                      {{ res.channel?.name || 'Direct' }}
+                    </span>
+                  </td>
                   <td>
                     <span class="room-pill">{{ res.room?.name || 'N/A' }}</span>
                   </td>
@@ -248,6 +255,26 @@ onMounted(async () => {
                   </td>
                   <td class="text-center">
                     <span
+                      v-if="res.deposit >= res.total_price && res.total_price > 0"
+                      class="px-2 py-0.5 text-xs font-bold rounded-full bg-emerald-100 text-emerald-700 border border-emerald-300"
+                    >
+                      Lunas
+                    </span>
+                    <span
+                      v-else-if="res.deposit > 0"
+                      class="px-2 py-0.5 text-xs font-bold rounded-full bg-blue-100 text-blue-700 border border-blue-300"
+                    >
+                      DP Rp {{ res.deposit.toLocaleString('id-ID') }}
+                    </span>
+                    <span
+                      v-else
+                      class="px-2 py-0.5 text-xs font-bold rounded-full bg-slate-100 text-slate-600 border border-slate-300"
+                    >
+                      Belum Bayar
+                    </span>
+                  </td>
+                  <td class="text-center">
+                    <span
                       class="status-dot-badge"
                       :class="{
                         'status-pending': res.status === 'pending',
@@ -257,12 +284,12 @@ onMounted(async () => {
                         'status-cancel': res.status === 'cancel' || res.status === 'rejected',
                       }"
                     >
-                      {{ res.status }}
+                      {{ res.status === 'pending' ? 'Pending Approval' : res.status }}
                     </span>
                   </td>
                 </tr>
                 <tr v-if="filteredReservations.length === 0">
-                  <td colspan="6" class="no-data">Tidak ditemukan data reservasi yang cocok.</td>
+                  <td colspan="7" class="no-data">Tidak ditemukan data reservasi yang cocok.</td>
                 </tr>
               </tbody>
             </table>
@@ -327,6 +354,13 @@ onMounted(async () => {
               <p class="val-small">
                 📅 {{ selectedReservation.checkin_date }} — {{ selectedReservation.checkout_date }} |
                 ({{ selectedReservation.total_night }}) nights
+              </p>
+            </div>
+
+            <div class="info-block-card">
+              <label>Payment Method & Verifikasi</label>
+              <p class="val-small font-bold text-slate-800">
+                💳 {{ selectedReservation.payment_method ? selectedReservation.payment_method.toUpperCase().replace('_', ' ') : 'BANK TRANSFER (FINANCE)' }}
               </p>
             </div>
 
@@ -594,6 +628,17 @@ onMounted(async () => {
   color: #475569;
   font-size: 0.85rem;
   font-weight: 500;
+}
+.channel-badge-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  background: #f1f5f9;
+  color: #334155;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border: 1px solid #e2e8f0;
 }
 .price-text {
   font-weight: 700;

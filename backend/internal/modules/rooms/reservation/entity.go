@@ -2,6 +2,7 @@ package reservation
 
 import (
 	"citramascoweb-backend/internal/dto"
+	"citramascoweb-backend/internal/modules/channel"
 	"citramascoweb-backend/internal/modules/rooms"
 	"time"
 )
@@ -17,15 +18,28 @@ const (
 	ReservationStatusCheckedOut ReservationStatus = "checked-out"
 )
 
+type TransactionStatus string
+
+const (
+	TransactionStatusUnpaid      TransactionStatus = "unpaid"
+	TransactionStatusDownPayment TransactionStatus = "down_payment"
+	TransactionStatusPaid        TransactionStatus = "paid"
+	TransactionStatusRefunded    TransactionStatus = "refunded"
+)
+
 type Reservation struct {
-	Id            string            `gorm:"type:varchar(191);primaryKey" json:"id"`
-	Code          string            `gorm:"type:varchar(191)" json:"code"`
-	FullName      string            `json:"full_name"`
-	Email         string            `json:"email"`
-	RoomId        string            `gorm:"type:varchar(191)" json:"room_id"`
-	Room          rooms.Room        `gorm:"foreignKey:RoomId;references:Id" json:"room"`
-	Status        ReservationStatus `gorm:"type:varchar(191);default:'pending'" json:"status"`
-	NumberOfGuest int               `json:"number_of_guest"`
+	Id                string            `gorm:"type:varchar(191);primaryKey" json:"id"`
+	Code              string            `gorm:"type:varchar(191)" json:"code"`
+	FullName          string            `json:"full_name"`
+	Email             string            `json:"email"`
+	RoomId            string            `gorm:"type:varchar(191)" json:"room_id"`
+	Room              rooms.Room        `gorm:"foreignKey:RoomId;references:Id" json:"room"`
+	ChannelId         *string           `gorm:"type:varchar(191)" json:"channel_id"`
+	Channel           *channel.Channel  `gorm:"foreignKey:ChannelId;references:Id" json:"channel"`
+	Status            ReservationStatus `gorm:"type:varchar(191);default:'pending'" json:"status"`
+	TransactionStatus TransactionStatus `gorm:"type:varchar(191);default:'unpaid'" json:"transaction_status"`
+	PaymentMethod     string            `gorm:"type:varchar(191);default:'bank_transfer'" json:"payment_method"`
+	NumberOfGuest     int               `json:"number_of_guest"`
 
 	CheckinDate  *dto.CustomDate `json:"checkin_date"`
 	CheckoutDate *dto.CustomDate `json:"checkout_date"`
