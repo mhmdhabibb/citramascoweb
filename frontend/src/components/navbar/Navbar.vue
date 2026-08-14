@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useScrollReveal } from '@/composables/useScrollReveal'
+import GuestServiceRequestModal from '@/components/GuestServiceRequestModal.vue'
 
 const menuOpen = ref(false)
+const isGuestServiceOpen = ref(false)
 const { elementRef: navRef, isVisible: navVisible } = useScrollReveal(0.1)
 </script>
 
@@ -26,6 +28,9 @@ const { elementRef: navRef, isVisible: navVisible } = useScrollReveal(0.1)
 
       <!-- Right Section (Desktop) -->
       <div class="nav-right">
+        <button @click="isGuestServiceOpen = true" class="service-room-btn" title="Hubungi Resepsionis untuk Bantuan Kamar">
+          🛎️ Layanan Kamar
+        </button>
         <router-link to="/booking" class="book-now-btn">Book Now</router-link>
       </div>
 
@@ -46,9 +51,18 @@ const { elementRef: navRef, isVisible: navVisible } = useScrollReveal(0.1)
         <router-link to="/rooms" class="mobile-link" @click="menuOpen = false">Rooms & Suites</router-link>
         <router-link to="/offers" class="mobile-link" @click="menuOpen = false">Offers</router-link>
         <router-link to="/contact" class="mobile-link" @click="menuOpen = false">Contact</router-link>
+        <button @click="isGuestServiceOpen = true; menuOpen = false" class="w-full text-left py-2 text-amber-600 font-bold flex items-center gap-1.5">
+          <span>🛎️</span> <span>Layanan Kamar / Bantuan Tamu</span>
+        </button>
         <router-link to="/booking" class="mobile-book-btn" @click="menuOpen = false">Book Now</router-link>
       </div>
     </div>
+
+    <!-- Guest Service Request Modal -->
+    <GuestServiceRequestModal
+      :isOpen="isGuestServiceOpen"
+      @close="isGuestServiceOpen = false"
+    />
   </nav>
 </template>
 
@@ -184,6 +198,27 @@ const { elementRef: navRef, isVisible: navVisible } = useScrollReveal(0.1)
   letter-spacing: 0.01em;
   transition: background-color 0.3s ease, transform 0.2s ease;
   white-space: nowrap;
+}
+
+.service-room-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.55rem 1.15rem;
+  border-radius: 100px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #78350f;
+  background-color: #fef3c7;
+  border: 1px solid #fde68a;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.service-room-btn:hover {
+  background-color: #fde68a;
+  transform: translateY(-1px);
 }
 
 .book-now-btn:hover {

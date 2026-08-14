@@ -1,7 +1,8 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { reservationService } from '@/services/admin/reservationService'
+import { financeService } from '@/services/admin/financeService'
 import { authService } from '@/services/authService'
 import { useToastStore } from '@/stores/toastStore'
 
@@ -48,8 +49,11 @@ const filteredReservations = computed(() => {
   })
 })
 
-const refreshData = async () => {
+let pollingTimer = null
+
+const refreshData = async (isSilent = false) => {
   try {
+    if (!isSilent) loading.value = true
     const data = await reservationService.getAll()
     if (data) {
       reservations.value = data
@@ -59,7 +63,9 @@ const refreshData = async () => {
       }
     }
   } catch (error) {
-    console.error('Refresh data error:', error)
+    if (!isSilent) console.error('Refresh data error:', error)
+  } finally {
+    if (!isSilent) loading.value = false
   }
 }
 
@@ -80,6 +86,19 @@ const approveReservation = async (id) => {
     await refreshData()
   } catch (error) {
     toastStore.error(error.message || 'Gagal menyetujui reservasi')
+  } finally {
+    loading.value = false
+  }
+}
+
+const verifyFinancePayment = async (id, status = 'confirmed') => {
+  try {
+    loading.value = true
+    await financeService.verifyPayment(id, status)
+    toastStore.success(status === 'confirmed' ? 'Pembayaran berhasil diverifikasi oleh Tim Finance (Status: Dibayar)!' : 'Pembayaran ditolak')
+    await refreshData()
+  } catch (error) {
+    toastStore.error(error.message || 'Gagal memverifikasi pembayaran')
   } finally {
     loading.value = false
   }
@@ -150,11 +169,23 @@ onMounted(async () => {
     } else {
       currentUser.value = await authService.getProfile()
     }
-    await refreshData()
+    await refreshData(false)
   } catch (error) {
     console.error(error)
   } finally {
     loading.value = false
+  }
+
+  // Silent auto-reload polling every 5 seconds
+  pollingTimer = setInterval(() => {
+    refreshData(true)
+  }, 5000)
+})
+
+onUnmounted(() => {
+  if (pollingTimer) {
+    clearInterval(pollingTimer)
+    pollingTimer = null
   }
 })
 </script>
@@ -224,7 +255,8 @@ onMounted(async () => {
                   <th>Check Out</th>
                   <th>Total Price</th>
                   <th class="text-center">Pembayaran</th>
-                  <th class="text-center">Status Approval</th>
+                  <th class="text-center">Status</th>
+                  <th class="text-center">Aksi Resepsionis</th>
                 </tr>
               </thead>
               <tbody>
@@ -255,21 +287,24 @@ onMounted(async () => {
                   </td>
                   <td class="text-center">
                     <span
-                      v-if="res.deposit >= res.total_price && res.total_price > 0"
-                      class="px-2 py-0.5 text-xs font-bold rounded-full bg-emerald-100 text-emerald-700 border border-emerald-300"
+                      v-if="res.transaction_status === 'paid' || (res.deposit >= res.total_price && res.total_price > 0)"
+                      class="px-2.5 py-1 text-xs font-bold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-300 inline-flex items-center gap-1"
                     >
-                      Lunas
+                      <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                      Dibayar
                     </span>
                     <span
-                      v-else-if="res.deposit > 0"
-                      class="px-2 py-0.5 text-xs font-bold rounded-full bg-blue-100 text-blue-700 border border-blue-300"
+                      v-else-if="res.transaction_status === 'down_payment' || (res.deposit > 0)"
+                      class="px-2.5 py-1 text-xs font-bold rounded-full bg-blue-50 text-blue-700 border border-blue-300 inline-flex items-center gap-1"
                     >
-                      DP Rp {{ res.deposit.toLocaleString('id-ID') }}
+                      <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                      DP Rp {{ (res.deposit || 0).toLocaleString('id-ID') }}
                     </span>
                     <span
                       v-else
-                      class="px-2 py-0.5 text-xs font-bold rounded-full bg-slate-100 text-slate-600 border border-slate-300"
+                      class="px-2.5 py-1 text-xs font-bold rounded-full bg-amber-50 text-amber-700 border border-amber-300 inline-flex items-center gap-1"
                     >
+                      <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
                       Belum Bayar
                     </span>
                   </td>
@@ -278,18 +313,95 @@ onMounted(async () => {
                       class="status-dot-badge"
                       :class="{
                         'status-pending': res.status === 'pending',
-                        'status-approved': res.status === 'approve' || res.status === 'approved',
+                        'status-approved': res.status === 'approve' || res.status === 'approved' || res.status === 'confirmed',
                         'status-checkedin': res.status === 'checked-in',
                         'status-checkedout': res.status === 'checked-out',
                         'status-cancel': res.status === 'cancel' || res.status === 'rejected',
                       }"
                     >
-                      {{ res.status === 'pending' ? 'Pending Approval' : res.status }}
+                      {{ res.status === 'pending' ? 'Pending' : (res.status === 'approved' || res.status === 'confirmed' ? 'Confirmed' : res.status) }}
                     </span>
+                  </td>
+                  <td class="text-center" @click.stop>
+                    <!-- KONDISI 1: PENDING & SUDAH DIBAYAR / CASH -> MUNCUL TOMBOL APPROVE RESEPSIONIS -->
+                    <div
+                      v-if="
+                        res.status === 'pending' &&
+                        (res.transaction_status === 'paid' ||
+                          res.transaction_status === 'down_payment' ||
+                          res.payment_method === 'cash' ||
+                          (res.deposit && res.deposit > 0))
+                      "
+                      class="flex items-center justify-center gap-1"
+                    >
+                      <button
+                        @click="approveReservation(res.id)"
+                        class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg shadow-sm transition-all flex items-center gap-1"
+                        title="Klik untuk Approve Reservasi & Kunci Kamar"
+                      >
+                        <span>✓</span>
+                        <span>Approve</span>
+                      </button>
+                      <button
+                        @click="rejectReservation(res.id)"
+                        class="px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 font-semibold text-xs rounded-lg border border-rose-200"
+                        title="Tolak Reservasi"
+                      >
+                        ✕
+                      </button>
+                    </div>
+
+                    <!-- KONDISI 2: PENDING & BELUM BAYAR (TRANSFER) -> MUNCUL TOMBOL FINANCE CONFIRM -->
+                    <div
+                      v-else-if="res.status === 'pending'"
+                      class="flex items-center justify-center"
+                    >
+                      <button
+                        @click="verifyFinancePayment(res.id, 'confirmed')"
+                        class="px-2 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold text-xs rounded-lg border border-amber-300 transition-all flex items-center gap-1"
+                        title="Klik untuk konfirmasi bahwa pembayaran sudah masuk rekening"
+                      >
+                        <span>💳</span>
+                        <span>Finance Confirm</span>
+                      </button>
+                    </div>
+
+                    <!-- KONDISI 3: CONFIRMED / APPROVED -> MUNCUL TOMBOL CHECK IN -->
+                    <div
+                      v-else-if="res.status === 'approved' || res.status === 'confirmed' || res.status === 'approve'"
+                      class="flex items-center justify-center"
+                    >
+                      <button
+                        @click="handleCheckIn(res.id)"
+                        class="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-lg shadow-sm transition-all flex items-center gap-1"
+                        title="Proses Check In Tamu"
+                      >
+                        <span>🛎️</span>
+                        <span>Check In</span>
+                      </button>
+                    </div>
+
+                    <!-- KONDISI 4: CHECKED-IN -> MUNCUL TOMBOL CHECK OUT -->
+                    <div
+                      v-else-if="res.status === 'checked-in'"
+                      class="flex items-center justify-center"
+                    >
+                      <button
+                        @click="handleCheckOut(res.id)"
+                        class="px-2.5 py-1 bg-slate-700 hover:bg-slate-800 text-white font-bold text-xs rounded-lg shadow-sm transition-all flex items-center gap-1"
+                        title="Proses Check Out Tamu"
+                      >
+                        <span>🚪</span>
+                        <span>Check Out</span>
+                      </button>
+                    </div>
+
+                    <!-- KONDISI LAIN: SELESAI / CANCEL -->
+                    <span v-else class="text-xs text-slate-400 font-medium">Selesai</span>
                   </td>
                 </tr>
                 <tr v-if="filteredReservations.length === 0">
-                  <td colspan="7" class="no-data">Tidak ditemukan data reservasi yang cocok.</td>
+                  <td colspan="9" class="no-data">Tidak ditemukan data reservasi yang cocok.</td>
                 </tr>
               </tbody>
             </table>
@@ -297,56 +409,25 @@ onMounted(async () => {
         </div>
       </div>
 
-      <transition name="drawer-slide">
-        <div v-if="selectedReservation" class="action-drawer-pane">
+      <!-- Detail Drawer Modal -->
+      <transition name="drawer">
+        <div v-if="selectedReservation" class="details-drawer">
           <div class="drawer-header">
             <div>
-              <h3>Reservation Details</h3>
-              <span class="drawer-id"
-                >ID: #{{ selectedReservation.id?.slice(-6).toUpperCase() }}</span
-              >
+              <span class="drawer-code">#{{ selectedReservation.code }}</span>
+              <h2>{{ selectedReservation.full_name }}</h2>
             </div>
-            <button @click="closeDrawer" class="close-drawer-btn">✕</button>
+            <button @click="closeDrawer" class="btn-close-drawer">✕</button>
           </div>
 
-          <div class="drawer-content">
+          <div class="drawer-body">
             <div class="info-block-card">
-              <label>Guest Name</label>
-              <p class="val-large">{{ selectedReservation.full_name }}</p>
-            </div>
-
-            <div class="info-grid-2">
-              <div class="info-block-card">
-                <label>Room Assigned</label>
-                <p class="val-mid">{{ selectedReservation.room?.name || 'N/A' }}</p>
+              <label>Contact & Room</label>
+              <p class="val-primary">{{ selectedReservation.email || '-' }}</p>
+              <div class="meta-row">
+                <span class="room-pill">{{ selectedReservation.room?.name || 'N/A' }}</span>
+                <span class="channel-badge-pill">{{ selectedReservation.channel?.name || 'Direct' }}</span>
               </div>
-              <div class="info-block-card">
-                <label>Current Status</label>
-                <div style="margin-top: 4px">
-                  <span
-                    class="status-dot-badge"
-                    :class="{
-                      'status-pending': selectedReservation.status === 'pending',
-                      'status-approved':
-                        selectedReservation.status === 'approve' ||
-                        selectedReservation.status === 'approved',
-                      'status-checkedin': selectedReservation.status === 'checked-in',
-                      'status-checkedout': selectedReservation.status === 'checked-out',
-                      'status-cancel':
-                        selectedReservation.status === 'cancel' ||
-                        selectedReservation.status === 'rejected',
-                    }"
-                    >{{ selectedReservation.status }}</span
-                  >
-                </div>
-              </div>
-            </div>
-
-            <div class="info-block-card">
-              <label>OFFER CODE</label>
-              <p class="val-small">
-                {{ selectedReservation.offer_code || 'No Offer Code' }}
-              </p>
             </div>
 
             <div class="info-block-card">
@@ -358,10 +439,24 @@ onMounted(async () => {
             </div>
 
             <div class="info-block-card">
-              <label>Payment Method & Verifikasi</label>
-              <p class="val-small font-bold text-slate-800">
-                💳 {{ selectedReservation.payment_method ? selectedReservation.payment_method.toUpperCase().replace('_', ' ') : 'BANK TRANSFER (FINANCE)' }}
-              </p>
+              <label>Payment Method & Status</label>
+              <div class="flex items-center justify-between mt-1">
+                <span class="font-bold text-slate-800 text-xs">
+                  💳 {{ selectedReservation.payment_method ? selectedReservation.payment_method.toUpperCase().replace('_', ' ') : 'BANK TRANSFER' }}
+                </span>
+                <span
+                  v-if="selectedReservation.transaction_status === 'paid' || (selectedReservation.deposit >= selectedReservation.total_price && selectedReservation.total_price > 0)"
+                  class="px-2 py-0.5 text-xs font-bold rounded-full bg-emerald-100 text-emerald-700"
+                >
+                  ✓ Dibayar
+                </span>
+                <span
+                  v-else
+                  class="px-2 py-0.5 text-xs font-bold rounded-full bg-amber-100 text-amber-700"
+                >
+                  ⏳ Belum Bayar
+                </span>
+              </div>
             </div>
 
             <div class="info-block-card pricing-bg">
@@ -372,30 +467,76 @@ onMounted(async () => {
             </div>
 
             <div v-if="canManage" class="drawer-actions-container">
-              <div v-if="selectedReservation.status === 'pending'" class="btn-group-row">
-                <button
-                  @click="approveReservation(selectedReservation.id)"
-                  class="btn btn-success flex-1"
+              <!-- JIKA STATUS PENDING: Pisahkan Alur Verifikasi Finance vs Persetujuan Resepsionis -->
+              <div v-if="selectedReservation.status === 'pending'" class="space-y-3">
+                <!-- JIKA PEMBAYARAN SUDAH DIBAYAR / CASH / DP: RESEPSIONIS DAPAT APPROVE -->
+                <div
+                  v-if="
+                    selectedReservation.transaction_status === 'paid' ||
+                    selectedReservation.transaction_status === 'down_payment' ||
+                    selectedReservation.payment_method === 'cash' ||
+                    (selectedReservation.deposit && selectedReservation.deposit > 0)
+                  "
                 >
-                  Approve
-                </button>
-                <button
-                  @click="rejectReservation(selectedReservation.id)"
-                  class="btn btn-warning flex-1"
-                >
-                  Reject
-                </button>
+                  <div class="p-2.5 mb-2 bg-emerald-50 border border-emerald-200 rounded-lg text-xs text-emerald-800 flex items-center gap-2">
+                    <span class="text-base">✓</span>
+                    <span><strong>Pembayaran Sudah Dibayar:</strong> Resepsionis dapat menyetujui reservasi & mengunci kamar.</span>
+                  </div>
+                  <div class="btn-group-row">
+                    <button
+                      @click="approveReservation(selectedReservation.id)"
+                      class="btn btn-success flex-1"
+                    >
+                      ✓ Approve Reservasi (Receptionist)
+                    </button>
+                    <button
+                      @click="rejectReservation(selectedReservation.id)"
+                      class="btn btn-warning flex-1"
+                    >
+                      Tolak
+                    </button>
+                  </div>
+                </div>
+
+                <!-- JIKA PEMBAYARAN BELUM BAYAR (TRANSFER BANK): TIM FINANCE HARUS CONFIRM PEMBAYARAN DULU -->
+                <div v-else>
+                  <div class="p-2.5 mb-2 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800 flex items-start gap-2">
+                    <span class="text-base">⏳</span>
+                    <div>
+                      <strong>Menunggu Konfirmasi Finance:</strong><br />
+                      Status saat ini <em>Belum Bayar</em>. Begitu Finance klik <strong>Confirm Pembayaran</strong>, status otomatis berubah jadi <em>Dibayar</em> dan tombol Approve Resepsionis aktif.
+                    </div>
+                  </div>
+
+                  <div class="btn-group-row">
+                    <button
+                      @click="verifyFinancePayment(selectedReservation.id, 'confirmed')"
+                      class="btn btn-primary flex-1"
+                      title="Klik untuk konfirmasi bahwa transfer bank sudah masuk"
+                    >
+                      💳 Confirm Pembayaran (Finance)
+                    </button>
+                    <button
+                      @click="rejectReservation(selectedReservation.id)"
+                      class="btn btn-warning"
+                    >
+                      Tolak
+                    </button>
+                  </div>
+                </div>
               </div>
 
+              <!-- JIKA SUDAH CONFIRMED / APPROVED: TOMBOL CHECK IN TAMU -->
               <button
                 v-if="
                   selectedReservation.status === 'approve' ||
-                  selectedReservation.status === 'approved'
+                  selectedReservation.status === 'approved' ||
+                  selectedReservation.status === 'confirmed'
                 "
                 @click="handleCheckIn(selectedReservation.id)"
                 class="btn btn-checkedin btn-block"
               >
-                Check In Guest
+                🛎️ Check In Guest
               </button>
 
               <button
@@ -403,19 +544,20 @@ onMounted(async () => {
                 @click="handleCheckOut(selectedReservation.id)"
                 class="btn btn-checkedout btn-block"
               >
-                Process Check Out
+                🚪 Process Check Out
               </button>
 
               <button
                 v-if="
                   selectedReservation.status === 'pending' ||
                   selectedReservation.status === 'approve' ||
-                  selectedReservation.status === 'approved'
+                  selectedReservation.status === 'approved' ||
+                  selectedReservation.status === 'confirmed'
                 "
                 @click="cancelReservation(selectedReservation.id)"
-                class="btn btn-danger-outline btn-block"
+                class="btn btn-danger-outline btn-block mt-2"
               >
-                Cancel Reservation
+                Batalkan Reservasi
               </button>
             </div>
           </div>

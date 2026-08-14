@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { inventoryService } from '@/services/admin/inventoryService'
 import { useToastStore } from '@/stores/toastStore'
 import type { InventoryItem, InventoryTransaction } from '@/types'
@@ -7,6 +7,7 @@ import { AlertTriangle, Package, History, TrendingDown } from 'lucide-vue-next'
 
 const toastStore = useToastStore()
 const loading = ref(false)
+let pollingTimer: any = null
 
 const items = ref<InventoryItem[]>([])
 const transactions = ref<InventoryTransaction[]>([])
@@ -16,20 +17,34 @@ const lowStockCount = computed(() => items.value.filter((i) => i.reorder_level >
 const recentUsages = computed(() => transactions.value.filter(t => t.type === 'usage').slice(0, 5))
 const recentStockIns = computed(() => transactions.value.filter(t => t.type === 'stock-in').slice(0, 5))
 
-const fetchData = async () => {
+const fetchData = async (isSilent: boolean = false) => {
   try {
-    loading.value = true
-    items.value = await inventoryService.getItems()
-    transactions.value = await inventoryService.getTransactions()
+    if (!isSilent) loading.value = true
+    const [itemList, txList] = await Promise.all([
+      inventoryService.getItems(),
+      inventoryService.getTransactions(),
+    ])
+    items.value = itemList
+    transactions.value = txList
   } catch (error) {
-    toastStore.error((error as Error).message || 'Failed to load inventory data')
+    if (!isSilent) toastStore.error((error as Error).message || 'Failed to load inventory data')
   } finally {
-    loading.value = false
+    if (!isSilent) loading.value = false
   }
 }
 
 onMounted(() => {
-  fetchData()
+  fetchData(false)
+  pollingTimer = setInterval(() => {
+    fetchData(true)
+  }, 5000)
+})
+
+onUnmounted(() => {
+  if (pollingTimer) {
+    clearInterval(pollingTimer)
+    pollingTimer = null
+  }
 })
 
 const formatDate = (dateStr: string) => {

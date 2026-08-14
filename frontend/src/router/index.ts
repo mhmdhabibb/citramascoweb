@@ -35,6 +35,7 @@ import GuestBookView from '@/views/admin/GuestBookView.vue'
 import ChannelsView from '@/views/admin/ChannelsView.vue'
 import CalendarView from '@/views/admin/CalendarView.vue'
 import MonthlyReportView from '@/views/admin/MonthlyReportView.vue'
+import ServiceRequestsView from '@/views/admin/ServiceRequestsView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -108,6 +109,12 @@ const router = createRouter({
           name: 'admin-reservations',
           component: ReservationsView,
           meta: { title: 'Reservations' },
+        },
+        {
+          path: 'service-requests',
+          name: 'admin-service-requests',
+          component: ServiceRequestsView,
+          meta: { title: 'Guest Service Requests' },
         },
         {
           path: 'guestbook',

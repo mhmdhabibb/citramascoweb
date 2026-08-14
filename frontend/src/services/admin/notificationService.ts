@@ -30,4 +30,14 @@ export const notificationService = {
   markRead: async (id: string): Promise<void> => {
     await api.patch<ApiResponse<null>>(`/notifications/${id}/read`)
   },
+
+  /**
+   * POST /api/notifications/device-token
+   */
+  saveDeviceToken: async (token: string, deviceType: string = 'web'): Promise<void> => {
+    await api.post<ApiResponse<null>>('/notifications/device-token', {
+      token,
+      device_type: deviceType,
+    })
+  },
 }

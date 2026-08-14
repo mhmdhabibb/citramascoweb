@@ -103,6 +103,7 @@ export type UserRole =
   | 'reception'
   | 'finance'
   | 'inventory'
+  | 'housekeeping'
 
 export interface User {
   id: string
@@ -212,5 +213,45 @@ export interface Channel {
   name: string
   created_at: string
   updated_at: string
+}
+
+// ============================================
+// ServiceRequest (Guest Incident & Housekeeping Task)
+// ============================================
+export type ServiceRequestCategory =
+  | 'incident_broken_item'
+  | 'extra_cleaning'
+  | 'amenities_request'
+  | 'maintenance_repair'
+  | 'other'
+
+export type ServiceRequestStatus =
+  | 'pending_reception'
+  | 'assigned_to_housekeeping'
+  | 'in_progress'
+  | 'completed'
+  | 'cancelled'
+
+export type ServiceRequestPriority = 'low' | 'medium' | 'high' | 'urgent'
+
+export interface ServiceRequest {
+  id: string
+  room_id: string
+  room?: Room
+  reservation_id?: string
+  guest_name: string
+  guest_phone?: string
+  category: ServiceRequestCategory
+  title: string
+  description: string
+  priority: ServiceRequestPriority
+  status: ServiceRequestStatus
+  assigned_to_user_id?: string
+  assigned_to_user?: User
+  notes_from_reception?: string
+  damage_charge: number
+  created_at: string
+  updated_at: string
+  completed_at?: string
 }
 

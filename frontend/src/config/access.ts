@@ -20,13 +20,14 @@ export type AppRole =
   | 'reception'
   | 'finance'
   | 'inventory'
+  | 'housekeeping'
 
 /**
  * Allowed roles per admin route path.
  * A role not listed for an admin path is blocked from that page.
  */
 export const ROUTE_ACCESS: Record<string, AppRole[]> = {
-  '/admin/dashboard': ['admin', 'manager', 'reception', 'inventory'],
+  '/admin/dashboard': ['admin', 'manager', 'reception', 'inventory', 'housekeeping'],
   '/admin/finance': ['admin', 'manager', 'finance'],
   '/admin/finance/cash-bank': ['admin', 'manager', 'finance'],
   '/admin/finance/general-journal': ['admin', 'manager', 'finance'],
@@ -36,9 +37,10 @@ export const ROUTE_ACCESS: Record<string, AppRole[]> = {
   '/admin/finance/profit-loss': ['admin', 'manager', 'finance'],
   '/admin/finance/balance-sheet': ['admin', 'manager', 'finance'],
   '/admin/reservations': ['admin', 'manager', 'reception'],
+  '/admin/service-requests': ['admin', 'manager', 'reception', 'housekeeping'],
   '/admin/guestbook': ['admin', 'manager', 'reception'],
   '/admin/reservations/new': ['admin', 'manager', 'reception'],
-  '/admin/rooms': ['admin', 'manager'],
+  '/admin/rooms': ['admin', 'manager', 'housekeeping', 'reception'],
   '/admin/room-types': ['admin', 'manager'],
   '/admin/room-categories': ['admin', 'manager'],
   '/admin/inventory': ['admin', 'manager', 'inventory'],
@@ -49,7 +51,7 @@ export const ROUTE_ACCESS: Record<string, AppRole[]> = {
   '/admin/calendar': ['admin', 'manager', 'reception'],
   '/admin/monthly-report': ['admin', 'manager', 'finance'],
   '/admin/staff': ['admin', 'manager'],
-  '/admin/help': ['admin', 'manager', 'inventory', 'finance'],
+  '/admin/help': ['admin', 'manager', 'inventory', 'finance', 'housekeeping'],
 }
 
 export function canAccess(role: string | undefined, path: string): boolean {
