@@ -414,10 +414,25 @@ const activeChannelsWithRevenue = computed(() => {
   return channelBreakdown.value.filter((c) => c.revenue > 0)
 })
 
+// Cancelled/Rejected Reservations in Selected Month (from DB)
+const monthCancelledReservations = computed(() => {
+  const currentYM = `${selectedYear.value}-${String(selectedMonth.value + 1).padStart(2, '0')}`
+  return reservations.value.filter((r) => {
+    const checkinISO = parseDateToISO(r.checkin_date)
+    const matchesMonth = checkinISO.startsWith(currentYM)
+    const matchesProperty = selectedProperty.value === 'all' || r.room_id === selectedProperty.value
+    const isCancelled = r.status === 'cancel' || r.status === 'rejected'
+    return matchesMonth && matchesProperty && isCancelled
+  })
+})
+
+const totalCancelledReservations = computed(() => monthCancelledReservations.value.length)
+
 // By Property Table Rows (100% from DB rooms & reservations)
 const propertyRows = computed(() => {
   return rooms.value.map((room) => {
     const roomRes = monthReservations.value.filter((r) => r.room_id === room.id)
+    const roomCancelled = monthCancelledReservations.value.filter((r) => r.room_id === room.id).length
     const reservationsCount = roomRes.length
     const nights = roomRes.reduce((acc, r) => acc + (r.total_night || 1), 0)
     const rev = roomRes.reduce((acc, r) => acc + (r.total_price || 0), 0)
@@ -429,6 +444,7 @@ const propertyRows = computed(() => {
       id: room.id,
       name: room.name,
       reservations: reservationsCount,
+      cancelled: roomCancelled,
       nights,
       occupancy: occ,
       revenue: rev,
@@ -699,6 +715,7 @@ const exportPDF = () => {
     const propRowsData: any[] = propertyRows.value.map((p) => [
       p.name,
       p.reservations.toString(),
+      p.cancelled.toString(),
       p.nights.toString(),
       `${p.occupancy}%`,
       formatIDR(p.revenue),
@@ -708,6 +725,7 @@ const exportPDF = () => {
     propRowsData.push([
       'TOTAL KESELURUHAN',
       totalReservations.value.toString(),
+      totalCancelledReservations.value.toString(),
       totalNights.value.toString(),
       `${occupancyRate.value}%`,
       formatIDR(totalRevenue.value),
@@ -717,8 +735,8 @@ const exportPDF = () => {
 
     autoTable(doc, {
       startY: (doc as any).lastAutoTable.finalY + 8,
-      head: [['Unit Kamar', 'Booking', 'Malam', 'Okupansi', 'Total Revenue (IDR)', 'ADR (IDR)', 'RevPAR (IDR)']],
-      body: propRowsData.length > 0 ? propRowsData : [['Tidak ada kamar di database', '-', '-', '-', '-', '-', '-']],
+      head: [['Unit Kamar', 'Booking', 'Dibatalkan', 'Malam', 'Okupansi', 'Total Revenue (IDR)', 'ADR (IDR)', 'RevPAR (IDR)']],
+      body: propRowsData.length > 0 ? propRowsData : [['Tidak ada kamar di database', '-', '-', '-', '-', '-', '-', '-']],
       headStyles: { fillColor: [15, 23, 42] },
       theme: 'striped',
       styles: { fontSize: 8 },
@@ -794,11 +812,11 @@ const exportCSV = () => {
 
     // 3. Property Performance Breakdown
     lines.push(`=== RINCIAN PERFORMA PER UNIT KAMAR ===`)
-    lines.push(`Nama Kamar,Jumlah Reservasi,Total Malam,Occupancy Rate (%),Total Pendapatan (IDR),ADR (IDR),RevPAR (IDR)`)
+    lines.push(`Nama Kamar,Jumlah Reservasi,Dibatalkan,Total Malam,Occupancy Rate (%),Total Pendapatan (IDR),ADR (IDR),RevPAR (IDR)`)
     propertyRows.value.forEach((p) => {
-      lines.push(`"${p.name}",${p.reservations},${p.nights},${p.occupancy}%,${p.revenue},${p.adr},${p.revpar}`)
+      lines.push(`"${p.name}",${p.reservations},${p.cancelled},${p.nights},${p.occupancy}%,${p.revenue},${p.adr},${p.revpar}`)
     })
-    lines.push(`"TOTAL KESELURUHAN",${totalReservations.value},${totalNights.value},${occupancyRate.value}%,${totalRevenue.value},${adr.value},${revPAR.value}`)
+    lines.push(`"TOTAL KESELURUHAN",${totalReservations.value},${totalCancelledReservations.value},${totalNights.value},${occupancyRate.value}%,${totalRevenue.value},${adr.value},${revPAR.value}`)
     lines.push(``)
 
     // 4. Channel Breakdown
@@ -1345,6 +1363,7 @@ onUnmounted(() => {
               <tr>
                 <th>Unit Kamar</th>
                 <th class="text-center">Reservasi</th>
+                <th class="text-center">Dibatalkan</th>
                 <th class="text-center">Total Malam</th>
                 <th class="text-center">Occupancy Rate</th>
                 <th class="text-right">Total Revenue (IDR)</th>
@@ -1355,7 +1374,8 @@ onUnmounted(() => {
             <tbody>
               <tr v-for="prop in propertyRows" :key="prop.id">
                 <td class="font-bold text-slate-800">{{ prop.name }}</td>
-                <td class="text-center">{{ prop.reservations }}</td>
+                <td class="text-center font-bold text-slate-700">{{ prop.reservations }}</td>
+                <td class="text-center font-bold" :class="prop.cancelled > 0 ? 'text-rose-600' : 'text-slate-400'">{{ prop.cancelled }}</td>
                 <td class="text-center">{{ prop.nights }}</td>
                 <td class="text-center font-semibold text-emerald-600">{{ prop.occupancy }}%</td>
                 <td class="text-right font-bold text-indigo-900">{{ formatIDR(prop.revenue) }}</td>
@@ -1363,7 +1383,7 @@ onUnmounted(() => {
                 <td class="text-right font-semibold">{{ formatIDR(prop.revpar) }}</td>
               </tr>
               <tr v-if="propertyRows.length === 0">
-                <td colspan="7" class="text-center py-6 text-slate-400 font-semibold">
+                <td colspan="8" class="text-center py-6 text-slate-400 font-semibold">
                   Belum ada kamar terdaftar di database
                 </td>
               </tr>
@@ -1372,6 +1392,7 @@ onUnmounted(() => {
               <tr class="total-row">
                 <td class="font-extrabold uppercase">Total Keseluruhan</td>
                 <td class="text-center font-extrabold">{{ totalReservations }}</td>
+                <td class="text-center font-extrabold" :class="totalCancelledReservations > 0 ? 'text-rose-600' : 'text-slate-500'">{{ totalCancelledReservations }}</td>
                 <td class="text-center font-extrabold">{{ totalNights }}</td>
                 <td class="text-center font-extrabold text-emerald-700">{{ occupancyRate }}%</td>
                 <td class="text-right font-extrabold text-indigo-700 text-base">{{ formatIDR(totalRevenue) }}</td>

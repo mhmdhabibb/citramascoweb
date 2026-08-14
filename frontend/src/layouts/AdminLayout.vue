@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import Sidebar from '@/components/admin/Sidebar.vue'
 import { useAuthStore } from '@/stores/authStore'
 import { notificationService } from '@/services/admin/notificationService'
+import { requestFCMToken } from '@/services/firebase'
 
 const route = useRoute()
 const router = useRouter()
@@ -58,6 +59,8 @@ const timeAgo = (iso) => {
 onMounted(() => {
   loadUnreadCount()
   unreadTimer = setInterval(loadUnreadCount, 30000)
+  // Request FCM token for Web & Android browser push notifications
+  requestFCMToken()
 })
 
 onUnmounted(() => {

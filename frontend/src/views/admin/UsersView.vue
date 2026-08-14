@@ -18,6 +18,7 @@ const roleLabels: Record<UserRole | 'All', string> = {
   reception: 'Reception',
   finance: 'Finance',
   inventory: 'Inventory',
+  housekeeping: 'Housekeeping',
 }
 
 const roleOptions: Array<{ value: UserRole | 'All'; label: string }> = [
@@ -28,6 +29,7 @@ const roleOptions: Array<{ value: UserRole | 'All'; label: string }> = [
   { value: 'reception', label: 'Reception' },
   { value: 'finance', label: 'Finance' },
   { value: 'inventory', label: 'Inventory' },
+  { value: 'housekeeping', label: 'Housekeeping' },
 ]
 
 // --- Stats ---

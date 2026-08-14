@@ -26,4 +26,5 @@ func (m *Module) NotificationRoutes(router *gin.RouterGroup) {
 	g.GET("/", m.Handler.List)
 	g.GET("/unread-count", m.Handler.UnreadCount)
 	g.PATCH("/:id/read", m.Handler.MarkRead)
+	g.POST("/device-token", m.Handler.SaveDeviceToken)
 }

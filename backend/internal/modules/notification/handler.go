@@ -41,3 +41,28 @@ func (h *notificationHandler) MarkRead(c *gin.Context) {
 	}
 	c.JSON(200, gin.H{"success": true, "message": "Notification marked as read"})
 }
+
+type SaveDeviceTokenRequest struct {
+	Token      string `json:"token" binding:"required"`
+	DeviceType string `json:"device_type"` // 'android', 'web', 'ios'
+}
+
+func (h *notificationHandler) SaveDeviceToken(c *gin.Context) {
+	userId := c.GetString("user_id")
+	var req SaveDeviceTokenRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(400, gin.H{"success": false, "message": "Token is required"})
+		return
+	}
+
+	if req.DeviceType == "" {
+		req.DeviceType = "web"
+	}
+
+	if err := h.service.SaveDeviceToken(userId, req.Token, req.DeviceType); err != nil {
+		c.JSON(500, gin.H{"success": false, "message": err.Error()})
+		return
+	}
+
+	c.JSON(200, gin.H{"success": true, "message": "FCM Device Token registered successfully"})
+}

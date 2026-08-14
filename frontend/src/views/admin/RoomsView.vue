@@ -47,6 +47,9 @@ const occupiedRooms = computed(() => rooms.value.filter((r) => r.status === 'Occ
 const maintenanceRooms = computed(
   () => rooms.value.filter((r) => r.status?.toLowerCase() === 'maintenance').length,
 )
+const dirtyRooms = computed(
+  () => rooms.value.filter((r) => r.status?.toLowerCase() === 'dirty').length,
+)
 
 // Filter Logic
 const filteredRooms = computed(() => {
@@ -256,6 +259,13 @@ onMounted(async () => {
         </div>
       </div>
       <div class="stat-card">
+        <span class="stat-icon text-amber-500">🧹</span>
+        <div>
+          <h3>Dirty (Housekeeping)</h3>
+          <p class="main-val text-amber-600">{{ dirtyRooms }}</p>
+        </div>
+      </div>
+      <div class="stat-card">
         <span class="stat-icon text-warning">🛠️</span>
         <div>
           <h3>Maintenance</h3>
@@ -277,11 +287,11 @@ onMounted(async () => {
           </div>
           <div class="filter-box">
             <select v-model="statusFilter" class="filter-select">
-              <option value="All">Status</option>
+              <option value="All">Semua Status</option>
               <option value="active">Active / Available</option>
               <option value="Occupied">Occupied</option>
+              <option value="dirty">Dirty (Perlu Pembersihan)</option>
               <option value="maintenance">Maintenance</option>
-              <option value="dirty">Dirty</option>
             </select>
           </div>
           <button @click="openCreateModal" class="btn btn-primary">+ Add Room</button>
@@ -298,6 +308,7 @@ onMounted(async () => {
                   <th>Price / Night</th>
                   <th>Image</th>
                   <th class="text-center">Status</th>
+                  <th class="text-center">Aksi Cepat</th>
                 </tr>
               </thead>
               <tbody>
@@ -337,12 +348,42 @@ onMounted(async () => {
                         'status-dirty': room.status?.toLowerCase() === 'dirty',
                       }"
                     >
-                      {{ room.status || 'Available' }}
+                      {{ room.status?.toLowerCase() === 'dirty' ? '🧹 Dirty' : (room.status || 'Available') }}
                     </span>
+                  </td>
+                  <td class="text-center" @click.stop>
+                    <button
+                      v-if="room.status?.toLowerCase() === 'dirty'"
+                      @click="mutateRoomStatus(room.id, 'active')"
+                      class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg shadow-sm transition-all flex items-center gap-1 mx-auto"
+                      title="Klik untuk konfirmasi bahwa kamar telah selesai dibersihkan (Kembali Available)"
+                    >
+                      <span>✨</span>
+                      <span>Telah Dibersihkan</span>
+                    </button>
+                    <button
+                      v-else-if="room.status?.toLowerCase() === 'active' || room.status?.toLowerCase() === 'available'"
+                      @click="mutateRoomStatus(room.id, 'dirty')"
+                      class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 font-semibold text-xs rounded-lg border border-amber-300 transition-all flex items-center gap-1 mx-auto"
+                      title="Tandai kamar kotor (Kirim Notifikasi Housekeeping)"
+                    >
+                      <span>🧹</span>
+                      <span>Set Dirty</span>
+                    </button>
+                    <button
+                      v-else-if="room.status?.toLowerCase() === 'maintenance'"
+                      @click="mutateRoomStatus(room.id, 'active')"
+                      class="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold text-xs rounded-lg border border-blue-300 transition-all flex items-center gap-1 mx-auto"
+                      title="Selesai Perbaikan (Set Available)"
+                    >
+                      <span>✓</span>
+                      <span>Selesai</span>
+                    </button>
+                    <span v-else class="text-xs text-slate-400 font-medium">-</span>
                   </td>
                 </tr>
                 <tr v-if="filteredRooms.length === 0">
-                  <td colspan="6" class="no-data">Tidak ditemukan unit kamar yang cocok.</td>
+                  <td colspan="7" class="no-data">Tidak ditemukan unit kamar yang cocok.</td>
                 </tr>
               </tbody>
             </table>
@@ -393,6 +434,24 @@ onMounted(async () => {
                   >
                 </div>
               </div>
+            </div>
+
+            <!-- JIKA STATUS DIRTY: TAMPILKAN BANNER KHUSUS & TOMBOL TELAH DIBERSIHKAN -->
+            <div v-if="selectedRoom.status?.toLowerCase() === 'dirty'" class="p-3.5 mb-3 bg-amber-50 border border-amber-300 rounded-xl">
+              <div class="flex items-center gap-2 text-amber-900 font-bold text-sm mb-1">
+                <span class="text-lg">🧹</span>
+                <span>Kamar Perlu Dibersihkan</span>
+              </div>
+              <p class="text-xs text-amber-800 leading-relaxed mb-3">
+                Kamar ini telah diset <strong>Dirty</strong> dan tim Housekeeping menerima notifikasi. Klik tombol di bawah setelah kamar selesai dibersihkan agar otomatis kembali <strong>Available</strong>.
+              </p>
+              <button
+                @click="mutateRoomStatus(selectedRoom.id, 'active')"
+                class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-lg shadow-sm transition-all flex items-center justify-center gap-2"
+              >
+                <span>✨</span>
+                <span>Tandai Telah Dibersihkan (Set Available)</span>
+              </button>
             </div>
 
             <div class="info-block-card oper-card">
