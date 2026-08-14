@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { reservationService } from '@/services/admin/reservationService'
 import { useToastStore } from '@/stores/toastStore'
 import { financeService } from '@/services/admin/financeService'
@@ -16,7 +16,7 @@ const nonCancelled = computed(() =>
 
 const totalRevenue = computed(() =>
   reservations.value
-    .filter((r) => ['checked-in', 'checked-out'].includes(r.status))
+    .filter((r) => ['confirmed', 'approved', 'checked-in', 'checked-out'].includes(r.status))
     .reduce((sum, r) => sum + (r.total_price || 0), 0),
 )
 
@@ -103,14 +103,16 @@ function statusClass(s: string) {
   return map[s] || ''
 }
 
-const fetchAll = async () => {
+let pollingTimer: any = null
+
+const fetchAll = async (isSilent: boolean = false) => {
   try {
-    loading.value = true
+    if (!isSilent) loading.value = true
     reservations.value = await reservationService.getAll()
   } catch (error) {
-    toastStore.error((error as Error).message || 'Failed to load finance data')
+    if (!isSilent) toastStore.error((error as Error).message || 'Failed to load finance data')
   } finally {
-    loading.value = false
+    if (!isSilent) loading.value = false
   }
 }
 
@@ -119,14 +121,26 @@ async function verifyPayment(id: string, status: 'confirmed' | 'rejected') {
     try {
       await financeService.verifyPayment(id, status)
       toastStore.success(`Payment ${status} successfully`)
-      fetchAll()
+      fetchAll(false)
     } catch (error: any) {
       toastStore.error(error.message || `Failed to ${status} payment`)
     }
   }
 }
 
-onMounted(fetchAll)
+onMounted(() => {
+  fetchAll(false)
+  pollingTimer = setInterval(() => {
+    fetchAll(true)
+  }, 5000)
+})
+
+onUnmounted(() => {
+  if (pollingTimer) {
+    clearInterval(pollingTimer)
+    pollingTimer = null
+  }
+})
 </script>
 
 <template>

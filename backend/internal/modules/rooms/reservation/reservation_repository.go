@@ -32,7 +32,7 @@ func NewReservationRepository(db *gorm.DB) ReservationRepositoryInterface {
 
 func (r *reservationRepo) GetAll() ([]Reservation, error) {
 	var reservations []Reservation
-	err := r.db.Preload("Room").Find(&reservations).Error
+	err := r.db.Preload("Room").Preload("Channel").Find(&reservations).Error
 	if err != nil {
 		return nil, err
 	}
@@ -41,7 +41,7 @@ func (r *reservationRepo) GetAll() ([]Reservation, error) {
 
 func (r *reservationRepo) GetById(id string) (*Reservation, error) {
 	var reservation Reservation
-	err := r.db.Preload("Room").Where("id = ?", id).First(&reservation).Error
+	err := r.db.Preload("Room").Preload("Channel").Where("id = ?", id).First(&reservation).Error
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +62,7 @@ func (r *reservationRepo) Delete(id string) error {
 
 func (r *reservationRepo) GetByStatus(status string) ([]Reservation, error) {
 	var reservations []Reservation
-	err := r.db.Preload("User").Preload("Room").Where("status = ?", status).Find(&reservations).Error
+	err := r.db.Preload("User").Preload("Room").Preload("Channel").Where("status = ?", status).Find(&reservations).Error
 	if err != nil {
 		return nil, err
 	}

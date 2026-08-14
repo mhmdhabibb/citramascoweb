@@ -61,12 +61,16 @@ export interface Reservation {
   email: string
   room_id: string
   status: string
+  transaction_status?: 'unpaid' | 'down_payment' | 'paid' | 'refunded' | string
+  payment_method?: 'bank_transfer' | 'cash' | 'qris' | 'credit_card' | 'ota_collect' | string
   number_of_guest: number
   checkin_date: string
   checkout_date: string
   room: {
     name: string
   }
+  channel_id?: string
+  channel?: Channel
   price: number
   total_night: number
   total_price: number
@@ -198,3 +202,15 @@ export interface AppNotification {
   is_read: boolean
   created_at: string
 }
+
+// ============================================
+// Channel (Distribution / Booking Channel)
+// ============================================
+export interface Channel {
+  id: string
+  code: string
+  name: string
+  created_at: string
+  updated_at: string
+}
+

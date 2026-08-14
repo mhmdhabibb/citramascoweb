@@ -151,8 +151,15 @@ func (r *financeRepository) VerifyPayment(req *dto.VerifyPaymentRequest) error {
 		}
 
 		if req.Status == "confirmed" {
-			// Update reservation status to confirmed
-			if err := tx.Table("reservations").Where("id = ?", req.ReservationId).Update("status", "confirmed").Error; err != nil {
+			txStatus := "paid"
+			if deposit > 0 && deposit < totalPrice {
+				txStatus = "down_payment"
+			}
+			// Update reservation status and transaction_status
+			if err := tx.Table("reservations").Where("id = ?", req.ReservationId).Updates(map[string]interface{}{
+				"status":             "confirmed",
+				"transaction_status": txStatus,
+			}).Error; err != nil {
 				return err
 			}
 

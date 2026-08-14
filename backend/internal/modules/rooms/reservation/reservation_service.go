@@ -155,22 +155,41 @@ func (s *reservationService) Store(req *dto.CreateReservationRequest) error {
 		return err
 	}
 
+	txStatus := TransactionStatusUnpaid
+	if req.TransactionStatus != "" {
+		txStatus = TransactionStatus(req.TransactionStatus)
+	} else if req.Deposit >= totalPrice && totalPrice > 0 {
+		txStatus = TransactionStatusPaid
+	} else if req.Deposit > 0 {
+		txStatus = TransactionStatusDownPayment
+	}
+
+	payMethod := "bank_transfer"
+	if req.PaymentMethod != "" {
+		payMethod = req.PaymentMethod
+	} else if req.ChannelId != nil {
+		payMethod = "ota_collect"
+	}
+
 	newReservation := &Reservation{
-		Id:            uuid.New().String(),
-		Code:          code,
-		RoomId:        req.RoomId,
-		FullName:      req.FullName,
-		Email:         req.Email,
-		CheckinDate:   checkinCustom,
-		CheckoutDate:  checkoutCustom,
-		Price:         pricePerNight,
-		TotalNight:    totalNight,
-		TotalPrice:    totalPrice,
-		Status:        ReservationStatusPending,
-		NumberOfGuest: req.NumberOfGuest,
-		IsOffer:       &isOfferVal,
-		OfferCode:     offerApplied,
-		Deposit:       req.Deposit,
+		Id:                uuid.New().String(),
+		Code:              code,
+		RoomId:            req.RoomId,
+		FullName:          req.FullName,
+		Email:             req.Email,
+		CheckinDate:       checkinCustom,
+		CheckoutDate:      checkoutCustom,
+		Price:             pricePerNight,
+		TotalNight:        totalNight,
+		TotalPrice:        totalPrice,
+		Status:            ReservationStatusPending,
+		TransactionStatus: txStatus,
+		PaymentMethod:     payMethod,
+		NumberOfGuest:     req.NumberOfGuest,
+		IsOffer:           &isOfferVal,
+		OfferCode:         offerApplied,
+		Deposit:           req.Deposit,
+		ChannelId:         req.ChannelId,
 	}
 
 	err = s.reservationRepo.Create(newReservation)
@@ -324,6 +343,14 @@ func (s *reservationService) Update(id string, req *dto.UpdateReservationRequest
 
 	if req.NumberOfGuest != 0 {
 		reservation.NumberOfGuest = req.NumberOfGuest
+	}
+
+	if req.ChannelId != nil {
+		reservation.ChannelId = req.ChannelId
+	}
+
+	if req.PaymentMethod != "" {
+		reservation.PaymentMethod = req.PaymentMethod
 	}
 
 	err = s.reservationRepo.Update(reservation, id)
