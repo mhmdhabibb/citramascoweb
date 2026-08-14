@@ -2,6 +2,7 @@ package rooms
 
 import (
 	"citramascoweb-backend/internal/dto"
+	"citramascoweb-backend/internal/modules/notification"
 	"citramascoweb-backend/pkg/utils"
 	"errors"
 	"fmt"
@@ -13,11 +14,12 @@ import (
 )
 
 type roomService struct {
-	roomRepo RoomRepositoryInterface
+	roomRepo     RoomRepositoryInterface
+	notifService *notification.NotificationService
 }
 
-func NewRoomService(roomRepo RoomRepositoryInterface) *roomService {
-	return &roomService{roomRepo: roomRepo}
+func NewRoomService(roomRepo RoomRepositoryInterface, notifService *notification.NotificationService) *roomService {
+	return &roomService{roomRepo: roomRepo, notifService: notifService}
 }
 
 func (s *roomService) GetAll() ([]Room, error) {
@@ -174,7 +176,7 @@ func (s *roomService) UpdateStatus(id string, statusStr string) error {
 	// Konversi string input menjadi tipe typed-enum RoomStatus
 	var targetStatus RoomStatus
 	switch strings.ToLower(statusStr) {
-	case "active", "available":
+	case "active", "available", "clean":
 		targetStatus = RoomStatusActive
 	case "maintenance":
 		targetStatus = RoomStatusMaintenance
@@ -192,6 +194,21 @@ func (s *roomService) UpdateStatus(id string, statusStr string) error {
 		return fmt.Errorf("unit kamar tidak ditemukan: %v", err)
 	}
 
-	log.Printf("[DEBUG][ROOM-SERVICE] Kamar '%s' ditemukan. Mengubah status lama '%s' -> '%s'", room.Code, room.Status, targetStatus)
-	return s.roomRepo.UpdateStatus(id, targetStatus)
+	oldStatus := room.Status
+	log.Printf("[DEBUG][ROOM-SERVICE] Kamar '%s' ditemukan. Mengubah status lama '%s' -> '%s'", room.Code, oldStatus, targetStatus)
+	err = s.roomRepo.UpdateStatus(id, targetStatus)
+	if err != nil {
+		return err
+	}
+
+	// Otomatis kirim notifikasi jika status diset menjadi Dirty atau selesai dibersihkan
+	if s.notifService != nil {
+		if targetStatus == RoomStatusDirty {
+			_ = s.notifService.NotifyDirtyRoom(room.Name, room.Code, room.Id)
+		} else if (targetStatus == RoomStatusActive) && (oldStatus == RoomStatusDirty) {
+			_ = s.notifService.NotifyRoomCleaned(room.Name, room.Code, room.Id)
+		}
+	}
+
+	return nil
 }

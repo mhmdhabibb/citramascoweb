@@ -2,6 +2,7 @@ package rooms
 
 import (
 	"citramascoweb-backend/internal/middlewares"
+	"citramascoweb-backend/internal/modules/notification"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -13,7 +14,8 @@ type Module struct {
 
 func InitModule(db *gorm.DB) *Module {
 	repo := NewRoomRepository(db)
-	service := NewRoomService(repo)
+	notifier := notification.NewNotificationService(notification.NewNotificationRepository(db))
+	service := NewRoomService(repo, notifier)
 	handler := NewRoomHandler(service)
 
 	return &Module{
@@ -32,5 +34,5 @@ func (m *Module) RoomRoutes(router *gin.RouterGroup) {
 	room.GET("/filter/category/:id", m.Handler.FilerByCategory)
 	room.GET("/filter/type/:id", m.Handler.FilterByType)
 	room.GET("/filter", m.Handler.Filter)
-	room.PATCH("/status/:id", middlewares.AuthMiddleware(), middlewares.RoleMiddleware("admin", "manager"), m.Handler.UpdateStatus)
+	room.PATCH("/status/:id", middlewares.AuthMiddleware(), middlewares.RoleMiddleware("admin", "manager", "reception", "housekeeping"), m.Handler.UpdateStatus)
 }

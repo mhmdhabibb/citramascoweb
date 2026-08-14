@@ -15,6 +15,7 @@ import (
 	"citramascoweb-backend/internal/modules/rooms/category"
 	"citramascoweb-backend/internal/modules/rooms/reservation"
 	"citramascoweb-backend/internal/modules/rooms/types"
+	"citramascoweb-backend/internal/modules/service_request"
 	"citramascoweb-backend/internal/modules/user"
 
 	"github.com/gin-contrib/cors"
@@ -59,6 +60,7 @@ func main() {
 	notificationModule := notification.InitModule(db)
 	financeModule := finance.InitModule(db)
 	channelModule := channel.InitModule(db)
+	serviceRequestModule := service_request.InitModule(db)
 
 	api := app.Group("/api")
 
@@ -74,6 +76,7 @@ func main() {
 	notificationModule.NotificationRoutes(api)
 	financeModule.FinanceRoutes(api)
 	channelModule.ChannelRoutes(api)
+	serviceRequestModule.ServiceRequestRoutes(api)
 
 	api.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{

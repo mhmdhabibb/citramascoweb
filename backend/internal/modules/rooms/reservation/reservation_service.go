@@ -377,7 +377,8 @@ func (s *reservationService) ApproveReservation(id string) error {
 		return errors.New("Reservation Not Found!")
 	}
 
-	if reservation.Status == ReservationStatusApproved {
+	statusLower := strings.ToLower(string(reservation.Status))
+	if statusLower == "approved" {
 		return errors.New("reservation is already approved")
 	}
 	if reservation.Status == ReservationStatusRejected {
@@ -542,8 +543,9 @@ func (s *reservationService) CheckIn(id string) error {
 		return errors.New("reservation tidak ditemukan")
 	}
 
-	// Validasi: Hanya reservasi yang sudah di-approve oleh admin yang bisa check-in
-	if reservation.Status != ReservationStatusApproved {
+	// Validasi: Reservasi yang sudah di-approve atau dikonfirmasi dapat melakukan check-in
+	statusLower := strings.ToLower(string(reservation.Status))
+	if statusLower != "approved" && statusLower != "confirmed" {
 		return fmt.Errorf("gagal check-in, status reservasi saat ini masih '%s' (harus approved)", reservation.Status)
 	}
 
