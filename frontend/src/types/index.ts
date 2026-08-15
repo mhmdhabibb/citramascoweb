@@ -45,6 +45,7 @@ export interface Room {
   category?: Category
   price: number
   capacity: number
+  child_capacity: number
   size: number
   type_id: string
   type?: RoomType
@@ -63,7 +64,8 @@ export interface Reservation {
   status: string
   transaction_status?: 'unpaid' | 'down_payment' | 'paid' | 'refunded' | string
   payment_method?: 'bank_transfer' | 'cash' | 'qris' | 'credit_card' | 'ota_collect' | string
-  number_of_guest: number
+  number_of_adult: number
+  number_of_children: number
   checkin_date: string
   checkout_date: string
   room: {
@@ -254,4 +256,3 @@ export interface ServiceRequest {
   updated_at: string
   completed_at?: string
 }
-

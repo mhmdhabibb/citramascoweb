@@ -185,7 +185,8 @@ func (s *reservationService) Store(req *dto.CreateReservationRequest) error {
 		Status:            ReservationStatusPending,
 		TransactionStatus: txStatus,
 		PaymentMethod:     payMethod,
-		NumberOfGuest:     req.NumberOfGuest,
+		NumberOfAdult:     req.NumberOfAdult,
+		NumberOfChildren:  req.NumberOfChildren,
 		IsOffer:           &isOfferVal,
 		OfferCode:         offerApplied,
 		Deposit:           req.Deposit,
@@ -341,8 +342,12 @@ func (s *reservationService) Update(id string, req *dto.UpdateReservationRequest
 		reservation.Status = ReservationStatus(req.Status)
 	}
 
-	if req.NumberOfGuest != 0 {
-		reservation.NumberOfGuest = req.NumberOfGuest
+	if req.NumberOfAdult != 0 {
+		reservation.NumberOfAdult = req.NumberOfAdult
+	}
+
+	if *req.NumberOfChildren != 0 {
+		reservation.NumberOfChildren = req.NumberOfChildren
 	}
 
 	if req.ChannelId != nil {

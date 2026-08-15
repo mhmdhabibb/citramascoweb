@@ -1,5 +1,5 @@
-import api from '../api'
 import type { ApiResponse, Reservation } from '@/types'
+import api from '../api'
 
 export const reservationService = {
   /**
@@ -77,7 +77,8 @@ export const reservationService = {
     email: string
     check_in_date: string
     check_out_date: string
-    number_of_guest: number
+    number_of_adult: number
+    number_of_children: number
     is_offer?: boolean
     offer_code?: string
     deposit?: number

@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { ref, onMounted, computed, watch } from 'vue'
-import { useRoute } from 'vue-router'
-import { roomService, type Room } from '@/services/roomService'
 import { reservationService } from '@/services/admin/reservationService'
+import { roomService, type Room } from '@/services/roomService'
 import { useOfferStore } from '@/stores/offerStore'
 import { useTypeStore } from '@/stores/typeStore'
+import { computed, onMounted, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 
 const route = useRoute()
 const rooms = ref<Room[]>([])
@@ -17,7 +17,8 @@ const selectedRoomName = ref<string>('')
 const selectedTypeId = ref<string>('')
 const checkInDate = ref('')
 const checkOutDate = ref('')
-const guests = ref(1)
+const adultGuest = ref(1)
+const childGuest = ref(0)
 const fullName = ref('')
 const email = ref('')
 const promoCode = ref('')
@@ -26,11 +27,6 @@ const loading = ref(true)
 const submitting = ref(false)
 const errorMsg = ref('')
 const successMsg = ref('')
-
-const isOffer = ref(false)
-const offerCode = ref('')
-const isSubmitting = ref(false)
-const submitError = ref<string | null>(null)
 
 onMounted(async () => {
   try {
@@ -98,6 +94,13 @@ const selectedRoom = computed(() => {
 
 const selectedRoomId = computed(() => selectedRoom.value ? String(selectedRoom.value.id) : '')
 
+// Validasi Kapasitas Maksimal
+const maxAdultCapacity = computed(() => Number(selectedRoom.value?.capacity) || 1)
+const maxChildCapacity = computed(() => Number(selectedRoom.value?.child_capacity) || 0)
+
+const isAdultOverCapacity = computed(() => Number(adultGuest.value) > maxAdultCapacity.value)
+const isChildOverCapacity = computed(() => Number(childGuest.value) > maxChildCapacity.value)
+
 const selectedOffer = computed(() => {
   if (!promoCode.value) return null
   return offers.value.find(o => o.code === promoCode.value) || null
@@ -131,9 +134,33 @@ const formatDateToApi = (dateStr: string) => {
 }
 
 const handleSubmit = async () => {
-  submitting.value = true
   errorMsg.value = ''
   successMsg.value = ''
+
+  if (!selectedRoom.value) {
+    errorMsg.value = 'Silakan pilih kamar terlebih dahulu.'
+    return
+  }
+
+  // 1. Validasi Kapasitas Dewasa
+  if (Number(adultGuest.value) > maxAdultCapacity.value) {
+    errorMsg.value = `Jumlah tamu dewasa melebihi kapasitas kamar (${maxAdultCapacity.value} orang).`
+    return
+  }
+
+  // 2. Validasi Kapasitas Anak
+  if (Number(childGuest.value) > maxChildCapacity.value) {
+    errorMsg.value = `Jumlah anak melebihi kapasitas kamar (${maxChildCapacity.value} anak).`
+    return
+  }
+
+  // 3. Validasi Tanggal
+  if (new Date(checkOutDate.value) <= new Date(checkInDate.value)) {
+    errorMsg.value = 'Tanggal Check-Out harus lebih besar dari tanggal Check-In.'
+    return
+  }
+
+  submitting.value = true
 
   const payload = {
     room_id: selectedRoomId.value,
@@ -141,7 +168,8 @@ const handleSubmit = async () => {
     email: email.value.trim(),
     check_in_date: formatDateToApi(checkInDate.value),
     check_out_date: formatDateToApi(checkOutDate.value),
-    number_of_guest: Number(guests.value),
+    number_of_adult: Number(adultGuest.value),
+    number_of_children: Number(childGuest.value),
     is_offer: !!promoCode.value,
     offer_code: promoCode.value ? promoCode.value.trim().toUpperCase() : ''
   }
@@ -187,7 +215,7 @@ const handleSubmit = async () => {
         </div>
         <h2 class="text-3xl font-serif text-[#1C1612] mb-4">Reservation Confirmed</h2>
         <p class="text-gray-600 mb-8">{{ successMsg }}</p>
-        <button @click="successMsg = ''" class="inline-flex items-center justify-center px-8 py-3.5 border border-[#1A1A1A] text-[12px] font-bold tracking-[0.1em] text-[#1A1A1A] uppercase hover:bg-[#1A1A1A] hover:text-white transition-colors duration-400 rounded-full">
+        <button @click="successMsg = ''" class="inline-flex items-center justify-center px-8 py-3.5 border border-[#1A1A1A] text-[12px] font-bold tracking-[0.1em] text-[#1A1A1A] uppercase hover:bg-[#1A1A1A] hover:text-white transition-colors duration-400 rounded-full cursor-pointer">
           Make Another Booking
         </button>
       </div>
@@ -199,8 +227,9 @@ const handleSubmit = async () => {
         <div class="lg:col-span-7 xl:col-span-8 animate-slide-up">
           <form @submit.prevent="handleSubmit" class="space-y-8 bg-white p-8 md:p-12 rounded-[24px] border border-[#EAE1D8] shadow-sm">
             
-            <div v-if="errorMsg" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm mb-6">
-              {{ errorMsg }}
+            <div v-if="errorMsg" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm mb-6 flex items-start gap-2">
+              <span class="font-bold">⚠️</span>
+              <span>{{ errorMsg }}</span>
             </div>
 
             <!-- Guest Details -->
@@ -258,11 +287,48 @@ const handleSubmit = async () => {
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <!-- Adult Input -->
                   <div>
-                    <label class="block text-[11px] font-bold tracking-[0.1em] text-gray-500 uppercase mb-2">Number of Guests</label>
-                    <input type="number" v-model="guests" min="1" max="10" required class="w-full bg-[#FAF7F2] border border-[#EAE1D8] text-[#1C1612] rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#8C7A6B] transition-colors">
+                    <div class="flex justify-between items-center mb-2">
+                      <label class="block text-[11px] font-bold tracking-[0.1em] text-gray-500 uppercase">Number of Adult</label>
+                      <span class="text-[10px] text-slate-400 font-medium">Maks: {{ maxAdultCapacity }}</span>
+                    </div>
+                    <input 
+                      type="number" 
+                      v-model="adultGuest" 
+                      min="1" 
+                      :max="maxAdultCapacity" 
+                      required 
+                      :class="{'border-red-400 bg-red-50/30': isAdultOverCapacity}"
+                      class="w-full bg-[#FAF7F2] border border-[#EAE1D8] text-[#1C1612] rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#8C7A6B] transition-colors"
+                    >
+                    <p v-if="isAdultOverCapacity" class="text-red-500 text-xs mt-1.5 font-medium">
+                      ⚠️ Melebihi kapasitas (Maks. {{ maxAdultCapacity }} Dewasa)
+                    </p>
                   </div>
+
+                  <!-- Children Input -->
                   <div>
+                    <div class="flex justify-between items-center mb-2">
+                      <label class="block text-[11px] font-bold tracking-[0.1em] text-gray-500 uppercase">Number of Child (0 - 17 yo)</label>
+                      <span class="text-[10px] text-slate-400 font-medium">Maks: {{ maxChildCapacity }}</span>
+                    </div>
+                    <input 
+                      type="number" 
+                      v-model="childGuest" 
+                      min="0" 
+                      :max="maxChildCapacity" 
+                      required 
+                      :class="{'border-red-400 bg-red-50/30': isChildOverCapacity}"
+                      class="w-full bg-[#FAF7F2] border border-[#EAE1D8] text-[#1C1612] rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#8C7A6B] transition-colors"
+                    >
+                    <p v-if="isChildOverCapacity" class="text-red-500 text-xs mt-1.5 font-medium">
+                      ⚠️ Melebihi kapasitas (Maks. {{ maxChildCapacity }} Anak)
+                    </p>
+                  </div>
+
+                  <!-- Promo Code Input -->
+                  <div class="sm:col-span-2">
                     <label class="block text-[11px] font-bold tracking-[0.1em] text-gray-500 uppercase mb-2">Promo Code (Optional)</label>
                     <select v-model="promoCode" class="w-full bg-[#FAF7F2] border border-[#EAE1D8] text-[#1C1612] rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#8C7A6B] transition-colors appearance-none">
                       <option value="">-- No Promo Code --</option>
@@ -275,9 +341,13 @@ const handleSubmit = async () => {
               </div>
             </div>
 
-            <!-- Submit -->
+            <!-- Submit Button -->
             <div class="pt-6">
-              <button type="submit" :disabled="submitting" class="w-full inline-flex items-center justify-center px-8 py-4 bg-[#1C1612] text-[12px] font-bold tracking-[0.1em] text-white uppercase hover:bg-[#3D3329] transition-colors duration-400 rounded-full disabled:opacity-70 disabled:cursor-not-allowed">
+              <button 
+                type="submit" 
+                :disabled="submitting || isAdultOverCapacity || isChildOverCapacity" 
+                class="w-full inline-flex items-center justify-center px-8 py-4 bg-[#1C1612] text-[12px] font-bold tracking-[0.1em] text-white uppercase hover:bg-[#3D3329] transition-colors duration-400 rounded-full disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              >
                 <svg v-if="submitting" class="animate-spin -ml-1 mr-3 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -299,7 +369,11 @@ const handleSubmit = async () => {
               </div>
               <div class="p-8">
                 <h4 class="text-2xl font-serif text-[#1C1612] mb-2" style="font-family: 'Playfair Display', ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;">{{ selectedRoom.name }}</h4>
-                <p class="text-gray-500 text-sm mb-6">{{ selectedRoom.capacity }} Guests Maximum</p>
+                <div class="flex items-center gap-4 text-gray-500 text-sm mb-6">
+                  <span>👤 Maks. {{ selectedRoom.capacity }} Dewasa</span>
+                  <span>•</span>
+                  <span>🧒 Maks. {{ selectedRoom.child_capacity }} Anak</span>
+                </div>
                 
                 <div class="flex justify-between items-center border-t border-[#EAE1D8] pt-6">
                   <span class="text-gray-500 text-[11px] font-bold tracking-[0.1em] uppercase">Rate</span>
@@ -345,7 +419,7 @@ const handleSubmit = async () => {
           </div>
         </div>
       </div>
-  </div>
+    </div>
   </div>
 </template>
 
@@ -374,15 +448,8 @@ const handleSubmit = async () => {
 
 select {
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-  background-position: right 0.5rem center;
+  background-position: right 0.75rem center;
   background-repeat: no-repeat;
-  background-size: 1.5em 1.5em;
-}
-
-.code-input {
-  text-transform: uppercase;
-  font-family: monospace;
-  font-weight: 700;
-  letter-spacing: 0.05em;
+  background-size: 1.25em 1.25em;
 }
 </style>

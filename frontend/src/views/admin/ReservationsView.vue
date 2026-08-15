@@ -1,10 +1,10 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { reservationService } from '@/services/admin/reservationService'
 import { financeService } from '@/services/admin/financeService'
+import { reservationService } from '@/services/admin/reservationService'
 import { authService } from '@/services/authService'
 import { useToastStore } from '@/stores/toastStore'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const reservations = ref([])
@@ -411,158 +411,236 @@ onUnmounted(() => {
 
       <!-- Detail Drawer Modal -->
       <transition name="drawer">
-        <div v-if="selectedReservation" class="details-drawer">
-          <div class="drawer-header">
-            <div>
-              <span class="drawer-code">#{{ selectedReservation.code }}</span>
-              <h2>{{ selectedReservation.full_name }}</h2>
+  <div v-if="selectedReservation" class="details-drawer w-full max-w-md bg-slate-50/50 border-l border-slate-200 shadow-2xl flex flex-col h-full overflow-hidden">
+    <!-- Header with Gradient Accent -->
+    <div class="drawer-header bg-white p-6 border-b border-slate-100 flex items-start justify-between shadow-xs">
+      <div>
+        <div class="flex items-center gap-2 mb-1">
+          <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold tracking-wider bg-blue-50 text-blue-700 border border-blue-100">
+            #{{ selectedReservation.code }}
+          </span>
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 text-slate-600">
+            <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+            {{ selectedReservation.channel?.name || 'Direct Booking' }}
+          </span>
+        </div>
+        <h2 class="text-xl font-extrabold text-slate-900 tracking-tight">{{ selectedReservation.full_name }}</h2>
+      </div>
+      <button 
+        @click="closeDrawer" 
+        class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 transition-colors duration-150 cursor-pointer"
+      >
+        ✕
+      </button>
+    </div>
+
+    <div class="drawer-body p-6 space-y-4 overflow-y-auto flex-1">
+      <!-- Contact & Room Card -->
+      <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-xs hover:border-slate-200 transition-all">
+        <span class="text-[11px] font-bold tracking-wider text-slate-400 uppercase">Kontak & Kamar</span>
+        <div class="flex items-center gap-2 mt-2">
+          <div class="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 text-sm">
+            ✉️
+          </div>
+          <span class="font-medium text-slate-700 text-sm truncate">{{ selectedReservation.email || '-' }}</span>
+        </div>
+        <div class="mt-3 flex items-center gap-2 pt-3 border-t border-slate-50">
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
+            🛏️ {{ selectedReservation.room?.name || 'Standard Room' }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Stay Schedule & Guests Card -->
+      <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-xs hover:border-slate-200 transition-all">
+        <span class="text-[11px] font-bold tracking-wider text-slate-400 uppercase">Jadwal & Tamu</span>
+        
+        <!-- Date Timeline -->
+        <div class="mt-2 flex items-center justify-between bg-slate-50 rounded-xl p-3 border border-slate-100">
+          <div>
+            <div class="text-[10px] text-slate-400 font-semibold uppercase">Check-in</div>
+            <div class="text-xs font-bold text-slate-800">{{ selectedReservation.checkin_date }}</div>
+          </div>
+          <div class="flex flex-col items-center px-2">
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white text-indigo-600 shadow-xs border border-slate-100">
+              {{ selectedReservation.total_night }} Malam
+            </span>
+            <div class="w-12 h-0.5 bg-slate-200 my-1 relative">
+              <span class="absolute -right-0.5 -top-0.5 w-1.5 h-1.5 rounded-full bg-slate-400"></span>
             </div>
-            <button @click="closeDrawer" class="btn-close-drawer">✕</button>
+          </div>
+          <div class="text-right">
+            <div class="text-[10px] text-slate-400 font-semibold uppercase">Check-out</div>
+            <div class="text-xs font-bold text-slate-800">{{ selectedReservation.checkout_date }}</div>
+          </div>
+        </div>
+
+        <!-- Guest Badges -->
+        <div class="mt-3 grid grid-cols-2 gap-2">
+          <div class="flex items-center gap-2.5 p-2 rounded-xl bg-amber-50/60 border border-amber-100/80">
+            <div class="w-7 h-7 rounded-lg bg-amber-100 flex items-center justify-center text-xs">👤</div>
+            <div>
+              <div class="text-[10px] text-amber-700/70 font-semibold">Dewasa</div>
+              <div class="text-xs font-extrabold text-amber-900">
+                {{ selectedReservation.adults || selectedReservation.number_of_adult || selectedReservation.adult || 1 }} Orang
+              </div>
+            </div>
+          </div>
+          <div class="flex items-center gap-2.5 p-2 rounded-xl bg-sky-50/60 border border-sky-100/80">
+            <div class="w-7 h-7 rounded-lg bg-sky-100 flex items-center justify-center text-xs">🧒</div>
+            <div>
+              <div class="text-[10px] text-sky-700/70 font-semibold">Anak-anak</div>
+              <div class="text-xs font-extrabold text-sky-900">
+                {{ selectedReservation.children || selectedReservation.number_of_children || selectedReservation.child || 0 }} Anak
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payment Method & Status Card -->
+      <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-xs flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center text-slate-700">
+            💳
+          </div>
+          <div>
+            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Metode Bayar</div>
+            <div class="text-xs font-bold text-slate-800">
+              {{ selectedReservation.payment_method ? selectedReservation.payment_method.toUpperCase().replace('_', ' ') : 'BANK TRANSFER' }}
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <span
+            v-if="selectedReservation.transaction_status === 'paid' || (selectedReservation.deposit >= selectedReservation.total_price && selectedReservation.total_price > 0)"
+            class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-600 border border-emerald-200"
+          >
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            Dibayar
+          </span>
+          <span
+            v-else
+            class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200"
+          >
+            <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+            Belum Bayar
+          </span>
+        </div>
+      </div>
+
+      <!-- Billing Statement Highlight Card -->
+      <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500 via-orange-500 to-rose-500 p-5 text-white shadow-lg shadow-orange-500/20">
+        <div class="absolute -right-4 -bottom-4 w-24 h-24 rounded-full bg-white/10 blur-xl pointer-events-none"></div>
+        <div class="text-xs font-medium text-orange-100 tracking-wider uppercase">Total Pembayaran</div>
+        <div class="mt-1 flex items-baseline gap-1">
+          <span class="text-sm font-semibold opacity-90">Rp</span>
+          <span class="text-2xl font-black tracking-tight">
+            {{ selectedReservation.total_price?.toLocaleString('id-ID') || 0 }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Actions Container -->
+      <div v-if="canManage" class="pt-2">
+        <div v-if="selectedReservation.status === 'pending'" class="space-y-3">
+          <!-- Paid Confirmation -->
+          <div
+            v-if="
+              selectedReservation.transaction_status === 'paid' ||
+              selectedReservation.transaction_status === 'down_payment' ||
+              selectedReservation.payment_method === 'cash' ||
+              (selectedReservation.deposit && selectedReservation.deposit > 0)
+            "
+            class="space-y-2.5"
+          >
+            <div class="p-3 bg-emerald-50/80 border border-emerald-200/70 rounded-xl text-xs text-emerald-900 flex items-start gap-2.5">
+              <span class="text-base leading-none">✅</span>
+              <div>
+                <strong class="font-bold">Pembayaran Diterima:</strong> Kamar siap dikonfirmasi oleh resepsionis.
+              </div>
+            </div>
+            <div class="flex gap-2">
+              <button
+                @click="approveReservation(selectedReservation.id)"
+                class="flex-1 py-2.5 px-4 rounded-xl font-bold text-xs text-white bg-emerald-600 hover:bg-emerald-700 shadow-md shadow-emerald-600/20 transition-all cursor-pointer"
+              >
+                ✓ Approve (Receptionist)
+              </button>
+              <button
+                @click="rejectReservation(selectedReservation.id)"
+                class="py-2.5 px-4 rounded-xl font-bold text-xs text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 transition-all cursor-pointer"
+              >
+                Tolak
+              </button>
+            </div>
           </div>
 
-          <div class="drawer-body">
-            <div class="info-block-card">
-              <label>Contact & Room</label>
-              <p class="val-primary">{{ selectedReservation.email || '-' }}</p>
-              <div class="meta-row">
-                <span class="room-pill">{{ selectedReservation.room?.name || 'N/A' }}</span>
-                <span class="channel-badge-pill">{{ selectedReservation.channel?.name || 'Direct' }}</span>
+          <!-- Pending Finance Verification -->
+          <div v-else class="space-y-2.5">
+            <div class="p-3 bg-amber-50 border border-amber-200/80 rounded-xl text-xs text-amber-900 flex items-start gap-2.5">
+              <span class="text-base leading-none">⏳</span>
+              <div class="leading-relaxed">
+                <strong class="font-bold">Menunggu Tim Finance:</strong> Verifikasi mutasi transfer untuk mengaktifkan persetujuan.
               </div>
             </div>
 
-            <div class="info-block-card">
-              <label>Stay Schedule</label>
-              <p class="val-small">
-                📅 {{ selectedReservation.checkin_date }} — {{ selectedReservation.checkout_date }} |
-                ({{ selectedReservation.total_night }}) nights
-              </p>
-            </div>
-
-            <div class="info-block-card">
-              <label>Payment Method & Status</label>
-              <div class="flex items-center justify-between mt-1">
-                <span class="font-bold text-slate-800 text-xs">
-                  💳 {{ selectedReservation.payment_method ? selectedReservation.payment_method.toUpperCase().replace('_', ' ') : 'BANK TRANSFER' }}
-                </span>
-                <span
-                  v-if="selectedReservation.transaction_status === 'paid' || (selectedReservation.deposit >= selectedReservation.total_price && selectedReservation.total_price > 0)"
-                  class="px-2 py-0.5 text-xs font-bold rounded-full bg-emerald-100 text-emerald-700"
-                >
-                  ✓ Dibayar
-                </span>
-                <span
-                  v-else
-                  class="px-2 py-0.5 text-xs font-bold rounded-full bg-amber-100 text-amber-700"
-                >
-                  ⏳ Belum Bayar
-                </span>
-              </div>
-            </div>
-
-            <div class="info-block-card pricing-bg">
-              <label>Billing Statement</label>
-              <p class="val-price">
-                Rp {{ selectedReservation.total_price?.toLocaleString('id-ID') || 0 }}
-              </p>
-            </div>
-
-            <div v-if="canManage" class="drawer-actions-container">
-              <!-- JIKA STATUS PENDING: Pisahkan Alur Verifikasi Finance vs Persetujuan Resepsionis -->
-              <div v-if="selectedReservation.status === 'pending'" class="space-y-3">
-                <!-- JIKA PEMBAYARAN SUDAH DIBAYAR / CASH / DP: RESEPSIONIS DAPAT APPROVE -->
-                <div
-                  v-if="
-                    selectedReservation.transaction_status === 'paid' ||
-                    selectedReservation.transaction_status === 'down_payment' ||
-                    selectedReservation.payment_method === 'cash' ||
-                    (selectedReservation.deposit && selectedReservation.deposit > 0)
-                  "
-                >
-                  <div class="p-2.5 mb-2 bg-emerald-50 border border-emerald-200 rounded-lg text-xs text-emerald-800 flex items-center gap-2">
-                    <span class="text-base">✓</span>
-                    <span><strong>Pembayaran Sudah Dibayar:</strong> Resepsionis dapat menyetujui reservasi & mengunci kamar.</span>
-                  </div>
-                  <div class="btn-group-row">
-                    <button
-                      @click="approveReservation(selectedReservation.id)"
-                      class="btn btn-success flex-1"
-                    >
-                      ✓ Approve Reservasi (Receptionist)
-                    </button>
-                    <button
-                      @click="rejectReservation(selectedReservation.id)"
-                      class="btn btn-warning flex-1"
-                    >
-                      Tolak
-                    </button>
-                  </div>
-                </div>
-
-                <!-- JIKA PEMBAYARAN BELUM BAYAR (TRANSFER BANK): TIM FINANCE HARUS CONFIRM PEMBAYARAN DULU -->
-                <div v-else>
-                  <div class="p-2.5 mb-2 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800 flex items-start gap-2">
-                    <span class="text-base">⏳</span>
-                    <div>
-                      <strong>Menunggu Konfirmasi Finance:</strong><br />
-                      Status saat ini <em>Belum Bayar</em>. Begitu Finance klik <strong>Confirm Pembayaran</strong>, status otomatis berubah jadi <em>Dibayar</em> dan tombol Approve Resepsionis aktif.
-                    </div>
-                  </div>
-
-                  <div class="btn-group-row">
-                    <button
-                      @click="verifyFinancePayment(selectedReservation.id, 'confirmed')"
-                      class="btn btn-primary flex-1"
-                      title="Klik untuk konfirmasi bahwa transfer bank sudah masuk"
-                    >
-                      💳 Confirm Pembayaran (Finance)
-                    </button>
-                    <button
-                      @click="rejectReservation(selectedReservation.id)"
-                      class="btn btn-warning"
-                    >
-                      Tolak
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <!-- JIKA SUDAH CONFIRMED / APPROVED: TOMBOL CHECK IN TAMU -->
+            <div class="flex gap-2">
               <button
-                v-if="
-                  selectedReservation.status === 'approve' ||
-                  selectedReservation.status === 'approved' ||
-                  selectedReservation.status === 'confirmed'
-                "
-                @click="handleCheckIn(selectedReservation.id)"
-                class="btn btn-checkedin btn-block"
+                @click="verifyFinancePayment(selectedReservation.id, 'confirmed')"
+                class="flex-1 py-2.5 px-4 rounded-xl font-bold text-xs text-white bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-600/20 transition-all cursor-pointer"
               >
-                🛎️ Check In Guest
+                💳 Confirm Bayar (Finance)
               </button>
-
               <button
-                v-if="selectedReservation.status === 'checked-in'"
-                @click="handleCheckOut(selectedReservation.id)"
-                class="btn btn-checkedout btn-block"
+                @click="rejectReservation(selectedReservation.id)"
+                class="py-2.5 px-4 rounded-xl font-bold text-xs text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 transition-all cursor-pointer"
               >
-                🚪 Process Check Out
-              </button>
-
-              <button
-                v-if="
-                  selectedReservation.status === 'pending' ||
-                  selectedReservation.status === 'approve' ||
-                  selectedReservation.status === 'approved' ||
-                  selectedReservation.status === 'confirmed'
-                "
-                @click="cancelReservation(selectedReservation.id)"
-                class="btn btn-danger-outline btn-block mt-2"
-              >
-                Batalkan Reservasi
+                Tolak
               </button>
             </div>
           </div>
         </div>
-      </transition>
+
+        <!-- Confirmed Actions -->
+        <button
+          v-if="
+            selectedReservation.status === 'approve' ||
+            selectedReservation.status === 'approved' ||
+            selectedReservation.status === 'confirmed'
+          "
+          @click="handleCheckIn(selectedReservation.id)"
+          class="w-full py-3 px-4 rounded-xl font-bold text-sm text-white bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-600/25 transition-all cursor-pointer"
+        >
+          🛎️ Check In Tamu
+        </button>
+
+        <button
+          v-if="selectedReservation.status === 'checked-in'"
+          @click="handleCheckOut(selectedReservation.id)"
+          class="w-full py-3 px-4 rounded-xl font-bold text-sm text-white bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-600/25 transition-all cursor-pointer"
+        >
+          🚪 Proses Check Out
+        </button>
+
+        <!-- Cancel Action -->
+        <button
+          v-if="
+            selectedReservation.status === 'pending' ||
+            selectedReservation.status === 'approve' ||
+            selectedReservation.status === 'approved' ||
+            selectedReservation.status === 'confirmed'
+          "
+          @click="cancelReservation(selectedReservation.id)"
+          class="w-full mt-2 py-2 px-4 rounded-xl font-semibold text-xs text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-100 transition-all cursor-pointer"
+        >
+          Batalkan Reservasi
+        </button>
+      </div>
+    </div>
+  </div>
+</transition>
     </div>
   </div>
 </template>
