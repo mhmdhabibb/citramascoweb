@@ -764,7 +764,7 @@ const goToChannels = () => router.push('/admin/channels')
             </div>
             <div class="info-item">
               <span class="info-label">Jumlah Tamu</span>
-              <span class="info-val">{{ selectedBooking.number_of_guest || 1 }} Orang</span>
+              <span class="info-val">{{ (selectedBooking.number_of_adult || 1) + (selectedBooking.number_of_children || 0) }} Orang</span>
             </div>
           </div>
 

@@ -66,6 +66,7 @@ export interface Reservation {
   payment_method?: 'bank_transfer' | 'cash' | 'qris' | 'credit_card' | 'ota_collect' | string
   number_of_adult: number
   number_of_children: number
+  number_of_guest?: number
   checkin_date: string
   checkout_date: string
   room: {
