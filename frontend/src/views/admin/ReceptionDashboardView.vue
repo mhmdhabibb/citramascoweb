@@ -831,7 +831,7 @@ const exportCSV = () => {
     lines.push(`=== DAFTAR TRANSAKSI RESERVASI (${period}) ===`)
     lines.push(`Kode Booking,Nama Tamu,Kamar,Check-In,Check-Out,Malam,Tamu,Channel,Status,Total Harga (IDR)`)
     monthReservations.value.forEach((r) => {
-      lines.push(`"${r.code || '-'}","${r.full_name || '-'}","${r.room?.name || '-'}","${r.checkin_date || '-'}","${r.checkout_date || '-'}","${r.total_night || 1}","${r.number_of_guest || 1}","${getBookingChannelKey(r)}","${r.status}","${r.total_price || 0}"`)
+      lines.push(`"${r.code || '-'}","${r.full_name || '-'}","${r.room?.name || '-'}","${r.checkin_date || '-'}","${r.checkout_date || '-'}","${r.total_night || 1}","${(r.number_of_adult || 1) + (r.number_of_children || 0)}","${getBookingChannelKey(r)}","${r.status}","${r.total_price || 0}"`)
     })
 
     // UTF-8 BOM so Excel opens with proper Indonesian formatting
@@ -997,7 +997,7 @@ onUnmounted(() => {
             <div v-for="item in todayArrivals" :key="item.id" class="arrival-row">
               <div class="guest-info">
                 <span class="guest-name">{{ item.full_name }}</span>
-                <span class="unit-name">{{ item.room?.name || 'Unit Kamar' }} · {{ item.number_of_guest || 1 }} tamu</span>
+                <span class="unit-name">{{ item.room?.name || 'Unit Kamar' }} · {{ (item.number_of_adult || 1) + (item.number_of_children || 0) }} tamu</span>
               </div>
               <span
                 class="channel-pill"
@@ -1102,7 +1102,7 @@ onUnmounted(() => {
                   <div class="guest-meta">
                     <span class="guest-name">{{ item.full_name }}</span>
                     <span class="stay-info">
-                      {{ item.room?.name || 'Unit Kamar' }} · {{ item.number_of_guest || 1 }} guests · {{ item.total_night || 1 }} nights
+                      {{ item.room?.name || 'Unit Kamar' }} · {{ (item.number_of_adult || 1) + (item.number_of_children || 0) }} guests · {{ item.total_night || 1 }} nights
                     </span>
                   </div>
                 </div>

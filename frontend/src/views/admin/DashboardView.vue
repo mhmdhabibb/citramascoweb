@@ -415,7 +415,7 @@ onMounted(async () => {
                 <td>
                   <span>{{ res.room?.name || 'N/A' }}</span>
                 </td>
-                <td>{{ res.number_of_guest || 0 }} Users</td>
+                <td>{{ (res.number_of_adult || 0) + (res.number_of_children || 0) || res.number_of_guest || 1 }} Tamu</td>
                 <td>
                   <span class="date-badge-rect">{{ res.checkin_date }}</span>
                 </td>
