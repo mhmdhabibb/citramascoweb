@@ -49,14 +49,15 @@ func (s *roomService) Store(req *dto.CreateRoomRequest) error {
 	}
 
 	newRoom := &Room{
-		Id:         uuid.New().String(),
-		Code:       code,
-		Name:       req.Name,
-		Slug:       utils.Slugify(req.Name),
-		CategoryId: req.CategoryId,
-		Price:      req.Price,
-		Capacity:   req.Capacity,
-		Size:       req.Size,
+		Id:            uuid.New().String(),
+		Code:          code,
+		Name:          req.Name,
+		Slug:          utils.Slugify(req.Name),
+		CategoryId:    req.CategoryId,
+		Price:         req.Price,
+		Capacity:      req.Capacity,
+		ChildCapacity: req.ChildCapacity,
+		Size:          req.Size,
 
 		TypeId:      req.TypeId,
 		Description: req.Description,
@@ -84,6 +85,7 @@ func (s *roomService) Update(id string, req *dto.UpdateRoomRequest) error {
 	room.Price = req.Price
 	room.Capacity = req.Capacity
 	room.Size = req.Size
+	room.ChildCapacity = req.ChildCapacity
 
 	room.TypeId = req.TypeId
 	room.Description = req.Description

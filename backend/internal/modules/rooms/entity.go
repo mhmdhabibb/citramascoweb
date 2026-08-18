@@ -31,7 +31,8 @@ type Room struct {
 	CategoryId         string                 `gorm:"type:varchar(191)" json:"category_id"`
 	Category           category.Category      `gorm:"foreignKey:CategoryId;references:Id" json:"category"`
 	Price              int                    `json:"price"`
-	Capacity           int                    `json:"capacity"`
+	Capacity           int                    `json:"capacity"`       // adult
+	ChildCapacity      *int                   `json:"child_capacity"` // child ( 0 - 17 years old )
 	Size               int                    `json:"size"`
 	TypeId             string                 `gorm:"type:varchar(191)" json:"type_id"`
 	Type               types.Types            `gorm:"foreignKey:TypeId;references:Id" json:"type"`

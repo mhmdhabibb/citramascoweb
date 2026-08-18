@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useScrollReveal } from '@/composables/useScrollReveal'
 import GuestServiceRequestModal from '@/components/GuestServiceRequestModal.vue'
+import { useScrollReveal } from '@/composables/useScrollReveal'
+import { ref } from 'vue'
 
 const menuOpen = ref(false)
 const isGuestServiceOpen = ref(false)
@@ -27,10 +27,10 @@ const { elementRef: navRef, isVisible: navVisible } = useScrollReveal(0.1)
       </div>
 
       <!-- Right Section (Desktop) -->
-      <div class="nav-right">
-        <button @click="isGuestServiceOpen = true" class="service-room-btn" title="Hubungi Resepsionis untuk Bantuan Kamar">
-          🛎️ Layanan Kamar
-        </button>
+      <div class="nav-right flex items-center gap-2 ">
+        <!-- <button @click="isGuestServiceOpen = true" class="service-room-btn" title="Hubungi Resepsionis untuk Bantuan Kamar">
+          🛎️ Layanan 
+        </button> -->
         <router-link to="/booking" class="book-now-btn">Book Now</router-link>
       </div>
 

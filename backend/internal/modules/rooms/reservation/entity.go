@@ -39,7 +39,8 @@ type Reservation struct {
 	Status            ReservationStatus `gorm:"type:varchar(191);default:'pending'" json:"status"`
 	TransactionStatus TransactionStatus `gorm:"type:varchar(191);default:'unpaid'" json:"transaction_status"`
 	PaymentMethod     string            `gorm:"type:varchar(191);default:'bank_transfer'" json:"payment_method"`
-	NumberOfGuest     int               `json:"number_of_guest"`
+	NumberOfAdult     int               `json:"number_of_adult"`
+	NumberOfChildren  *int              `json:"number_of_children" gorm:"default:0"`
 
 	CheckinDate  *dto.CustomDate `json:"checkin_date"`
 	CheckoutDate *dto.CustomDate `json:"checkout_date"`

@@ -6,7 +6,8 @@ type CreateReservationRequest struct {
 	Email             string  `json:"email" form:"email" binding:"required"`
 	CheckInDate       string  `json:"check_in_date" form:"check_in_date" binding:"required"`
 	CheckOutDate      string  `json:"check_out_date" form:"check_out_date" binding:"required"`
-	NumberOfGuest     int     `json:"number_of_guest" form:"number_of_guest" binding:"required"`
+	NumberOfAdult     int     `json:"number_of_adult" form:"number_of_adult" binding:"required"`
+	NumberOfChildren  *int    `json:"number_of_children" form:"number_of_children"`
 	IsOffer           *bool   `json:"is_offer" form:"is_offer"`
 	OfferCode         *string `json:"offer_code" form:"offer_code"`
 	Deposit           int     `json:"deposit" form:"deposit"`
@@ -23,7 +24,8 @@ type UpdateReservationRequest struct {
 	Status            string  `json:"status" form:"status"`
 	TransactionStatus string  `json:"transaction_status" form:"transaction_status"`
 	PaymentMethod     string  `json:"payment_method" form:"payment_method"`
-	NumberOfGuest     int     `json:"number_of_guest" form:"number_of_guest"`
+	NumberOfAdult     int     `json:"number_of_adult" form:"number_of_adult" `
+	NumberOfChildren  *int    `json:"number_of_children" form:"number_of_children"`
 	IsOffer           *bool   `json:"is_offer" form:"is_offer"`
 	OfferCode         *string `json:"offer_code" form:"offer_code"`
 	ChannelId         *string `json:"channel_id" form:"channel_id"`

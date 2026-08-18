@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { useRouter } from 'vue-router'
-import type { Room } from '@/types'
+import type { Room } from '@/types';
+import { useRouter } from 'vue-router';
 
 const props = defineProps<{
   room: Room
@@ -25,13 +24,18 @@ const goToDetail = () => {
         <span class="text-[#4A4A4A] text-[14px] font-medium mt-1">Rp {{ room.price.toLocaleString('id-ID') }} / night</span>
       </div>
       
-      <div class="flex items-center gap-6 text-[#6B5E52] text-[13px]">
+      <div class="flex items-center justify-between gap-6 text-[#6B5E52] text-[13px]">
         <div class="flex items-center gap-2">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
             <circle cx="12" cy="7" r="4"></circle>
           </svg>
           <span>{{ room.capacity }} adults</span>
+           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          <span>{{ room.child_capacity }} children</span>
         </div>
         <div class="flex items-center gap-2">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

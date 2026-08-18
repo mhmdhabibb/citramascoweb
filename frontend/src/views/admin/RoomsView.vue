@@ -1,9 +1,9 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { roomService } from '@/services/roomService'
 import { categoryService } from '@/services/categoryService'
+import { roomService } from '@/services/roomService'
 import { typeService } from '@/services/typeService'
 import { useToastStore } from '@/stores/toastStore'
+import { computed, onMounted, ref } from 'vue'
 
 const rooms = ref([])
 const roomCategories = ref([])
@@ -28,6 +28,7 @@ const form = ref({
   type_id: '',
   price: 0,
   capacity: 2,
+  child_capacity: 0,
   size: 30,
   description: '',
   status: 'Available',
@@ -117,6 +118,8 @@ const openCreateModal = () => {
     type_id: roomTypes.value[0]?.id || '',
     price: 350000,
     capacity: 2,
+  child_capacity: 0,
+
     size: 30,
     description: '',
     status: 'Available',
@@ -132,6 +135,8 @@ const openEditModal = (item) => {
     name: item.name || '',
     category_id: item.category_id || '',
     type_id: item.type_id || '',
+  child_capacity: item.child_capacity || 0,
+
     price: item.price || 0,
     capacity: item.capacity || 2,
     size: item.size || 30,
@@ -167,6 +172,7 @@ const saveRoom = async () => {
     formData.append('type_id', form.value.type_id)
     formData.append('price', String(form.value.price))
     formData.append('capacity', String(form.value.capacity))
+    formData.append('child_capacity', String(form.value.child_capacity))
     formData.append('size', String(form.value.size))
     formData.append('description', form.value.description)
     formData.append('status', form.value.status)
@@ -484,7 +490,8 @@ onMounted(async () => {
             <div class="info-grid-2">
               <div class="info-block-card">
                 <label>Max Capacity</label>
-                <p class="val-small">👥 {{ selectedRoom.capacity || 2 }} Persons</p>
+                <p class="val-small">👥 Adult:  {{ selectedRoom.capacity || 2 }} Persons</p>
+                <p class="val-small">👥 Children : {{ selectedRoom.child_capacity || 2 }} Persons</p>
               </div>
               <div class="info-block-card">
                 <label>Room Size</label>
@@ -546,20 +553,25 @@ onMounted(async () => {
           </div>
           <div class="form-grid-2">
             <div class="form-group">
-              <label class="form-label">Capacity (persons) <span class="required-fields">*</span> </label>
+              <label class="form-label">Capacity (Adult) <span class="required-fields">*</span> </label>
               <input v-model.number="form.capacity" type="number" min="1" class="form-input" />
             </div>
-            <div class="form-group">
+             <div class="form-group">
+              <label class="form-label">Capacity (Child) <span class="required-fields">*</span> </label>
+              <input v-model.number="form.child_capacity" type="number" min="1" class="form-input" />
+            </div>
+            
+          </div>
+          <div class="form-group">
               <label class="form-label">Room Size (m²) <span class="required-fields">*</span> </label>
               <input v-model.number="form.size" type="number" min="1" class="form-input" />
             </div>
-          </div>
           <div class="form-group">
             <label class="form-label">Description <span class="required-fields">*</span> </label>
             <textarea
               v-model="form.description"
               class="form-input"
-              rows="2"
+              rows="8"
               placeholder="Tulis deskripsi fasilitas kamar..."
             ></textarea>
           </div>
