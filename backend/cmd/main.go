@@ -13,8 +13,10 @@ import (
 	"citramascoweb-backend/internal/modules/offer"
 	"citramascoweb-backend/internal/modules/rooms"
 	"citramascoweb-backend/internal/modules/rooms/category"
+	"citramascoweb-backend/internal/modules/rooms/floor"
 	"citramascoweb-backend/internal/modules/rooms/reservation"
 	"citramascoweb-backend/internal/modules/rooms/types"
+	"citramascoweb-backend/internal/modules/rooms/unit"
 	"citramascoweb-backend/internal/modules/service_request"
 	"citramascoweb-backend/internal/modules/user"
 
@@ -29,7 +31,7 @@ func main() {
 	db := config.ConnectDB()
 
 	// Auto migrate entities
-	db.AutoMigrate(&channel.Channel{}, &reservation.Reservation{})
+	// db.AutoMigrate(&channel.Channel{}, &reservation.Reservation{})
 	// db.AutoMigrate(&offer.Offer{})
 	// db.AutoMigrate(&inventory.InventoryItem{}, &inventory.InventoryTransaction{}, &inventory.InventoryStockTake{})
 	// db.AutoMigrate(&notification.Notification{})
@@ -50,6 +52,8 @@ func main() {
 	//  init modules
 	categoryModule := category.InitModule(db)
 	typeModule := types.InitModule(db)
+	floorModule := floor.InitModule(db)
+	unitModule := unit.InitModule(db)
 	authModule := auth.InitModule(db)
 	userModule := user.InitModule(db)
 	roomModule := rooms.InitModule(db)
@@ -66,6 +70,8 @@ func main() {
 
 	categoryModule.CategoryRoutes(api)
 	typeModule.TypeRoutes(api)
+	floorModule.FloorRoutes(api)
+	unitModule.RoomUnitRoutes(api)
 	authModule.AuthRoutes(api)
 	userModule.UserRoutes(api)
 	roomModule.RoomRoutes(api)

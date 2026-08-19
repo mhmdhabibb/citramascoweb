@@ -33,7 +33,34 @@ export interface RoomType {
 }
 
 // ============================================
-// Room (mock data — TODO: replace when backend Room module exists)
+// Floor (Lantai)
+// ============================================
+export interface Floor {
+  id: string
+  name: string
+  floor_number: number
+  description?: string
+  created_at?: string
+  updated_at?: string
+}
+
+// ============================================
+// Room Unit (Nomor Kamar Fisik)
+// ============================================
+export interface RoomUnit {
+  id: string
+  room_number: string
+  room_id: string
+  room?: Room
+  floor_id: string
+  floor?: Floor
+  status: 'available' | 'occupied' | 'dirty' | 'maintenance' | string
+  created_at?: string
+  updated_at?: string
+}
+
+// ============================================
+// Room (Katalog Tipe Kamar)
 // ============================================
 export interface Room {
   id: string
@@ -80,6 +107,23 @@ export interface Reservation {
   deposit?: number
   is_offer: boolean
   offer_code: string
+  is_early_checkin?: boolean
+  estimated_arrival_time?: string
+  actual_checkin_at?: string
+  actual_checkout_at?: string
+  room_unit_id?: string
+  room_unit?: RoomUnit
+  logs?: ReservationLog[]
+}
+
+export interface ReservationLog {
+  id: string
+  reservation_id: string
+  action: 'check_in' | 'check_out' | string
+  timestamp: string
+  is_early?: boolean
+  notes?: string
+  created_at?: string
 }
 
 export interface Offer {

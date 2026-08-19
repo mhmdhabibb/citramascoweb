@@ -19,75 +19,82 @@ const router = useRouter()
 // Menu Definition
 const menuGroups = ref([
   {
-    groupName: 'Master',
+    groupName: 'Utama',
     items: [
       {
-        name: 'Dashboard',
+        name: 'Dashboard Operasional',
         icon: 'LayoutDashboard',
         route: '/admin/dashboard',
       },
       {
-        name: 'Users',
-        icon: 'Users',
-        route: '/admin/users',
-      },
-      {
-        name: 'Channels',
-        icon: 'Radio',
-        route: '/admin/channels',
-      },
-      {
-        name: 'Calendar',
+        name: 'Kalender Booking',
         icon: 'Calendar',
         route: '/admin/calendar',
       },
+    ],
+  },
+  {
+    groupName: 'Front Desk & Tamu',
+    items: [
       {
-        name: 'Reservations',
+        name: 'Reservasi Kamar',
         icon: 'CalendarCheck',
         route: '/admin/reservations',
       },
       {
-        name: 'Guest Requests',
-        icon: 'BellRing',
-        route: '/admin/service-requests',
-      },
-      {
-        name: 'Guest Book',
-        icon: 'Users',
+        name: 'Buku Tamu & Log In/Out',
+        icon: 'BookOpen',
         route: '/admin/guestbook',
       },
       {
-        name: 'Inventory',
+        name: 'Permintaan Layanan Tamu',
+        icon: 'BellRing',
+        route: '/admin/service-requests',
+      },
+    ],
+  },
+  {
+    groupName: 'Manajemen Kamar',
+    items: [
+      {
+        name: 'Pengaturan Kamar',
+        icon: 'Bed',
+        isOpen: true,
+        children: [
+          { name: 'Katalog Kamar', route: '/admin/rooms' },
+          { name: 'Unit No. Kamar Fisik', route: '/admin/room-units' },
+          { name: 'Lantai Gedung (Floors)', route: '/admin/floors' },
+          { name: 'Kategori Kamar', route: '/admin/room-categories' },
+          { name: 'Tipe Ranjang (Bed)', route: '/admin/room-types' },
+        ],
+      },
+    ],
+  },
+  {
+    groupName: 'Housekeeping & Amenities',
+    items: [
+      {
+        name: 'Stok Perlengkapan & Amenities',
         icon: 'Boxes',
         route: '/admin/inventory',
       },
       {
-        name: 'Inventory Usage',
+        name: 'Pemakaian Housekeeping',
         icon: 'FileText',
         route: '/admin/inventory-usage',
       },
+    ],
+  },
+  {
+    groupName: 'Sales & Marketing',
+    items: [
       {
-        name: 'Manage Rooms',
-        icon: 'Bed',
-        isOpen: false,
-        children: [
-          { name: 'Room List', route: '/admin/rooms' },
-          { name: 'Room Types', route: '/admin/room-types' },
-          { name: 'Room Categories', route: '/admin/room-categories' },
-        ],
+        name: 'Saluran Penjualan (OTA)',
+        icon: 'Radio',
+        route: '/admin/channels',
       },
-
-      // {
-      //   name: 'Manage Staff',
-      //   icon: 'UserCog',
-      //   isOpen: false,
-      //   children: [
-      //     { name: 'Staff List', route: '/admin/staff' },
-      //     { name: 'Roles & Permissions', route: '/admin/staff/roles' }
-      //   ]
-      // },
       {
-        name: 'Promotions',
+        name: 'Promo & Diskon Kamar',
         icon: 'Percent',
         route: '/admin/promotions',
       },
@@ -106,8 +113,8 @@ const menuGroups = ref([
         icon: 'Database',
         isOpen: false,
         children: [
-          { name: 'Chart of Accounts', route: '/admin/finance/coa' }
-        ]
+          { name: 'Chart of Accounts (CoA)', route: '/admin/finance/coa' },
+        ],
       },
       {
         name: 'Transaksi',
@@ -116,28 +123,38 @@ const menuGroups = ref([
         children: [
           { name: 'Jurnal Umum', route: '/admin/finance/general-journal' },
           { name: 'Kas & Bank', route: '/admin/finance/cash-bank' },
-          { name: 'Hutang & Piutang', route: '/admin/finance/ap-ar' }
-        ]
+          { name: 'Hutang & Piutang', route: '/admin/finance/ap-ar' },
+        ],
       },
       {
-        name: 'Buku & Buku Besar',
+        name: 'Buku Besar',
         icon: 'BookOpen',
         isOpen: false,
         children: [
-          { name: 'Buku Besar', route: '/admin/finance/general-ledger' }
-        ]
+          { name: 'Buku Besar', route: '/admin/finance/general-ledger' },
+        ],
       },
       {
-        name: 'Laporan',
+        name: 'Laporan Keuangan',
         icon: 'FileText',
         isOpen: false,
         children: [
           { name: 'Laba Rugi', route: '/admin/finance/profit-loss' },
-          { name: 'Neraca & Arus Kas', route: '/admin/finance/balance-sheet' }
-        ]
-      }
-    ]
-  }
+          { name: 'Neraca & Arus Kas', route: '/admin/finance/balance-sheet' },
+        ],
+      },
+    ],
+  },
+  {
+    groupName: 'Pengaturan Staf & Sistem',
+    items: [
+      {
+        name: 'Akun Pengguna Staf',
+        icon: 'Users',
+        route: '/admin/users',
+      },
+    ],
+  },
 ])
 
 // Bottom Items
@@ -243,32 +260,48 @@ watch(
 // Role-based filtering (single source of truth: src/config/access.ts)
 const allowedMenuGroups = computed(() => {
   const role = authStore.role
+  const isManager = role === 'manager'
+
   return menuGroups.value
-    .map((group) => ({
-      ...group,
-      items: group.items
-        .map((item) => {
-          if (item.route) {
-            // main item with a direct route
-            return canAccess(role, item.route) ? item : null
-          }
-          if (item.children) {
-            // group item: keep only children the role may access
-            const visibleChildren = item.children.filter((sub) => canAccess(role, sub.route))
-            if (visibleChildren.length === 1) {
-              // Flatten if only 1 child is visible
-              return {
-                name: visibleChildren[0].name,
-                icon: item.icon,
-                route: visibleChildren[0].route,
+    .map((group) => {
+      let groupName = group.groupName
+      if (isManager) {
+        if (groupName === 'Utama') groupName = 'Pengawasan Eksekutif'
+        else if (groupName === 'Manajemen Kamar') groupName = 'Monitoring Kamar'
+        else if (groupName === 'Finance & Accounting') groupName = 'Laporan Keuangan Eksekutif'
+      }
+
+      return {
+        ...group,
+        groupName,
+        items: group.items
+          .map((item) => {
+            if (item.route) {
+              if (!canAccess(role, item.route)) return null
+              let itemName = item.name
+              if (isManager && item.route === '/admin/dashboard') {
+                itemName = 'Executive Overview (GM)'
               }
+              return { ...item, name: itemName }
             }
-            return visibleChildren.length ? { ...item, children: visibleChildren } : null
-          }
-          return item
-        })
-        .filter(Boolean),
-    }))
+            if (item.children) {
+              // group item: keep only children the role may access
+              const visibleChildren = item.children.filter((sub) => canAccess(role, sub.route))
+              if (visibleChildren.length === 1) {
+                // Flatten if only 1 child is visible
+                return {
+                  name: visibleChildren[0].name,
+                  icon: item.icon,
+                  route: visibleChildren[0].route,
+                }
+              }
+              return visibleChildren.length ? { ...item, children: visibleChildren } : null
+            }
+            return item
+          })
+          .filter(Boolean),
+      }
+    })
     .filter((group) => group.items.length > 0)
 })
 
@@ -345,25 +378,10 @@ const visibleBottomItems = computed(() =>
     <!-- Header / Brand Logo -->
     <div class="header" :class="{ 'header-collapsed': isCollapsed }">
       <div class="brand">
-        <!-- Orange Icon Block -->
-        <div class="logo-box">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="3"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            class="logo-icon"
-          >
-            <line x1="18" y1="19" x2="18" y2="10" />
-            <line x1="12" y1="19" x2="12" y2="4" />
-            <line x1="6" y1="19" x2="6" y2="14" />
-          </svg>
-        </div>
+        <!-- CM Living Brand Logo -->
+        <img src="/logo.png" alt="CM Living" class="sidebar-logo-img" />
         <!-- Brand Name -->
-        <span v-if="!isCollapsed" class="brand-name">CitraMas Co </span>
+        <span v-if="!isCollapsed" class="brand-name">CM Living</span>
       </div>
 
       <!-- Collapse Toggle Arrow -->
@@ -465,6 +483,7 @@ const visibleBottomItems = computed(() =>
                   :key="sub.name"
                   @click="handleSubItemClick(item.name, sub)"
                   class="submenu-item"
+                  :class="{ 'submenu-item-active': route.path === sub.route }"
                 >
                   {{ sub.name }}
                 </button>
@@ -524,19 +543,19 @@ const visibleBottomItems = computed(() =>
 <style scoped>
 /* Color Palette Variables */
 .sidebar {
-  --primary-orange: #e15b2b;
-  --primary-orange-gradient-end: #f17b50;
-  --bg-orange-light: rgba(225, 91, 43, 0.05);
-  --border-orange-light: rgba(225, 91, 43, 0.1);
+  --primary-orange: #966f1e;
+  --primary-orange-gradient-end: #faebc6;
+  --bg-orange-light: rgba(250, 235, 198, 0.5);
+  --border-orange-light: rgba(250, 235, 198, 0.95);
   --bg-sidebar: #ffffff;
-  --text-main: #27272a; /* zinc-800 */
-  --text-muted: #71717a; /* zinc-500 */
-  --text-light: #a1a1aa; /* zinc-400 */
-  --bg-hover: #f4f4f5; /* zinc-100 */
-  --border-color: rgba(228, 228, 231, 0.8); /* zinc-200/80 */
-  --border-light: #f4f4f5; /* zinc-100 */
-  --shadow-sidebar: 4px 0 24px -10px rgba(0, 0, 0, 0.03);
-  --shadow-logo: 0 4px 6px -1px rgba(225, 91, 43, 0.1), 0 2px 4px -2px rgba(225, 91, 43, 0.1);
+  --text-main: #1e1711;
+  --text-muted: #6e5c46;
+  --text-light: #9c8b74;
+  --bg-hover: rgba(250, 235, 198, 0.25);
+  --border-color: rgba(250, 235, 198, 0.75);
+  --border-light: rgba(250, 235, 198, 0.5);
+  --shadow-sidebar: 4px 0 24px -6px rgba(180, 140, 60, 0.07);
+  --shadow-logo: 0 4px 6px -1px rgba(180, 140, 60, 0.15);
   --font-family: 'Inter', sans-serif;
   --transition-speed: 0.3s;
 }
@@ -579,32 +598,17 @@ const visibleBottomItems = computed(() =>
 .brand {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   overflow: hidden;
   white-space: nowrap;
 }
 
-.logo-box {
-  width: 36px;
-  height: 36px;
-  background: linear-gradient(135deg, var(--primary-orange), var(--primary-orange-gradient-end));
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: var(--shadow-logo);
+.sidebar-logo-img {
+  height: 38px;
+  width: auto;
+  object-fit: contain;
   flex-shrink: 0;
-  transition: transform 0.2s ease;
-}
-
-.logo-box:hover {
-  transform: scale(1.05);
-}
-
-.logo-icon {
-  width: 20px;
-  height: 20px;
-  stroke: #ffffff;
+  border-radius: 8px;
 }
 
 .brand-name {
@@ -907,7 +911,13 @@ const visibleBottomItems = computed(() =>
 
 .submenu-item:hover {
   color: var(--text-main);
-  background-color: rgba(244, 244, 245, 0.8);
+  background-color: var(--bg-hover);
+}
+
+.submenu-item.submenu-item-active {
+  color: #7a5713;
+  background-color: #faebc6;
+  font-weight: 700;
 }
 
 /* Bottom Section */

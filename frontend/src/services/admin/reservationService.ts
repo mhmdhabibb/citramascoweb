@@ -83,6 +83,8 @@ export const reservationService = {
     offer_code?: string
     deposit?: number
     channel_id?: string
+    is_early_checkin?: boolean
+    estimated_arrival_time?: string
   }): Promise<string> => {
     const response = await api.post<ApiResponse<any>>('/reservation', data)
     if (!response.data.success) {

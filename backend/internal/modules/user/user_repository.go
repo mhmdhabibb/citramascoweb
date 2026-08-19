@@ -26,8 +26,12 @@ func NewUserRepository(db *gorm.DB) UserRepositoryInterface {
 func (r *userRepository) GetAllByRole(role string) ([]auth.User, error) {
 	var users []auth.User
 
-	err := r.db.Where("role = ?", role).Find(&users).Error
+	query := r.db
+	if role != "" && role != "All" && role != "all" {
+		query = query.Where("role = ?", role)
+	}
 
+	err := query.Order("created_at desc").Find(&users).Error
 	if err != nil {
 		return nil, err
 	}

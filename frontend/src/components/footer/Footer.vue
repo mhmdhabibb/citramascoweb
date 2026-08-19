@@ -23,11 +23,8 @@ const { elementRef: footerRef, isVisible: footerVisible } = useScrollReveal(0.1)
       <!-- Center Column: Logo, Subscribe, Socials -->
       <div class="flex flex-col items-center text-center">
         <!-- Logo -->
-        <div class="mb-16">
-          <svg class="w-8 h-8 text-white mx-auto mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
-          </svg>
-          <span class="text-xl font-medium tracking-wide text-white">CitraMas</span>
+        <div class="mb-10 flex flex-col items-center">
+          <img src="/logo-light.png" alt="CM Living" class="h-24 w-auto object-contain brightness-125" />
         </div>
 
         <!-- Subscribe -->
@@ -80,9 +77,9 @@ const { elementRef: footerRef, isVisible: footerVisible } = useScrollReveal(0.1)
       <div class="md:text-right">
         <h4 class="text-[26px] font-serif text-white mb-6" style="font-family: 'Playfair Display', ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;">Contact</h4>
         <ul class="space-y-3.5 text-[14.5px]">
-          <li><a href="info@citramascohotel.com" class="hover:text-white transition-colors">info@citramascohotel.com</a></li>
+          <li><a href="mailto:info@cmliving.com" class="hover:text-white transition-colors">info@cmliving.com</a></li>
           <li><a href="tel:+628111222333" class="hover:text-white transition-colors">+62 811-1222-333</a></li>
-          <li>Citramas Commercial Complex, Block B No. 14 - 15</li>
+          <li>CM Living Complex, Block B No. 14 - 15</li>
           <li>Batam, Riau Islands Province, Indonesia</li>
         </ul>
       </div>

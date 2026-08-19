@@ -2,8 +2,12 @@
 import { categoryService } from '@/services/categoryService'
 import { roomService } from '@/services/roomService'
 import { typeService } from '@/services/typeService'
+import { useAuthStore } from '@/stores/authStore'
+import { canMutateData } from '@/config/access'
 import { useToastStore } from '@/stores/toastStore'
 import { computed, onMounted, ref } from 'vue'
+
+const authStore = useAuthStore()
 
 const rooms = ref([])
 const roomCategories = ref([])
@@ -300,7 +304,10 @@ onMounted(async () => {
               <option value="maintenance">Maintenance</option>
             </select>
           </div>
-          <button @click="openCreateModal" class="btn btn-primary">+ Add Room</button>
+          <button v-if="canMutateData(authStore.role)" @click="openCreateModal" class="btn btn-primary">+ Add Room</button>
+          <div v-else class="px-3.5 py-2 rounded-xl bg-slate-900 text-amber-300 text-xs font-bold border border-indigo-900/50 flex items-center gap-1.5 shadow-xs">
+            <span>👑</span> Mode Tinjauan Manager (Read-Only)
+          </div>
         </div>
 
         <div class="dashboard-card table-card">
@@ -314,7 +321,7 @@ onMounted(async () => {
                   <th>Price / Night</th>
                   <th>Image</th>
                   <th class="text-center">Status</th>
-                  <th class="text-center">Aksi Cepat</th>
+                  <th v-if="canMutateData(authStore.role)" class="text-center">Aksi Cepat</th>
                 </tr>
               </thead>
               <tbody>
@@ -357,7 +364,7 @@ onMounted(async () => {
                       {{ room.status?.toLowerCase() === 'dirty' ? '🧹 Dirty' : (room.status || 'Available') }}
                     </span>
                   </td>
-                  <td class="text-center" @click.stop>
+                  <td v-if="canMutateData(authStore.role)" class="text-center" @click.stop>
                     <button
                       v-if="room.status?.toLowerCase() === 'dirty'"
                       @click="mutateRoomStatus(room.id, 'active')"
@@ -382,8 +389,8 @@ onMounted(async () => {
                       class="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold text-xs rounded-lg border border-blue-300 transition-all flex items-center gap-1 mx-auto"
                       title="Selesai Perbaikan (Set Available)"
                     >
-                      <span>✓</span>
-                      <span>Selesai</span>
+                      <span>🔧</span>
+                      <span>Set Active</span>
                     </button>
                     <span v-else class="text-xs text-slate-400 font-medium">-</span>
                   </td>
@@ -511,13 +518,16 @@ onMounted(async () => {
               <p class="val-price">Rp {{ selectedRoom.price?.toLocaleString('id-ID') || 0 }}</p>
             </div>
 
-            <div class="drawer-actions-container">
+            <div v-if="canMutateData(authStore.role)" class="drawer-actions-container">
               <button @click="openEditModal(selectedRoom)" class="btn btn-checkedin btn-block">
                 Edit Room Specification
               </button>
               <button @click="deleteRoom(selectedRoom.id)" class="btn btn-danger-outline btn-block">
                 Delete Unit From Inventory
               </button>
+            </div>
+            <div v-else class="p-3 bg-slate-900 text-amber-300 text-xs font-bold rounded-xl border border-indigo-900/50 text-center shadow-xs">
+              👑 Mode Tinjauan Manager (Spesifikasi Terkunci)
             </div>
           </div>
         </div>

@@ -12,7 +12,7 @@ const { elementRef: ctaRef, isVisible: ctaVisible } = useScrollReveal(0.2)
 
       <h2 class="cta-heading cta-item cta-delay-0">
         Your Perfect Stay Awaits at<br />
-        CitraMas Co Living
+        CM Living
       </h2>
       <p class="cta-description cta-item cta-delay-1">
         Experience modern co-living in the heart of Batam. Beautifully designed rooms,

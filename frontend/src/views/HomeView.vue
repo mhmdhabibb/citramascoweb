@@ -6,6 +6,34 @@ import RoomCard from '@/components/room/RoomCard.vue'
 
 const featuredRooms = ref<Room[]>([])
 const loading = ref(true)
+const heroVideoSrc = ref('/login_video.mp4')
+const videoA = ref<HTMLVideoElement | null>(null)
+const videoB = ref<HTMLVideoElement | null>(null)
+const activePlayer = ref<'A' | 'B'>('A')
+
+const CROSSFADE_DURATION = 0.8 // seconds before end to crossfade
+let isCrossfading = false
+
+const handleTimeUpdate = (player: 'A' | 'B') => {
+  const currentVideo = player === 'A' ? videoA.value : videoB.value
+  const nextVideo = player === 'A' ? videoB.value : videoA.value
+  if (!currentVideo || !nextVideo || !currentVideo.duration) return
+
+  const remaining = currentVideo.duration - currentVideo.currentTime
+  if (remaining <= CROSSFADE_DURATION && !isCrossfading && activePlayer.value === player) {
+    isCrossfading = true
+    nextVideo.currentTime = 0
+    nextVideo.muted = true
+    nextVideo.play().catch(() => {})
+    activePlayer.value = player === 'A' ? 'B' : 'A'
+
+    setTimeout(() => {
+      isCrossfading = false
+      currentVideo.pause()
+      currentVideo.currentTime = 0
+    }, CROSSFADE_DURATION * 1000)
+  }
+}
 
 const { elementRef: heroRef, isVisible: heroVisible } = useScrollReveal(0.1)
 const { elementRef: aboutRef, isVisible: aboutVisible } = useScrollReveal(0.2)
@@ -14,6 +42,19 @@ const { elementRef: featuredRef, isVisible: featuredVisible } = useScrollReveal(
 const { elementRef: ctaRef, isVisible: ctaVisible } = useScrollReveal(0.2)
 
 onMounted(async () => {
+  if (videoA.value) {
+    videoA.value.muted = true
+    videoA.value.defaultMuted = true
+    try {
+      await videoA.value.play()
+    } catch (e) {
+      console.warn('Video A autoplay fallback:', e)
+    }
+  }
+  if (videoB.value) {
+    videoB.value.muted = true
+    videoB.value.defaultMuted = true
+  }
   try {
     const rooms = await roomService.getRooms()
     featuredRooms.value = rooms.slice(0, 3)
@@ -29,24 +70,54 @@ onMounted(async () => {
   <div>
     <!-- Hero Section -->
     <section ref="heroRef" class="hero-section" :class="{ 'reveal-visible': heroVisible }">
+      <!-- Dual-Player Seamless Crossfade Video Engine -->
+      <video
+        ref="videoA"
+        class="hero-video"
+        :class="{ 'video-active': activePlayer === 'A' }"
+        :src="heroVideoSrc"
+        muted
+        playsinline
+        preload="auto"
+        disablePictureInPicture
+        @timeupdate="handleTimeUpdate('A')"
+      ></video>
+      <video
+        ref="videoB"
+        class="hero-video"
+        :class="{ 'video-active': activePlayer === 'B' }"
+        :src="heroVideoSrc"
+        muted
+        playsinline
+        preload="auto"
+        disablePictureInPicture
+        @timeupdate="handleTimeUpdate('B')"
+      ></video>
       <div class="hero-overlay"></div>
-      <div class="hero-container">
-        <h1 class="text-[50px] md:text-[70px] lg:text-[89px] leading-[1.1] font-serif italic text-white mb-6 reveal-item reveal-delay-0">
-          Experience luxury<br />
-          living at Citramas<br />
-          Co Living.
-        </h1>
-        <p class="hero-subtitle reveal-item reveal-delay-1">
-          Your premium co-living destination offering beautifully designed rooms,<br class="hidden-mobile" />
-          modern amenities, and a vibrant community in the heart of the city.
-        </p>
-        <div class="hero-buttons reveal-item reveal-delay-2">
-          <router-link to="/rooms" class="hero-btn-primary">
-            View Rooms &nbsp;&rarr;
-          </router-link>
-          <router-link to="/booking" class="hero-btn-secondary">
-            Book Now
-          </router-link>
+      
+      <!-- Unobstructed Hero Bottom Floating Action Bar -->
+      <div class="hero-bottom-container">
+        <div class="hero-glass-card reveal-item reveal-delay-0">
+          <div class="hero-card-left">
+            <div class="flex items-center gap-2 mb-1.5">
+              <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+              <span class="text-amber-300 text-[11px] font-extrabold tracking-[0.18em] uppercase">
+                CM Living & Suites
+              </span>
+            </div>
+            <p class="hero-card-tagline">
+              Your sanctuary of serene luxury, curated suites, and thoughtful hospitality.
+            </p>
+          </div>
+          
+          <div class="hero-card-right">
+            <router-link to="/rooms" class="hero-btn-primary">
+              View Rooms &nbsp;&rarr;
+            </router-link>
+            <router-link to="/booking" class="hero-btn-secondary">
+              Book Now
+            </router-link>
+          </div>
         </div>
       </div>
     </section>
@@ -67,7 +138,7 @@ onMounted(async () => {
           <!-- Right Column: Text -->
           <div class="lg:col-span-7 reveal-item reveal-delay-1">
             <p class="text-[16px] md:text-[18px] text-[#6B5E52] leading-relaxed mb-6 font-light">
-              CitraMas began as a private residence on the tranquil coastline. 
+              CM Living began as a private residence on the tranquil coastline. 
               When we opened our doors to guests, we kept its quiet — its hand-plastered walls, its sun-drenched terraces, its old citrus garden.
             </p>
             <p class="text-[16px] md:text-[18px] text-[#6B5E52] leading-relaxed font-light">
@@ -239,132 +310,141 @@ onMounted(async () => {
    ============================================ */
 .hero-section {
   position: relative;
-  background-image: url('@/assets/hero-bg.jpg');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  padding: 8rem 2rem 6rem;
-  min-height: 85vh;
+  overflow: hidden;
+  background-color: #1c1612;
+  min-height: 94vh;
   display: flex;
   align-items: flex-end;
+  padding-bottom: 2.5rem;
+}
+
+.hero-video {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  min-width: 100%;
+  min-height: 100%;
+  width: auto;
+  height: auto;
+  transform: translate3d(-50%, -50%, 0);
+  object-fit: cover;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.8s ease-in-out;
+}
+
+.hero-video.video-active {
+  opacity: 1;
 }
 
 .hero-overlay {
   position: absolute;
   inset: 0;
+  z-index: 1;
   background: linear-gradient(
     to top,
-    rgba(28, 22, 18, 0.85) 0%,
-    rgba(28, 22, 18, 0.5) 50%,
-    rgba(28, 22, 18, 0.2) 100%
+    rgba(28, 22, 18, 0.75) 0%,
+    rgba(28, 22, 18, 0.1) 40%,
+    rgba(28, 22, 18, 0.05) 100%
   );
 }
 
-.hero-container {
+.hero-bottom-container {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   max-width: 1400px;
   margin: 0 auto;
   width: 100%;
+  padding: 0 1.5rem;
+  box-sizing: border-box;
 }
 
-
-/* Hero entrance animations */
-.animate-hero-text {
-  opacity: 0;
-  transform: translateY(30px);
-  animation: heroSlideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-.animate-hero-text--delay-1 {
-  animation-delay: 0.2s;
-}
-
-.animate-hero-text--delay-2 {
-  animation-delay: 0.4s;
-}
-
-@keyframes heroSlideUp {
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.hero-heading {
-  font-size: clamp(40px, 6vw, 64px);
-  font-weight: 700;
-  line-height: 1.1;
-  letter-spacing: -0.02em;
-  color: #FFFFFF;
-  margin: 0 0 1.5rem;
-}
-
-.hero-subtitle {
-  font-size: 18px;
-  line-height: 1.6;
-  color: rgba(255, 255, 255, 0.75);
-  margin: 0 0 2.5rem;
-  max-width: 600px;
-}
-
-.hidden-mobile {
-  display: none;
+.hero-glass-card {
+  background: rgba(28, 22, 18, 0.65);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 24px;
+  padding: 1.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
 }
 
 @media (min-width: 768px) {
-  .hidden-mobile {
-    display: inline;
+  .hero-glass-card {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.75rem 2.5rem;
   }
 }
 
-.hero-buttons {
+.hero-card-left {
+  max-width: 600px;
+}
+
+.hero-card-tagline {
+  font-size: 16px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+  font-weight: 400;
+}
+
+.hero-card-right {
   display: flex;
   align-items: center;
   gap: 1rem;
   flex-wrap: wrap;
+  flex-shrink: 0;
 }
 
 .hero-btn-primary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.75rem 1.75rem;
+  padding: 0.85rem 1.85rem;
   border-radius: 100px;
-  font-size: 16px;
-  font-weight: 500;
-  color: #1C1612;
-  background-color: #F8F5F1;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: #1c1612;
+  background-color: #f8f5f1;
   text-decoration: none;
-  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
 }
 
 .hero-btn-primary:hover {
-  background-color: #FFFFFF;
+  background-color: #ffffff;
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(248, 245, 241, 0.3);
+  box-shadow: 0 8px 24px rgba(248, 245, 241, 0.35);
 }
 
 .hero-btn-secondary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.75rem 1.75rem;
+  padding: 0.85rem 1.85rem;
   border-radius: 100px;
-  font-size: 16px;
-  font-weight: 500;
-  color: #FFFFFF;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: #ffffff;
   background-color: rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.35);
   text-decoration: none;
   backdrop-filter: blur(4px);
-  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .hero-btn-secondary:hover {
-  background-color: rgba(255, 255, 255, 0.25);
+  background-color: rgba(255, 255, 255, 0.28);
+  border-color: rgba(255, 255, 255, 0.6);
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(255, 255, 255, 0.1);
 }
 
 /* ============================================

@@ -2,8 +2,6 @@ package config
 
 import (
 	"citramascoweb-backend/internal/modules/finance"
-	"citramascoweb-backend/internal/modules/rooms"
-	"citramascoweb-backend/internal/modules/rooms/reservation"
 	"log"
 	"time"
 
@@ -40,7 +38,7 @@ func ConnectDB() *gorm.DB {
 		log.Fatalf("Database migration failed: %v", err)
 	}
 
-	db.AutoMigrate(&rooms.Room{}, &reservation.Reservation{})
+	// db.AutoMigrate(&rooms.Room{}, &reservation.Reservation{}, &reservation.ReservationLog{}, &floor.Floor{}, &unit.RoomUnit{})
 
 	seedCOA(db)
 

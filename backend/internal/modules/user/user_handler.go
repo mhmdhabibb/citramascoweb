@@ -50,10 +50,17 @@ func (h *userHandler) Delete(c *gin.Context) {
 }
 
 func (h *userHandler) Create(c *gin.Context) {
+	requesterRole := c.GetString("role")
 	var req dto.CreateUserRequest
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
 		c.JSON(400, gin.H{"success": false, "message": err.Error()})
+		return
+	}
+
+	targetRole := strings.ToLower(req.Role)
+	if requesterRole == "manager" && (targetRole == "admin" || targetRole == "manager") {
+		c.JSON(403, gin.H{"success": false, "message": "Manager tidak diizinkan membuat akun dengan role Admin atau Manager"})
 		return
 	}
 
@@ -67,6 +74,7 @@ func (h *userHandler) Create(c *gin.Context) {
 }
 
 func (h *userHandler) UpdateRole(c *gin.Context) {
+	requesterRole := c.GetString("role")
 	id := c.Param("id")
 
 	var req dto.UpdateUserRoleRequest
@@ -76,7 +84,13 @@ func (h *userHandler) UpdateRole(c *gin.Context) {
 		return
 	}
 
-	role := auth.Role(strings.ToLower(req.Role))
+	targetRole := strings.ToLower(req.Role)
+	if requesterRole == "manager" && (targetRole == "admin" || targetRole == "manager") {
+		c.JSON(403, gin.H{"success": false, "message": "Manager tidak diizinkan mengubah role menjadi Admin atau Manager"})
+		return
+	}
+
+	role := auth.Role(targetRole)
 
 	err = h.userService.UpdateRole(id, role)
 	if err != nil {

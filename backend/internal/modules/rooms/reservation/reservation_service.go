@@ -185,12 +185,14 @@ func (s *reservationService) Store(req *dto.CreateReservationRequest) error {
 		Status:            ReservationStatusPending,
 		TransactionStatus: txStatus,
 		PaymentMethod:     payMethod,
-		NumberOfAdult:     req.NumberOfAdult,
-		NumberOfChildren:  req.NumberOfChildren,
-		IsOffer:           &isOfferVal,
-		OfferCode:         offerApplied,
-		Deposit:           req.Deposit,
-		ChannelId:         req.ChannelId,
+		NumberOfAdult:        req.NumberOfAdult,
+		NumberOfChildren:     req.NumberOfChildren,
+		IsOffer:              &isOfferVal,
+		OfferCode:            offerApplied,
+		Deposit:              req.Deposit,
+		ChannelId:            req.ChannelId,
+		IsEarlyCheckin:       req.IsEarlyCheckin,
+		EstimatedArrivalTime: req.EstimatedArrivalTime,
 	}
 
 	err = s.reservationRepo.Create(newReservation)
@@ -356,6 +358,14 @@ func (s *reservationService) Update(id string, req *dto.UpdateReservationRequest
 
 	if req.PaymentMethod != "" {
 		reservation.PaymentMethod = req.PaymentMethod
+	}
+
+	if req.IsEarlyCheckin != nil {
+		reservation.IsEarlyCheckin = req.IsEarlyCheckin
+	}
+
+	if req.EstimatedArrivalTime != nil {
+		reservation.EstimatedArrivalTime = req.EstimatedArrivalTime
 	}
 
 	err = s.reservationRepo.Update(reservation, id)
@@ -548,10 +558,10 @@ func (s *reservationService) CheckIn(id string) error {
 		return errors.New("reservation tidak ditemukan")
 	}
 
-	// Validasi: Reservasi yang sudah di-approve atau dikonfirmasi dapat melakukan check-in
+	// Validasi: Reservasi yang sudah di-approve, confirmed, atau checked-out (selama masih dalam masa sewa) dapat check-in
 	statusLower := strings.ToLower(string(reservation.Status))
-	if statusLower != "approved" && statusLower != "confirmed" {
-		return fmt.Errorf("gagal check-in, status reservasi saat ini masih '%s' (harus approved)", reservation.Status)
+	if statusLower != "approved" && statusLower != "confirmed" && statusLower != "checked-out" {
+		return fmt.Errorf("gagal check-in, status reservasi saat ini masih '%s'", reservation.Status)
 	}
 
 	return s.reservationRepo.CheckIn(id, reservation.RoomId)
