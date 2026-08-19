@@ -685,7 +685,7 @@ const exportPDF = () => {
     // Header Title
     doc.setFontSize(16)
     doc.setTextColor(15, 23, 42)
-    doc.text('CITRAMAS RESORT & MANAGEMENT', 14, 18)
+    doc.text('CM LIVING HOTEL & SUITES', 14, 18)
 
     doc.setFontSize(10)
     doc.setTextColor(71, 85, 105)
@@ -784,7 +784,7 @@ const exportPDF = () => {
       })
     }
 
-    doc.save(`Laporan_Keuangan_Citramas_${selectedYear.value}_${selectedMonth.value + 1}.pdf`)
+    doc.save(`Laporan_Keuangan_CMLiving_${selectedYear.value}_${selectedMonth.value + 1}.pdf`)
     toastStore.success('Dokumen PDF data performa & transaksi berhasil diunduh!')
   } catch (error: any) {
     toastStore.error(error.message || 'Gagal mengekspor dokumen PDF')
@@ -798,7 +798,7 @@ const exportCSV = () => {
     const lines: string[] = []
 
     // 1. Header Metadata
-    lines.push(`LAPORAN KEUANGAN & PERFORMA RESERVASI CITRAMAS`)
+    lines.push(`LAPORAN KEUANGAN & PERFORMA RESERVASI CM LIVING`)
     lines.push(`Periode: ${period}`)
     lines.push(`Waktu Ekspor: ${timestamp}`)
     lines.push(`Total Unit Kamar: ${rooms.value.length}`)
@@ -840,7 +840,7 @@ const exportCSV = () => {
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.setAttribute('href', url)
-    link.setAttribute('download', `Laporan_Performa_Citramas_${selectedYear.value}_${selectedMonth.value + 1}.csv`)
+    link.setAttribute('download', `Laporan_Performa_CMLiving_${selectedYear.value}_${selectedMonth.value + 1}.csv`)
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
@@ -939,7 +939,7 @@ onUnmounted(() => {
         </div>
         <div>
           <h2 class="section-title">Operasional Resepsionis & Frontdesk Hari Ini</h2>
-          <p class="section-desc">Data live dari tabel reservasi database Citramas</p>
+          <p class="section-desc">Data live dari tabel reservasi database CM Living</p>
         </div>
       </div>
 

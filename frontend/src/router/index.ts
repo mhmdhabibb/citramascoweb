@@ -18,6 +18,8 @@ import ReservationFormView from '@/views/admin/ReservationFormView.vue'
 import AdminRoomsView from '@/views/admin/RoomsView.vue'
 import RoomTypesView from '@/views/admin/RoomTypesView.vue'
 import RoomCategoriesView from '@/views/admin/RoomCategoriesView.vue'
+import FloorsView from '@/views/admin/FloorsView.vue'
+import RoomUnitsView from '@/views/admin/RoomUnitsView.vue'
 import StaffView from '@/views/admin/StaffView.vue'
 import PromotionsView from '@/views/admin/PromotionsView.vue'
 import UsersView from '@/views/admin/UsersView.vue'
@@ -215,6 +217,18 @@ const router = createRouter({
           name: 'admin-rooms',
           component: AdminRoomsView,
           meta: { title: 'Manage Rooms' },
+        },
+        {
+          path: 'room-units',
+          name: 'admin-room-units',
+          component: RoomUnitsView,
+          meta: { title: 'Room Units (No. Kamar)' },
+        },
+        {
+          path: 'floors',
+          name: 'admin-floors',
+          component: FloorsView,
+          meta: { title: 'Floors (Lantai)' },
         },
         {
           path: 'room-types',

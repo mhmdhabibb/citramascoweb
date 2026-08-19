@@ -30,7 +30,7 @@ const { elementRef: mapRef, isVisible: mapVisible } = useScrollReveal(0.15)
             </div>
             <div class="ml-3">
               <p class="font-medium text-foreground">Address</p>
-              <p class="text-muted-foreground text-sm">Citramas Commercial Complex, Block B No. 14 - 15, Batam, Riau Islands Province, Indonesia</p>
+              <p class="text-muted-foreground text-sm">CM Living Commercial Complex, Block B No. 14 - 15, Batam, Riau Islands Province, Indonesia</p>
             </div>
           </div>
 
@@ -42,7 +42,7 @@ const { elementRef: mapRef, isVisible: mapVisible } = useScrollReveal(0.15)
             </div>
             <div class="ml-3">
               <p class="font-medium text-foreground">Phone</p>
-              <p class="text-muted-foreground text-sm">+62 21 1234 5678</p>
+              <p class="text-muted-foreground text-sm">+62 811-1222-333</p>
             </div>
           </div>
 
@@ -54,7 +54,7 @@ const { elementRef: mapRef, isVisible: mapVisible } = useScrollReveal(0.15)
             </div>
             <div class="ml-3">
               <p class="font-medium text-foreground">Email</p>
-              <p class="text-muted-foreground text-sm">info@citramascohotel.com</p>
+              <p class="text-muted-foreground text-sm">info@cmliving.com</p>
             </div>
           </div>
         </div>
@@ -73,7 +73,7 @@ const { elementRef: mapRef, isVisible: mapVisible } = useScrollReveal(0.15)
               :allowfullscreen="true"
               loading="lazy"
               referrerpolicy="no-referrer-when-downgrade"
-              title="Ruko Citramas Blok B No 14-15, Batam, Kepulauan Riau"
+              title="CM Living Blok B No 14-15, Batam, Kepulauan Riau"
             ></iframe>
           </div>
         </div>

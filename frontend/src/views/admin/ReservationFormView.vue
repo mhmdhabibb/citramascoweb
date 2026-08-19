@@ -315,4 +315,59 @@ onMounted(async () => {
   font-weight: 600;
   cursor: pointer;
 }
+
+.full-width {
+  grid-column: 1 / -1;
+}
+.early-checkin-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  margin-bottom: 0 !important;
+}
+.checkbox-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #e4793b;
+}
+.checkbox-label span {
+  display: flex;
+  flex-direction: column;
+}
+.checkbox-label strong {
+  font-size: 0.85rem;
+  color: #1e293b;
+}
+.checkbox-label small {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+.early-time-select {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed #e2e8f0;
+}
+.early-time-select label {
+  font-size: 0.8rem;
+  color: #475569;
+  white-space: nowrap;
+  margin-bottom: 0 !important;
+}
+.early-time-select select {
+  max-width: 200px;
+  background: #ffffff;
+}
 </style>

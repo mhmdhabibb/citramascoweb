@@ -1,6 +1,7 @@
 <script setup>
 import { financeService } from '@/services/admin/financeService'
 import { reservationService } from '@/services/admin/reservationService'
+import { roomUnitService } from '@/services/admin/roomUnitService'
 import { authService } from '@/services/authService'
 import { useToastStore } from '@/stores/toastStore'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
@@ -18,6 +19,23 @@ const toastStore = useToastStore()
 const canManage = computed(() =>
   ['admin', 'manager', 'reception'].includes(currentUser.value?.role),
 )
+
+// Helper: Cek apakah hari ini masih dalam masa sewa (sehingga bisa Re-Check In di hari berikutnya)
+const isStayActive = (res) => {
+  if (!res || !res.checkout_date) return false
+  const parts = res.checkout_date.split('-')
+  let checkOutDate
+  if (parts.length === 3) {
+    if (parts[0].length === 4) {
+      checkOutDate = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]), 23, 59, 59)
+    } else {
+      checkOutDate = new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0]), 23, 59, 59)
+    }
+  } else {
+    checkOutDate = new Date(res.checkout_date)
+  }
+  return new Date() <= checkOutDate
+}
 
 // State melacak baris yang sedang dipilih/diklik
 const selectedReservation = ref(null)
@@ -117,11 +135,51 @@ const rejectReservation = async (id) => {
   }
 }
 
-const handleCheckIn = async (id) => {
+const checkInModalOpen = ref(false)
+const checkInTarget = ref(null)
+const isEarlyCheckInOption = ref(false)
+const checkInCurrentTime = ref('')
+const autoAssignedUnit = ref(null)
+const availableUnitsForType = ref([])
+
+const openCheckInModal = async (res) => {
+  checkInTarget.value = res
+  autoAssignedUnit.value = null
+  availableUnitsForType.value = []
+
+  const now = new Date()
+  const hours = String(now.getHours()).padStart(2, '0')
+  const minutes = String(now.getMinutes()).padStart(2, '0')
+  checkInCurrentTime.value = `${hours}:${minutes}`
+  isEarlyCheckInOption.value = now.getHours() < 14 // Standard hotel check-in starts at 14:00
+  checkInModalOpen.value = true
+
+  // Cek alokasi kamar fisik otomatis secara berurutan
+  if (res.room_id) {
+    if (res.room_unit) {
+      autoAssignedUnit.value = res.room_unit
+    } else {
+      const nextUnit = await roomUnitService.getNextAvailable(res.room_id)
+      if (nextUnit) {
+        autoAssignedUnit.value = nextUnit
+      }
+    }
+  }
+}
+
+const closeCheckInModal = () => {
+  checkInModalOpen.value = false
+  checkInTarget.value = null
+  autoAssignedUnit.value = null
+}
+
+const confirmCheckIn = async () => {
+  if (!checkInTarget.value) return
   try {
     loading.value = true
-    const msg = await reservationService.checkIn(id)
-    toastStore.success(msg || 'Tamu berhasil Check In!')
+    const msg = await reservationService.checkIn(checkInTarget.value.id)
+    toastStore.success(isEarlyCheckInOption.value ? 'Tamu berhasil Early Check In!' : (msg || 'Tamu berhasil Check In!'))
+    closeCheckInModal()
     await refreshData()
   } catch (error) {
     toastStore.error(error.message || 'Gagal melakukan Check In')
@@ -275,6 +333,12 @@ onUnmounted(() => {
                   </td>
                   <td>
                     <span class="room-pill">{{ res.room?.name || 'N/A' }}</span>
+                    <span
+                      v-if="res.room_unit?.room_number"
+                      class="block text-[11px] font-extrabold text-indigo-700 bg-indigo-50 border border-indigo-200 rounded px-1.5 py-0.5 mt-1 w-fit"
+                    >
+                      🚪 Kamar {{ res.room_unit.room_number }} {{ res.room_unit.floor?.name ? `(${res.room_unit.floor.name})` : '' }}
+                    </span>
                   </td>
                   <td>
                     <span class="date-text">{{ res.checkin_date }}</span>
@@ -319,7 +383,7 @@ onUnmounted(() => {
                         'status-cancel': res.status === 'cancel' || res.status === 'rejected',
                       }"
                     >
-                      {{ res.status === 'pending' ? 'Pending' : (res.status === 'approved' || res.status === 'confirmed' ? 'Confirmed' : res.status) }}
+                      {{ res.status === 'checked-in' && res.is_early_checkin ? '🌅 Early Checked-In' : (res.status === 'pending' ? 'Pending' : (res.status === 'approved' || res.status === 'confirmed' ? 'Confirmed' : res.status)) }}
                     </span>
                   </td>
                   <td class="text-center" @click.stop>
@@ -372,8 +436,8 @@ onUnmounted(() => {
                       class="flex items-center justify-center"
                     >
                       <button
-                        @click="handleCheckIn(res.id)"
-                        class="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-lg shadow-sm transition-all flex items-center gap-1"
+                        @click="openCheckInModal(res)"
+                        class="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-lg shadow-sm transition-all flex items-center gap-1 cursor-pointer"
                         title="Proses Check In Tamu"
                       >
                         <span>🛎️</span>
@@ -388,11 +452,26 @@ onUnmounted(() => {
                     >
                       <button
                         @click="handleCheckOut(res.id)"
-                        class="px-2.5 py-1 bg-slate-700 hover:bg-slate-800 text-white font-bold text-xs rounded-lg shadow-sm transition-all flex items-center gap-1"
+                        class="px-2.5 py-1 bg-slate-700 hover:bg-slate-800 text-white font-bold text-xs rounded-lg shadow-sm transition-all flex items-center gap-1 cursor-pointer"
                         title="Proses Check Out Tamu"
                       >
                         <span>🚪</span>
                         <span>Check Out</span>
+                      </button>
+                    </div>
+
+                    <!-- KONDISI 5: CHECKED-OUT TAPI MASIH DALAM PERIODE SEWA -> BISA CHECK IN KEMBALI -->
+                    <div
+                      v-else-if="res.status === 'checked-out' && isStayActive(res)"
+                      class="flex items-center justify-center"
+                    >
+                      <button
+                        @click="openCheckInModal(res)"
+                        class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg shadow-sm transition-all flex items-center gap-1 cursor-pointer"
+                        title="Tamu Masuk / Check-In Kembali (Hari Berikutnya)"
+                      >
+                        <span>🔄</span>
+                        <span>Check In Lagi</span>
                       </button>
                     </div>
 
@@ -444,9 +523,15 @@ onUnmounted(() => {
           </div>
           <span class="font-medium text-slate-700 text-sm truncate">{{ selectedReservation.email || '-' }}</span>
         </div>
-        <div class="mt-3 flex items-center gap-2 pt-3 border-t border-slate-50">
+        <div class="mt-3 flex flex-wrap items-center gap-2 pt-3 border-t border-slate-50">
           <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
             🛏️ {{ selectedReservation.room?.name || 'Standard Room' }}
+          </span>
+          <span
+            v-if="selectedReservation.room_unit?.room_number"
+            class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-black bg-emerald-50 text-emerald-700 border border-emerald-200"
+          >
+            🚪 No. Kamar: {{ selectedReservation.room_unit.room_number }} {{ selectedReservation.room_unit.floor?.name ? `(${selectedReservation.room_unit.floor.name})` : '' }}
           </span>
         </div>
       </div>
@@ -456,22 +541,37 @@ onUnmounted(() => {
         <span class="text-[11px] font-bold tracking-wider text-slate-400 uppercase">Jadwal & Tamu</span>
         
         <!-- Date Timeline -->
-        <div class="mt-2 flex items-center justify-between bg-slate-50 rounded-xl p-3 border border-slate-100">
-          <div>
-            <div class="text-[10px] text-slate-400 font-semibold uppercase">Check-in</div>
-            <div class="text-xs font-bold text-slate-800">{{ selectedReservation.checkin_date }}</div>
-          </div>
-          <div class="flex flex-col items-center px-2">
-            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white text-indigo-600 shadow-xs border border-slate-100">
-              {{ selectedReservation.total_night }} Malam
-            </span>
-            <div class="w-12 h-0.5 bg-slate-200 my-1 relative">
-              <span class="absolute -right-0.5 -top-0.5 w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+        <div class="mt-2 bg-slate-50 rounded-xl p-3 border border-slate-100 space-y-2">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="text-[10px] text-slate-400 font-semibold uppercase">Check-in</div>
+              <div class="text-xs font-bold text-slate-800">{{ selectedReservation.checkin_date }}</div>
+            </div>
+            <div class="flex flex-col items-center px-2">
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white text-indigo-600 shadow-xs border border-slate-100">
+                {{ selectedReservation.total_night }} Malam
+              </span>
+              <div class="w-12 h-0.5 bg-slate-200 my-1 relative">
+                <span class="absolute -right-0.5 -top-0.5 w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+              </div>
+            </div>
+            <div class="text-right">
+              <div class="text-[10px] text-slate-400 font-semibold uppercase">Check-out</div>
+              <div class="text-xs font-bold text-slate-800">{{ selectedReservation.checkout_date }}</div>
             </div>
           </div>
-          <div class="text-right">
-            <div class="text-[10px] text-slate-400 font-semibold uppercase">Check-out</div>
-            <div class="text-xs font-bold text-slate-800">{{ selectedReservation.checkout_date }}</div>
+
+          <!-- Early Check-In Info if present -->
+          <div
+            v-if="selectedReservation.is_early_checkin || selectedReservation.actual_checkin_at"
+            class="pt-2 border-t border-slate-200/60 flex items-center justify-between text-[11px]"
+          >
+            <span class="font-bold text-amber-800 flex items-center gap-1">
+              <span>🌅</span> Early Check-in
+            </span>
+            <span class="font-semibold text-slate-700 bg-white px-2 py-0.5 rounded border border-slate-200">
+              {{ selectedReservation.actual_checkin_at ? new Date(selectedReservation.actual_checkin_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB' : 'Tiba Lebih Awal' }}
+            </span>
           </div>
         </div>
 
@@ -495,6 +595,43 @@ onUnmounted(() => {
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- Daily In/Out Activity Logs Card -->
+      <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-xs">
+        <div class="flex items-center justify-between mb-2.5">
+          <span class="text-[11px] font-bold tracking-wider text-slate-400 uppercase">Log Aktivitas In / Out Harian</span>
+          <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
+            {{ (selectedReservation.logs || []).length }} Aktivitas
+          </span>
+        </div>
+
+        <div v-if="selectedReservation.logs && selectedReservation.logs.length > 0" class="space-y-1.5 max-h-44 overflow-y-auto pr-1">
+          <div
+            v-for="(log, idx) in selectedReservation.logs"
+            :key="log.id || idx"
+            class="flex items-center justify-between p-2 rounded-xl text-xs border"
+            :class="log.action === 'check_in' ? 'bg-emerald-50/60 border-emerald-100 text-emerald-900' : 'bg-slate-50 border-slate-200 text-slate-700'"
+          >
+            <div class="flex items-center gap-2">
+              <span class="text-sm">{{ log.action === 'check_in' ? '🛎️' : '🚪' }}</span>
+              <div>
+                <strong class="font-bold block text-[11px]">
+                  {{ log.action === 'check_in' ? (log.is_early ? 'Early Check In' : 'Check In') : 'Check Out' }}
+                </strong>
+                <span class="text-[10px] text-slate-400">
+                  {{ new Date(log.timestamp).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) }}
+                </span>
+              </div>
+            </div>
+            <div class="text-right font-bold text-[11px]">
+              {{ new Date(log.timestamp).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) }} WIB
+            </div>
+          </div>
+        </div>
+        <div v-else class="text-xs text-slate-400 text-center py-2.5 bg-slate-50 rounded-xl">
+          Belum ada riwayat aktivitas check in / out.
         </div>
       </div>
 
@@ -603,17 +740,18 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <!-- Confirmed Actions -->
+        <!-- Confirmed Actions / Re-Check In -->
         <button
           v-if="
             selectedReservation.status === 'approve' ||
             selectedReservation.status === 'approved' ||
-            selectedReservation.status === 'confirmed'
+            selectedReservation.status === 'confirmed' ||
+            (selectedReservation.status === 'checked-out' && isStayActive(selectedReservation))
           "
-          @click="handleCheckIn(selectedReservation.id)"
+          @click="openCheckInModal(selectedReservation)"
           class="w-full py-3 px-4 rounded-xl font-bold text-sm text-white bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-600/25 transition-all cursor-pointer"
         >
-          🛎️ Check In Tamu
+          {{ selectedReservation.status === 'checked-out' ? '🔄 Check In Kembali (Hari Berikutnya)' : '🛎️ Check In Tamu' }}
         </button>
 
         <button
@@ -641,6 +779,116 @@ onUnmounted(() => {
     </div>
   </div>
 </transition>
+    </div>
+
+    <!-- Check-In Confirmation Modal -->
+    <div
+      v-if="checkInModalOpen && checkInTarget"
+      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in"
+    >
+      <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-slate-100 overflow-hidden animate-slide-up">
+        <!-- Modal Header -->
+        <div class="bg-gradient-to-r from-slate-900 to-indigo-950 p-6 text-white flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-xl">
+              🛎️
+            </div>
+            <div>
+              <h3 class="font-extrabold text-lg">Proses Check In</h3>
+              <p class="text-xs text-slate-300">Konfirmasi kedatangan tamu di hotel</p>
+            </div>
+          </div>
+          <button
+            @click="closeCheckInModal"
+            class="text-slate-400 hover:text-white transition-colors cursor-pointer text-lg font-bold"
+          >
+            ✕
+          </button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="p-6 space-y-4">
+          <!-- Guest & Room Allocation Summary Card -->
+          <div class="bg-slate-50 rounded-xl p-4 border border-slate-100 space-y-2.5">
+            <div class="flex justify-between items-center">
+              <span class="text-xs text-slate-400 uppercase font-semibold">Tamu</span>
+              <strong class="text-sm font-bold text-slate-800">{{ checkInTarget.full_name }}</strong>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-xs text-slate-400 uppercase font-semibold">Tipe Kamar</span>
+              <span class="px-2 py-0.5 rounded text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-100">
+                {{ checkInTarget.room?.name || 'Kamar Standar' }}
+              </span>
+            </div>
+
+            <!-- Auto-Assigned Room Unit Badge -->
+            <div class="flex justify-between items-center pt-2 border-t border-slate-200/60">
+              <span class="text-xs text-slate-400 uppercase font-semibold">Alokasi No. Kamar</span>
+              <span
+                v-if="autoAssignedUnit"
+                class="px-2.5 py-1 rounded-lg text-xs font-black bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1.5"
+              >
+                <span>🚪</span>
+                <span>Kamar {{ autoAssignedUnit.room_number }} ({{ autoAssignedUnit.floor?.name || 'Lantai 1' }})</span>
+                <span class="text-[9px] font-extrabold px-1.5 py-0.2 bg-emerald-200 text-emerald-900 rounded-full">Auto-Assign</span>
+              </span>
+              <span v-else class="text-xs text-amber-700 font-semibold italic">
+                Auto-Assign saat konfirmasi
+              </span>
+            </div>
+
+            <div class="flex justify-between items-center">
+              <span class="text-xs text-slate-400 uppercase font-semibold">Jadwal Menginap</span>
+              <span class="text-xs font-semibold text-slate-700">
+                {{ checkInTarget.checkin_date }} s/d {{ checkInTarget.checkout_date }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Current Time & Early Check-In Indicator -->
+          <div class="p-4 rounded-xl border" :class="isEarlyCheckInOption ? 'bg-amber-50/80 border-amber-200' : 'bg-emerald-50/80 border-emerald-200'">
+            <div class="flex items-start gap-3">
+              <span class="text-xl leading-none">{{ isEarlyCheckInOption ? '🌅' : '🕒' }}</span>
+              <div class="flex-1">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold" :class="isEarlyCheckInOption ? 'text-amber-900' : 'text-emerald-900'">
+                    {{ isEarlyCheckInOption ? 'Early Check-In Terdeteksi' : 'Check-In Reguler' }}
+                  </span>
+                  <span class="text-xs font-black px-2 py-0.5 rounded bg-white" :class="isEarlyCheckInOption ? 'text-amber-800' : 'text-emerald-800'">
+                    Jam: {{ checkInCurrentTime }} WIB
+                  </span>
+                </div>
+                <p class="text-[11px] mt-1 text-slate-600 leading-relaxed">
+                  <template v-if="isEarlyCheckInOption">
+                    Tamu tiba sebelum jam standar <strong>14:00</strong>. Sistem akan mencatat sebagai <strong>Early Check-in</strong> tanpa biaya tambahan.
+                  </template>
+                  <template v-else>
+                    Check-in pada waktu standar operasional hotel.
+                  </template>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="bg-slate-50 p-4 border-t border-slate-100 flex gap-3">
+          <button
+            @click="closeCheckInModal"
+            class="flex-1 py-2.5 px-4 rounded-xl font-bold text-xs text-slate-700 bg-white border border-slate-200 hover:bg-slate-100 transition-all cursor-pointer"
+          >
+            Batal
+          </button>
+          <button
+            @click="confirmCheckIn"
+            :disabled="loading"
+            class="flex-1 py-2.5 px-4 rounded-xl font-bold text-xs text-white bg-indigo-600 hover:bg-indigo-700 shadow-md shadow-indigo-600/20 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+          >
+            <span>✓</span>
+            <span>{{ loading ? 'Memproses...' : 'Konfirmasi Check In' }}</span>
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </template>

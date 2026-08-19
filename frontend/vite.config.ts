@@ -18,6 +18,9 @@ export default defineConfig({
     },
   },
   server: {
+    watch: {
+      ignored: ['**/public/*.mp4', '**/public/*.webm'],
+    },
     proxy: {
       '/api': {
         target: 'http://localhost:4000',

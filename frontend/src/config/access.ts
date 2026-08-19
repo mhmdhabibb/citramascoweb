@@ -28,28 +28,30 @@ export type AppRole =
  */
 export const ROUTE_ACCESS: Record<string, AppRole[]> = {
   '/admin/dashboard': ['admin', 'manager', 'reception', 'inventory', 'housekeeping'],
-  '/admin/finance': ['admin', 'manager', 'finance'],
-  '/admin/finance/cash-bank': ['admin', 'manager', 'finance'],
-  '/admin/finance/general-journal': ['admin', 'manager', 'finance'],
-  '/admin/finance/coa': ['admin', 'manager', 'finance'],
-  '/admin/finance/ap-ar': ['admin', 'manager', 'finance'],
-  '/admin/finance/general-ledger': ['admin', 'manager', 'finance'],
-  '/admin/finance/profit-loss': ['admin', 'manager', 'finance'],
-  '/admin/finance/balance-sheet': ['admin', 'manager', 'finance'],
+  '/admin/finance': ['admin', 'finance'],
+  '/admin/finance/cash-bank': ['admin', 'finance'],
+  '/admin/finance/general-journal': ['admin', 'finance'],
+  '/admin/finance/coa': ['admin', 'finance'],
+  '/admin/finance/ap-ar': ['admin', 'finance'],
+  '/admin/finance/general-ledger': ['admin', 'finance'],
+  '/admin/finance/profit-loss': ['admin', 'finance'],
+  '/admin/finance/balance-sheet': ['admin', 'finance'],
   '/admin/reservations': ['admin', 'manager', 'reception'],
   '/admin/service-requests': ['admin', 'manager', 'reception', 'housekeeping'],
   '/admin/guestbook': ['admin', 'manager', 'reception'],
   '/admin/reservations/new': ['admin', 'manager', 'reception'],
   '/admin/rooms': ['admin', 'manager', 'housekeeping', 'reception'],
-  '/admin/room-types': ['admin', 'manager'],
-  '/admin/room-categories': ['admin', 'manager'],
+  '/admin/room-units': ['admin', 'manager', 'housekeeping', 'reception'],
+  '/admin/floors': ['admin'], // Master config only for admin
+  '/admin/room-types': ['admin'], // Master config only for admin
+  '/admin/room-categories': ['admin'], // Master config only for admin
   '/admin/inventory': ['admin', 'manager', 'inventory'],
   '/admin/inventory-usage': ['admin', 'manager', 'inventory'],
   '/admin/promotions': ['admin', 'manager'],
   '/admin/users': ['admin', 'manager'],
-  '/admin/channels': ['admin', 'manager'],
+  '/admin/channels': ['admin'], // OTA tech channels only for admin
   '/admin/calendar': ['admin', 'manager', 'reception'],
-  '/admin/monthly-report': ['admin', 'manager', 'finance'],
+  '/admin/monthly-report': ['admin', 'finance'],
   '/admin/staff': ['admin', 'manager'],
   '/admin/help': ['admin', 'manager', 'inventory', 'finance', 'housekeeping'],
 }
@@ -59,6 +61,19 @@ export function canAccess(role: string | undefined, path: string): boolean {
   const allowed = ROUTE_ACCESS[path]
   if (!allowed) return true // unknown admin paths default to allowed for everyone
   return allowed.includes(role as AppRole)
+}
+
+/**
+ * Cek apakah role diizinkan melakukan CUD (Create, Update, Delete).
+ * Role 'manager' bersifat Read-Only / Supervisory (Monitoring & Laporan) sehingga tidak bisa memodifikasi master data.
+ */
+export function canMutateData(role: string | undefined): boolean {
+  if (!role) return false
+  return role === 'admin'
+}
+
+export function isManagerRole(role: string | undefined): boolean {
+  return role === 'manager'
 }
 
 /**

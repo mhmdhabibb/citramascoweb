@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { userService } from '@/services/admin/userService'
+import { useAuthStore } from '@/stores/authStore'
 import { useToastStore } from '@/stores/toastStore'
 import type { User, UserRole } from '@/types'
 
+const authStore = useAuthStore()
 const users = ref<User[]>([])
 const searchQuery = ref('')
 const roleFilter = ref('All')
@@ -57,7 +59,7 @@ const fetchUsers = async () => {
   try {
     loading.value = true
     if (roleFilter.value === 'All') {
-      const roles: UserRole[] = ['user', 'admin', 'manager', 'reception', 'finance', 'inventory']
+      const roles: UserRole[] = ['user', 'admin', 'manager', 'reception', 'finance', 'inventory', 'housekeeping']
       const results = await Promise.all(roles.map((role) => userService.getByRole(role)))
       const merged = new Map<string, User>()
       for (const list of results) {
@@ -76,7 +78,22 @@ const fetchUsers = async () => {
   }
 }
 
+// Cek apakah user saat ini diizinkan mengedit/menghapus akun target
+const canModifyUser = (user: User) => {
+  if (authStore.role === 'admin') return true
+  if (authStore.role === 'manager') {
+    // Manager hanya dapat mengelola staf biasa (reception, finance, inventory, housekeeping, user), TIDAK bisa mengedit/menghapus admin atau sesama manager
+    return user.role !== 'admin' && user.role !== 'manager'
+  }
+  return false
+}
+
 const handleDelete = async (user: User) => {
+  if (!canModifyUser(user)) {
+    toastStore.error('Manager tidak diizinkan menghapus akun Admin atau Manager')
+    return
+  }
+
   const fullName = `${user.first_name} ${user.last_name}`.trim() || user.username
   if (!confirm(`Are you sure you want to delete user "${fullName}"?`)) return
 
@@ -118,10 +135,18 @@ const createForm = ref({
   phone: '',
   email: '',
   address: '',
-  role: 'user' as UserRole,
+  role: 'reception' as UserRole,
 })
 
-const creatableRoles = computed(() => roleOptions.filter((o) => o.value !== 'All'))
+// Opsi role yang boleh dibuat: Jika login sebagai Manager, sembunyikan 'admin' dan 'manager'
+const creatableRoles = computed(() => {
+  if (authStore.role === 'manager') {
+    return roleOptions.filter(
+      (o) => o.value !== 'All' && o.value !== 'admin' && o.value !== 'manager',
+    )
+  }
+  return roleOptions.filter((o) => o.value !== 'All')
+})
 
 const openCreateModal = () => {
   createForm.value = {
@@ -132,7 +157,7 @@ const openCreateModal = () => {
     phone: '',
     email: '',
     address: '',
-    role: 'user',
+    role: authStore.role === 'manager' ? 'reception' : 'user',
   }
   showCreateModal.value = true
 }
@@ -262,7 +287,9 @@ onMounted(fetchUsers)
       <button @click="fetchUsers" class="btn btn-outline" :disabled="loading">
         {{ loading ? 'Loading...' : 'Refresh' }}
       </button>
-      <button @click="openCreateModal" class="btn btn-primary">+ Add User</button>
+      <button @click="openCreateModal" class="btn btn-primary">
+        <span>+</span> {{ authStore.role === 'manager' ? 'Tambah Akun Staf' : 'Tambah Pengguna' }}
+      </button>
     </div>
 
     <!-- Data Table Card -->
@@ -303,17 +330,20 @@ onMounted(fetchUsers)
               </td>
               <td>{{ formatDate(user.created_at) }}</td>
               <td>
-                <div class="action-buttons">
+                <div v-if="canModifyUser(user)" class="action-buttons">
                   <button
                     @click="openRoleModal(user)"
                     class="btn btn-sm btn-primary-outline"
                     :disabled="loading"
-                  >Assign Role</button>
+                  >Ubah Role</button>
                   <button
                     @click="handleDelete(user)"
                     class="btn btn-sm btn-danger-outline"
                     :disabled="loading"
-                  >Delete</button>
+                  >Hapus</button>
+                </div>
+                <div v-else class="text-xs text-slate-400 font-semibold italic flex items-center gap-1">
+                  <span>🔒</span> Akses Terkunci
                 </div>
               </td>
             </tr>

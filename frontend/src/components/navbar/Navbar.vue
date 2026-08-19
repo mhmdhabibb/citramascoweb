@@ -14,7 +14,7 @@ const { elementRef: navRef, isVisible: navVisible } = useScrollReveal(0.1)
       <!-- Logo (Left) -->
       <div class="navbar-logo">
         <router-link to="/" class="logo-link">
-          <img src="@/assets/logo.svg" alt="CitraMas Co Living" class="logo-img" />
+          <img src="/logo-navbar.png" alt="CM Living" class="logo-img" />
         </router-link>
       </div>
 
@@ -109,11 +109,19 @@ const { elementRef: navRef, isVisible: navVisible } = useScrollReveal(0.1)
 .logo-link {
   display: flex;
   align-items: center;
+  text-decoration: none;
 }
 
 .logo-img {
-  height: 36px;
+  height: 52px;
   width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.12));
+  transition: transform 0.25s ease;
+}
+
+.logo-img:hover {
+  transform: scale(1.04);
 }
 
 /* Center nav links - absolutely centered */
