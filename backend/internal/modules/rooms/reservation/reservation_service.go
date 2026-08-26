@@ -4,6 +4,7 @@ import (
 	"citramascoweb-backend/internal/dto"
 	"citramascoweb-backend/internal/modules/notification"
 	"citramascoweb-backend/internal/modules/rooms"
+	"citramascoweb-backend/pkg/email"
 	"citramascoweb-backend/pkg/utils"
 	"errors"
 	"fmt"
@@ -17,13 +18,20 @@ type reservationService struct {
 	reservationRepo ReservationRepositoryInterface
 	roomRepo        rooms.RoomRepositoryInterface
 	notifier        *notification.NotificationService
+	emailService    *email.EmailService
 }
 
-func NewReservationService(reservationRepo ReservationRepositoryInterface, roomRepo rooms.RoomRepositoryInterface, notifier *notification.NotificationService) *reservationService {
+func NewReservationService(
+	reservationRepo ReservationRepositoryInterface,
+	roomRepo rooms.RoomRepositoryInterface,
+	notifier *notification.NotificationService,
+	emailService *email.EmailService,
+) *reservationService {
 	return &reservationService{
 		reservationRepo: reservationRepo,
 		roomRepo:        roomRepo,
 		notifier:        notifier,
+		emailService:    emailService,
 	}
 }
 
@@ -210,6 +218,30 @@ func (s *reservationService) Store(req *dto.CreateReservationRequest) error {
 		_ = s.roomRepo.DecrementOfferQuota(*offerApplied)
 	}
 
+	// Send booking confirmation email to guest via Resend
+	if s.emailService != nil && newReservation.Email != "" {
+		guestEmail := newReservation.Email
+		guestName := newReservation.FullName
+		roomName := roomData.Name
+		checkinStr := checkinDate.Format("02 Jan 2006")
+		checkoutStr := checkoutDate.Format("02 Jan 2006")
+		bookingCode := newReservation.Code
+		totalPay := float64(newReservation.TotalPrice)
+		go func() {
+			_ = s.emailService.SendBookingConfirmation(
+				guestEmail,
+				guestName,
+				roomName,
+				"",
+				checkinStr,
+				checkoutStr,
+				bookingCode,
+				totalPay,
+				"pending",
+			)
+		}()
+	}
+
 	return nil
 }
 
@@ -348,7 +380,7 @@ func (s *reservationService) Update(id string, req *dto.UpdateReservationRequest
 		reservation.NumberOfAdult = req.NumberOfAdult
 	}
 
-	if *req.NumberOfChildren != 0 {
+	if req.NumberOfChildren != nil {
 		reservation.NumberOfChildren = req.NumberOfChildren
 	}
 
@@ -408,6 +440,44 @@ func (s *reservationService) ApproveReservation(id string) error {
 		return err
 	}
 
+	// Send approval confirmation email to guest via Resend
+	if s.emailService != nil && reservation.Email != "" {
+		roomName := "Kamar CM Living"
+		if reservation.Room.Name != "" {
+			roomName = reservation.Room.Name
+		}
+		roomNum := ""
+		if reservation.RoomUnit != nil && reservation.RoomUnit.RoomNumber != "" {
+			roomNum = reservation.RoomUnit.RoomNumber
+		}
+		checkinStr := ""
+		if reservation.CheckinDate != nil {
+			checkinStr = time.Time(*reservation.CheckinDate).Format("02 Jan 2006")
+		}
+		checkoutStr := ""
+		if reservation.CheckoutDate != nil {
+			checkoutStr = time.Time(*reservation.CheckoutDate).Format("02 Jan 2006")
+		}
+		guestEmail := reservation.Email
+		guestName := reservation.FullName
+		code := reservation.Code
+		totalPay := float64(reservation.TotalPrice)
+
+		go func() {
+			_ = s.emailService.SendBookingConfirmation(
+				guestEmail,
+				guestName,
+				roomName,
+				roomNum,
+				checkinStr,
+				checkoutStr,
+				code,
+				totalPay,
+				"approved",
+			)
+		}()
+	}
+
 	return nil
 }
 
@@ -436,6 +506,22 @@ func (s *reservationService) CancelReservation(id string) error {
 	// Increment offer quota back
 	if reservation.IsOffer != nil && *reservation.IsOffer && reservation.OfferCode != nil && *reservation.OfferCode != "" {
 		_ = s.roomRepo.IncrementOfferQuota(*reservation.OfferCode)
+	}
+
+	// Send cancellation notification via Resend
+	if s.emailService != nil && reservation.Email != "" {
+		guestEmail := reservation.Email
+		guestName := reservation.FullName
+		code := reservation.Code
+		go func() {
+			_ = s.emailService.SendReservationStatusNotification(
+				guestEmail,
+				guestName,
+				code,
+				"Pemberitahuan Pembatalan Reservasi",
+				"Reservasi kamar Anda di CM Living telah berhasil dibatalkan sesuai permohonan.",
+			)
+		}()
 	}
 
 	return nil

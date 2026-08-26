@@ -20,7 +20,7 @@ import RoomTypesView from '@/views/admin/RoomTypesView.vue'
 import RoomCategoriesView from '@/views/admin/RoomCategoriesView.vue'
 import FloorsView from '@/views/admin/FloorsView.vue'
 import RoomUnitsView from '@/views/admin/RoomUnitsView.vue'
-import StaffView from '@/views/admin/StaffView.vue'
+import StaffKpiDashboardView from '@/views/admin/StaffKpiDashboardView.vue'
 import PromotionsView from '@/views/admin/PromotionsView.vue'
 import UsersView from '@/views/admin/UsersView.vue'
 import InventoryView from '@/views/admin/InventoryView.vue'
@@ -245,8 +245,8 @@ const router = createRouter({
         {
           path: 'staff',
           name: 'admin-staff',
-          component: StaffView,
-          meta: { title: 'Manage Staff' },
+          component: StaffKpiDashboardView,
+          meta: { title: 'Staff KPI & SLA Monitoring' },
         },
         {
           path: 'promotions',

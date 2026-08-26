@@ -19,53 +19,58 @@ const router = useRouter()
 // Menu Definition
 const menuGroups = ref([
   {
-    groupName: 'Utama',
+    groupName: 'Main Operations',
     items: [
       {
-        name: 'Dashboard Operasional',
+        name: 'Operational Dashboard',
         icon: 'LayoutDashboard',
         route: '/admin/dashboard',
       },
       {
-        name: 'Kalender Booking',
+        name: 'Staff KPI & SLA',
+        icon: 'BarChart3',
+        route: '/admin/staff',
+      },
+      {
+        name: 'Booking Calendar',
         icon: 'Calendar',
         route: '/admin/calendar',
       },
     ],
   },
   {
-    groupName: 'Front Desk & Tamu',
+    groupName: 'Front Desk & Guests',
     items: [
       {
-        name: 'Reservasi Kamar',
+        name: 'Room Reservations',
         icon: 'CalendarCheck',
         route: '/admin/reservations',
       },
       {
-        name: 'Buku Tamu & Log In/Out',
+        name: 'Guest Book & Check Logs',
         icon: 'BookOpen',
         route: '/admin/guestbook',
       },
       {
-        name: 'Permintaan Layanan Tamu',
+        name: 'Guest Service Requests',
         icon: 'BellRing',
         route: '/admin/service-requests',
       },
     ],
   },
   {
-    groupName: 'Manajemen Kamar',
+    groupName: 'Room Management',
     items: [
       {
-        name: 'Pengaturan Kamar',
+        name: 'Room Setup',
         icon: 'Bed',
         isOpen: true,
         children: [
-          { name: 'Katalog Kamar', route: '/admin/rooms' },
-          { name: 'Unit No. Kamar Fisik', route: '/admin/room-units' },
-          { name: 'Lantai Gedung (Floors)', route: '/admin/floors' },
-          { name: 'Kategori Kamar', route: '/admin/room-categories' },
-          { name: 'Tipe Ranjang (Bed)', route: '/admin/room-types' },
+          { name: 'Room Catalog', route: '/admin/rooms' },
+          { name: 'Physical Room Units', route: '/admin/room-units' },
+          { name: 'Building Floors', route: '/admin/floors' },
+          { name: 'Room Categories', route: '/admin/room-categories' },
+          { name: 'Bed Types', route: '/admin/room-types' },
         ],
       },
     ],
@@ -74,12 +79,12 @@ const menuGroups = ref([
     groupName: 'Housekeeping & Amenities',
     items: [
       {
-        name: 'Stok Perlengkapan & Amenities',
+        name: 'Amenities & Stock',
         icon: 'Boxes',
         route: '/admin/inventory',
       },
       {
-        name: 'Pemakaian Housekeeping',
+        name: 'Housekeeping Usage',
         icon: 'FileText',
         route: '/admin/inventory-usage',
       },
@@ -89,12 +94,12 @@ const menuGroups = ref([
     groupName: 'Sales & Marketing',
     items: [
       {
-        name: 'Saluran Penjualan (OTA)',
+        name: 'Sales Channels (OTA)',
         icon: 'Radio',
         route: '/admin/channels',
       },
       {
-        name: 'Promo & Diskon Kamar',
+        name: 'Promotions & Discounts',
         icon: 'Percent',
         route: '/admin/promotions',
       },
@@ -117,39 +122,39 @@ const menuGroups = ref([
         ],
       },
       {
-        name: 'Transaksi',
+        name: 'Transactions',
         icon: 'CreditCard',
         isOpen: false,
         children: [
-          { name: 'Jurnal Umum', route: '/admin/finance/general-journal' },
-          { name: 'Kas & Bank', route: '/admin/finance/cash-bank' },
-          { name: 'Hutang & Piutang', route: '/admin/finance/ap-ar' },
+          { name: 'General Journal', route: '/admin/finance/general-journal' },
+          { name: 'Cash & Bank', route: '/admin/finance/cash-bank' },
+          { name: 'Accounts Payable / Receivable', route: '/admin/finance/ap-ar' },
         ],
       },
       {
-        name: 'Buku Besar',
+        name: 'General Ledger',
         icon: 'BookOpen',
         isOpen: false,
         children: [
-          { name: 'Buku Besar', route: '/admin/finance/general-ledger' },
+          { name: 'General Ledger', route: '/admin/finance/general-ledger' },
         ],
       },
       {
-        name: 'Laporan Keuangan',
+        name: 'Financial Reports',
         icon: 'FileText',
         isOpen: false,
         children: [
-          { name: 'Laba Rugi', route: '/admin/finance/profit-loss' },
-          { name: 'Neraca & Arus Kas', route: '/admin/finance/balance-sheet' },
+          { name: 'Profit & Loss', route: '/admin/finance/profit-loss' },
+          { name: 'Balance Sheet & Cash Flow', route: '/admin/finance/balance-sheet' },
         ],
       },
     ],
   },
   {
-    groupName: 'Pengaturan Staf & Sistem',
+    groupName: 'Staff & System Settings',
     items: [
       {
-        name: 'Akun Pengguna Staf',
+        name: 'Staff User Accounts',
         icon: 'Users',
         route: '/admin/users',
       },
