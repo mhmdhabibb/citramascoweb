@@ -71,7 +71,7 @@ const closeModal = () => {
 
 const saveRoomCategory = async () => {
   if(!form.value.name.trim()) {
-    toastStore.warning('Nama kategori tidak boleh kosong!')
+    toastStore.warning('Category name cannot be empty!')
     return
   }
 
@@ -83,10 +83,10 @@ const saveRoomCategory = async () => {
 
     if (isEditing.value) {
       const msg = await categoryStore.update(editingId.value, payload)
-      toastStore.success(msg || 'Kategori kamar berhasil diperbarui!')
+      toastStore.success(msg || 'Room category updated successfully!')
     } else {
       const msg = await categoryStore.store(payload)
-      toastStore.success(msg || 'Kategori kamar berhasil ditambahkan!')
+      toastStore.success(msg || 'Room category added successfully!')
     }
 
     // Refresh categories in the view
@@ -96,7 +96,7 @@ const saveRoomCategory = async () => {
     closeModal()
   } catch (error) {
     console.error('Error saving category:', error)
-    toastStore.error(error.response?.data?.message || error.message || 'Terjadi kesalahan saat menyimpan kategori')
+    toastStore.error(error.response?.data?.message || error.message || 'An error occurred while saving category')
   } finally {
     loading.value = false
   }
@@ -104,16 +104,16 @@ const saveRoomCategory = async () => {
 
 const deleteRoomCategory = async (index) => {
   const item = categories.value[index]
-  if (confirm(`Apakah Anda yakin ingin menghapus Kategori: ${item.name}?`)) {
+  if (confirm(`Are you sure you want to delete Category: ${item.name}?`)) {
     try {
       loading.value = true
       const msg = await categoryStore.destroy(item.id)
-      toastStore.success(msg || 'Kategori kamar berhasil dihapus!')
+      toastStore.success(msg || 'Room category deleted successfully!')
       await categoryStore.fetchCategories()
       categories.value = categoryStore.categories
     } catch (error) {
       console.error('Error deleting category:', error)
-      toastStore.error(error.response?.data?.message || error.message || 'Terjadi kesalahan saat menghapus kategori')
+      toastStore.error(error.response?.data?.message || error.message || 'An error occurred while deleting category')
     } finally {
       loading.value = false
     }

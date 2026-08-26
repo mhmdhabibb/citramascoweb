@@ -62,7 +62,7 @@ export const roomService = {
   updateStatus: async (id: string, status: string): Promise<string> => {
     const response = await api.patch<ApiResponse<any>>(`/room/status/${id}`, { status })
     if (!response.data.success) {
-      throw new Error(response.data.message || 'Gagal memperbarui status operasional!')
+      throw new Error(response.data.message || 'Failed to update operational status!')
     }
     return response.data.message
   },

@@ -82,8 +82,8 @@ onMounted(() => {
   <div class="finance-page">
     <div class="header">
       <div>
-        <h1>Buku Besar (General Ledger)</h1>
-        <p class="subtitle">Laporan mutasi tiap akun secara detail</p>
+        <h1>General Ledger</h1>
+        <p class="subtitle">Detailed report of each account</p>
       </div>
       <div class="filters">
         <label class="font-bold">Select Account:</label>

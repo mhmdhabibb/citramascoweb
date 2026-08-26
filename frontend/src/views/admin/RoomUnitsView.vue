@@ -58,7 +58,7 @@ const fetchData = async () => {
     rooms.value = rData
   } catch (error: any) {
     console.error('Error fetching room units data:', error)
-    toastStore.error(error.message || 'Gagal memuat data unit kamar')
+    toastStore.error(error.message || 'Failed to load room unit data')
   } finally {
     loading.value = false
   }
@@ -117,7 +117,7 @@ const closeModal = () => {
 
 const saveRoomUnit = async () => {
   if (!form.value.room_number.trim()) {
-    toastStore.warning('Nomor kamar tidak boleh kosong!')
+    toastStore.warning('Room number cannot be empty!')
     return
   }
   if (!form.value.room_id) {
@@ -142,7 +142,7 @@ const saveRoomUnit = async () => {
     closeModal()
   } catch (error: any) {
     console.error('Error saving room unit:', error)
-    toastStore.error(error.response?.data?.message || error.message || 'Gagal menyimpan unit kamar')
+    toastStore.error(error.response?.data?.message || error.message || 'Failed to save room unit')
   } finally {
     loading.value = false
   }
@@ -152,18 +152,18 @@ const updateStatusQuick = async (id: string, status: string) => {
   try {
     loading.value = true
     const msg = await roomUnitService.updateStatus(id, status)
-    toastStore.success(msg || `Status kamar berhasil diubah ke ${status}!`)
+    toastStore.success(msg || `Room status changed to ${status}!`)
     await fetchData()
   } catch (error: any) {
     console.error('Error updating status:', error)
-    toastStore.error(error.response?.data?.message || error.message || 'Gagal mengubah status kamar')
+    toastStore.error(error.response?.data?.message || error.message || 'Failed to change room status')
   } finally {
     loading.value = false
   }
 }
 
 const deleteRoomUnit = async (id: string, roomNumber: string) => {
-  if (!confirm(`Apakah Anda yakin ingin menghapus Kamar ${roomNumber}?`)) return
+  if (!confirm(`Are you sure you want to delete Room ${roomNumber}?`)) return
 
   try {
     loading.value = true
@@ -172,7 +172,7 @@ const deleteRoomUnit = async (id: string, roomNumber: string) => {
     await fetchData()
   } catch (error: any) {
     console.error('Error deleting room unit:', error)
-    toastStore.error(error.response?.data?.message || error.message || 'Gagal menghapus unit kamar')
+    toastStore.error(error.response?.data?.message || error.message || 'Failed to delete room unit')
   } finally {
     loading.value = false
   }
@@ -184,14 +184,14 @@ const deleteRoomUnit = async (id: string, roomNumber: string) => {
     <!-- Header Section -->
     <div class="header-section">
       <div>
-        <h1 class="page-title">Master Unit Kamar (Room Units)</h1>
-        <p class="subtitle">Kelola nomor fisik kamar hotel, penempatan lantai, dan status kebersihan.</p>
+        <h1 class="page-title">Room Unit Master</h1>
+        <p class="subtitle">Manage hotel physical room numbers, floor placement, and status.</p>
       </div>
       <button v-if="canMutateData(authStore.role)" @click="openCreateModal" class="btn-primary">
-        <span>+</span> Tambah No. Kamar
+        <span>+</span> Add Room No.
       </button>
       <div v-else class="px-3.5 py-2 rounded-xl bg-slate-900 text-amber-300 text-xs font-bold border border-indigo-900/50 flex items-center gap-2 shadow-sm">
-        <span>👑</span> Mode Tinjauan Manager (Read-Only)
+        <span>👑</span> Manager Review Mode (Read-Only)
       </div>
     </div>
 
@@ -200,35 +200,35 @@ const deleteRoomUnit = async (id: string, roomNumber: string) => {
       <div class="stat-card">
         <div class="stat-icon">🚪</div>
         <div>
-          <h3>Total Unit Kamar</h3>
+          <h3>Total Room Units</h3>
           <p class="main-val">{{ totalUnits }} Unit</p>
         </div>
       </div>
       <div class="stat-card">
         <div class="stat-icon text-emerald-600 bg-emerald-50">✨</div>
         <div>
-          <h3>Available (Siap Pakai)</h3>
+          <h3>Available</h3>
           <p class="main-val text-emerald-600">{{ availableUnits }}</p>
         </div>
       </div>
       <div class="stat-card">
         <div class="stat-icon text-indigo-600 bg-indigo-50">🛏️</div>
         <div>
-          <h3>Occupied (Terisi)</h3>
+          <h3>Occupied</h3>
           <p class="main-val text-indigo-600">{{ occupiedUnits }}</p>
         </div>
       </div>
       <div class="stat-card">
         <div class="stat-icon text-amber-600 bg-amber-50">🧹</div>
         <div>
-          <h3>Dirty (Pembersihan)</h3>
+          <h3>Dirty (Cleaning)</h3>
           <p class="main-val text-amber-600">{{ dirtyUnits }}</p>
         </div>
       </div>
       <div class="stat-card">
         <div class="stat-icon text-rose-600 bg-rose-50">🔧</div>
         <div>
-          <h3>Maintenance (Rusak)</h3>
+          <h3>Maintenance (Broken)</h3>
           <p class="main-val text-rose-600">{{ maintenanceUnits }}</p>
         </div>
       </div>
@@ -241,24 +241,24 @@ const deleteRoomUnit = async (id: string, roomNumber: string) => {
           <input
             v-model="searchQuery"
             type="text"
-            placeholder="Cari no. kamar, tipe, lantai..."
+            placeholder="Search room no., type, floor..."
             class="search-input"
           />
         </div>
 
         <div class="filter-box flex items-center gap-2">
           <select v-model="floorFilter" class="filter-select">
-            <option value="All">Semua Lantai</option>
+            <option value="All">All Floors</option>
             <option v-for="fl in floors" :key="fl.id" :value="fl.id">{{ fl.name }}</option>
           </select>
 
           <select v-model="typeFilter" class="filter-select">
-            <option value="All">Semua Tipe Kamar</option>
+            <option value="All">All Room Types</option>
             <option v-for="rm in rooms" :key="rm.id" :value="rm.id">{{ rm.name }}</option>
           </select>
 
           <select v-model="statusFilter" class="filter-select">
-            <option value="All">Semua Status</option>
+            <option value="All">All Statuses</option>
             <option value="available">Available</option>
             <option value="occupied">Occupied</option>
             <option value="dirty">Dirty</option>
@@ -273,12 +273,12 @@ const deleteRoomUnit = async (id: string, roomNumber: string) => {
             <thead>
               <tr>
                 <th class="w-28">No. Kamar</th>
-                <th>Lantai</th>
-                <th>Kategori Kamar</th>
-                <th>Tipe Bed</th>
-                <th>Harga / Malam</th>
+                <th>Floor</th>
+                <th>Room Category</th>
+                <th>Bed Type</th>
+                <th>Price / Night</th>
                 <th class="text-center">Status</th>
-                <th v-if="canMutateData(authStore.role)" class="text-center w-48">Ubah Status</th>
+                <th v-if="canMutateData(authStore.role)" class="text-center w-48">Change Status</th>
                 <th v-if="canMutateData(authStore.role)" class="text-center w-28">Aksi</th>
               </tr>
             </thead>
@@ -368,13 +368,13 @@ const deleteRoomUnit = async (id: string, roomNumber: string) => {
                       @click="deleteRoomUnit(unit.id, unit.room_number)"
                       class="px-2.5 py-1 text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-lg transition-colors cursor-pointer"
                     >
-                      Hapus
+                      Delete
                     </button>
                   </div>
                 </td>
               </tr>
               <tr v-if="filteredUnits.length === 0">
-                <td :colspan="canMutateData(authStore.role) ? 8 : 6" class="no-data">Tidak ada unit kamar yang cocok.</td>
+                <td :colspan="canMutateData(authStore.role) ? 8 : 6" class="no-data">No matching room unit found.</td>
               </tr>
             </tbody>
           </table>
@@ -386,25 +386,25 @@ const deleteRoomUnit = async (id: string, roomNumber: string) => {
     <div v-if="isModalOpen" class="modal-backdrop">
       <div class="modal-card">
         <div class="modal-header">
-          <h3>{{ isEditing ? 'Edit Unit Kamar' : 'Tambah Unit Kamar Baru' }}</h3>
+          <h3>{{ isEditing ? 'Edit Room Unit' : 'Add New Room Unit' }}</h3>
           <button @click="closeModal" class="close-btn">✕</button>
         </div>
         <div class="modal-body">
           <div class="form-group">
-            <label>Nomor Kamar Fisik *</label>
+            <label>Physical Room Number *</label>
             <input
               v-model="form.room_number"
               type="text"
-              placeholder="Contoh: 101, 102, 402"
+              placeholder="e.g.: 101, 102, 402"
               class="form-input font-bold text-base"
               required
             />
           </div>
 
           <div class="form-group">
-            <label>Tipe & Kategori Kamar *</label>
+            <label>Room Type & Category *</label>
             <select v-model="form.room_id" class="form-input" required>
-              <option value="" disabled>Pilih Tipe & Kategori Kamar</option>
+              <option value="" disabled>Select Room Type & Category</option>
               <option v-for="rm in rooms" :key="rm.id" :value="rm.id">
                 {{ rm.category?.name || rm.name }} — [{{ rm.type?.name || 'Standard Bed' }}] (Rp {{ (rm.price || 0).toLocaleString('id-ID') }})
               </option>
@@ -414,11 +414,11 @@ const deleteRoomUnit = async (id: string, roomNumber: string) => {
           <!-- Live Selected Room Details Card -->
           <div v-if="selectedRoomDetails" class="p-3 bg-gradient-to-br from-indigo-50/90 to-slate-50 border border-indigo-100 rounded-xl space-y-1.5 text-xs">
             <div class="flex justify-between items-center">
-              <span class="text-slate-500 font-semibold">🏷️ Kategori:</span>
+              <span class="text-slate-500 font-semibold">🏷️ Category:</span>
               <strong class="text-indigo-950 font-extrabold">{{ selectedRoomDetails.category?.name || selectedRoomDetails.name }}</strong>
             </div>
             <div class="flex justify-between items-center">
-              <span class="text-slate-500 font-semibold">🛏️ Tipe Bed:</span>
+              <span class="text-slate-500 font-semibold">🛏️ Bed Type:</span>
               <span class="font-bold text-indigo-700 bg-white px-2 py-0.5 rounded border border-indigo-100">
                 {{ selectedRoomDetails.type?.name || 'Standard Bed' }}
               </span>
@@ -430,7 +430,7 @@ const deleteRoomUnit = async (id: string, roomNumber: string) => {
               </span>
             </div>
             <div class="flex justify-between items-center pt-1.5 border-t border-indigo-100/70">
-              <span class="text-slate-500 font-semibold">💰 Harga Standar:</span>
+              <span class="text-slate-500 font-semibold">💰 Standard Price:</span>
               <strong class="text-emerald-700 font-black text-sm">
                 Rp {{ (selectedRoomDetails.price || 0).toLocaleString('id-ID') }} <span class="text-[10px] font-normal text-slate-400">/ malam</span>
               </strong>
@@ -438,11 +438,11 @@ const deleteRoomUnit = async (id: string, roomNumber: string) => {
           </div>
 
           <div class="form-group">
-            <label>Penempatan Lantai *</label>
+            <label>Floor Placement *</label>
             <select v-model="form.floor_id" class="form-input" required>
-              <option value="" disabled>Pilih Lantai</option>
+              <option value="" disabled>Select Floor</option>
               <option v-for="fl in floors" :key="fl.id" :value="fl.id">
-                {{ fl.name }} (Lantai {{ fl.floor_number }})
+                {{ fl.name }} (Floor {{ fl.floor_number }})
               </option>
             </select>
           </div>
@@ -450,17 +450,17 @@ const deleteRoomUnit = async (id: string, roomNumber: string) => {
           <div class="form-group">
             <label>Status Awal</label>
             <select v-model="form.status" class="form-input">
-              <option value="available">Available (Siap Pakai)</option>
-              <option value="occupied">Occupied (Terisi)</option>
-              <option value="dirty">Dirty (Perlu Dibersihkan)</option>
-              <option value="maintenance">Maintenance (Sedang Rusak)</option>
+              <option value="available">Available</option>
+              <option value="occupied">Occupied</option>
+              <option value="dirty">Dirty (Needs Cleaning)</option>
+              <option value="maintenance">Maintenance (Broken)</option>
             </select>
           </div>
         </div>
         <div class="modal-footer">
-          <button @click="closeModal" class="btn-secondary">Batal</button>
+          <button @click="closeModal" class="btn-secondary">Cancel</button>
           <button @click="saveRoomUnit" :disabled="loading" class="btn-primary">
-            {{ loading ? 'Menyimpan...' : 'Simpan' }}
+            {{ loading ? 'Saving...' : 'Save' }}
           </button>
         </div>
       </div>

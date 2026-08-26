@@ -74,7 +74,7 @@ const fetchRequests = async (isSilent: boolean = false) => {
       if (updated) selectedRequest.value = updated
     }
   } catch (error: any) {
-    if (!isSilent) toastStore.error(error.message || 'Gagal memuat permintaan layanan')
+    if (!isSilent) toastStore.error(error.message || 'Failed to load service requests')
   } finally {
     if (!isSilent) loading.value = false
   }
@@ -114,12 +114,12 @@ onMounted(() => {
 const openCreateModal = () => {
   createForm.value = {
     room_id: rooms.value[0]?.id || '',
-    guest_name: 'Tamu Kamar',
+    guest_name: 'Room Guest',
     guest_phone: '',
     source: 'phone_ext0',
     category: 'incident_broken_item',
-    title: 'Gelas Pecah di Kamar',
-    description: 'Tamu menelepon via Ext 0 melaporkan ada gelas pecah di lantai kamar, mohon segera disapu dan diganti.',
+    title: 'Broken Glass in Room',
+    description: 'Guest called via Ext 0 reporting broken glass on the room floor, please sweep and replace immediately.',
     priority: 'urgent',
     direct_assign_housekeeper_id: housekeepers.value[0]?.id || '',
   }
@@ -129,27 +129,27 @@ const openCreateModal = () => {
 const onCategoryChangeInCreate = () => {
   switch (createForm.value.category) {
     case 'incident_broken_item':
-      createForm.value.title = 'Gelas / Barang Pecah di Kamar'
+      createForm.value.title = 'Broken Glass / Items in Room'
       createForm.value.priority = 'urgent'
-      createForm.value.description = 'Tamu menelepon via Ext 0 melaporkan ada barang pecah, tolong disapu & diganti.'
+      createForm.value.description = 'Guest called via Ext 0 reporting broken items, please sweep & replace.'
       break
     case 'extra_cleaning':
-      createForm.value.title = 'Permintaan Pembersihan Ekstra'
+      createForm.value.title = 'Extra Cleaning Request'
       createForm.value.priority = 'high'
       createForm.value.description = 'Tamu meminta pembersihan tambahan / ganti sprei kamar.'
       break
     case 'amenities_request':
-      createForm.value.title = 'Permintaan Handuk & Amenities Tambahan'
+      createForm.value.title = 'Additional Towels & Amenities Request'
       createForm.value.priority = 'medium'
-      createForm.value.description = 'Tamu meminta tambahan handuk / sabun ke kamar.'
+      createForm.value.description = 'Guest requested extra towels / soap for the room.'
       break
     case 'maintenance_repair':
-      createForm.value.title = 'Laporan Kerusakan Fasilitas'
+      createForm.value.title = 'Facility Damage Report'
       createForm.value.priority = 'high'
-      createForm.value.description = 'Tamu melaporkan kerusakan fasilitas kamar.'
+      createForm.value.description = 'Guest reported facility damage in the room.'
       break
     default:
-      createForm.value.title = 'Permintaan Layanan Tamu'
+      createForm.value.title = 'Guest Service Request'
       createForm.value.priority = 'medium'
       createForm.value.description = ''
   }
@@ -157,7 +157,7 @@ const onCategoryChangeInCreate = () => {
 
 const submitCreate = async () => {
   if (!createForm.value.room_id || !createForm.value.title || !createForm.value.description) {
-    toastStore.error('Mohon lengkapi data permintaan tamu.')
+    toastStore.error('Please complete all required fields.')
     return
   }
 
@@ -180,15 +180,15 @@ const submitCreate = async () => {
         notes: createForm.value.description,
         priority: createForm.value.priority,
       })
-      toastStore.success('Permintaan tamu dicatat & langsung ditugaskan ke Housekeeping via FCM!')
+      toastStore.success('Guest request recorded & assigned to Housekeeping via FCM!')
     } else {
-      toastStore.success('Permintaan tamu berhasil dicatat ke antrean!')
+      toastStore.success('Guest request recorded to queue!')
     }
 
     isCreateModalOpen.value = false
     await fetchRequests(false)
   } catch (error: any) {
-    toastStore.error(error.message || 'Gagal mencatat permintaan')
+    toastStore.error(error.message || 'Failed to record request')
   } finally {
     loading.value = false
   }
@@ -202,7 +202,7 @@ const openAssignModal = (req: ServiceRequest) => {
   selectedRequest.value = req
   assignForm.value = {
     assigned_to_user_id: housekeepers.value[0]?.id || '',
-    notes: req.category === 'incident_broken_item' ? 'Tolong bersihkan pecahan kaca di kamar dan antarkan barang pengganti.' : '',
+    notes: req.category === 'incident_broken_item' ? 'Please clean the broken glass in the room and deliver replacement items.' : '',
     priority: req.priority || 'high',
   }
   isAssignModalOpen.value = true
@@ -213,11 +213,11 @@ const submitAssign = async () => {
   try {
     loading.value = true
     await serviceRequestService.assignToHousekeeping(selectedRequest.value.id, assignForm.value)
-    toastStore.success('Tugas berhasil diteruskan ke tim Housekeeping!')
+    toastStore.success('Task forwarded to Housekeeping team!')
     isAssignModalOpen.value = false
     await fetchRequests(false)
   } catch (error: any) {
-    toastStore.error(error.message || 'Gagal menugaskan ke Housekeeping')
+    toastStore.error(error.message || 'Failed to assign to Housekeeping')
   } finally {
     loading.value = false
   }
@@ -234,25 +234,25 @@ const submitComplete = async () => {
   try {
     loading.value = true
     await serviceRequestService.complete(selectedRequest.value.id, { damage_charge: completeDamageCharge.value })
-    toastStore.success('Tugas telah berhasil diselesaikan!')
+    toastStore.success('Task completed successfully!')
     isCompleteModalOpen.value = false
     await fetchRequests(false)
   } catch (error: any) {
-    toastStore.error(error.message || 'Gagal menyelesaikan tugas')
+    toastStore.error(error.message || 'Failed to complete task')
   } finally {
     loading.value = false
   }
 }
 
 const handleCancel = async (id: string) => {
-  if (confirm('Batalkan laporan layanan kamar ini?')) {
+  if (confirm('Cancel this room service report?')) {
     try {
       loading.value = true
       await serviceRequestService.cancel(id)
-      toastStore.success('Laporan berhasil dibatalkan.')
+      toastStore.success('Report cancelled.')
       await fetchRequests(false)
     } catch (error: any) {
-      toastStore.error(error.message || 'Gagal membatalkan laporan')
+      toastStore.error(error.message || 'Failed to cancel report')
     } finally {
       loading.value = false
     }
@@ -279,11 +279,11 @@ const getCategoryBadgeClass = (category: string) => {
 
 const getCategoryLabel = (category: string) => {
   switch (category) {
-    case 'incident_broken_item': return '🍷 Barang Pecah (Insiden)'
-    case 'extra_cleaning': return '🧹 Pembersihan Ekstra'
-    case 'amenities_request': return '🪥 Perlengkapan / Amenities'
-    case 'maintenance_repair': return '🛠️ Kerusakan Fasilitas'
-    default: return '❓ Bantuan Khusus'
+    case 'incident_broken_item': return '🍷 Broken Items (Incident)'
+    case 'extra_cleaning': return '🧹 Extra Cleaning'
+    case 'amenities_request': return '🪥 Amenities / Supplies'
+    case 'maintenance_repair': return '🛠️ Facility Damage'
+    default: return '❓ Special Assistance'
   }
 }
 </script>
@@ -292,8 +292,8 @@ const getCategoryLabel = (category: string) => {
   <div class="service-requests-view">
     <div class="header-section">
       <div>
-        <h1 class="page-title">🛎️ Layanan Kamar & Permintaan Tamu</h1>
-        <p class="page-subtitle">Pusat koordinasi insiden kamar, permintaan kebersihan, dan penugasan staf Housekeeping.</p>
+        <h1 class="page-title">🛎️ Room Service & Guest Requests</h1>
+        <p class="page-subtitle">Central coordination for room incidents, cleaning requests, and Housekeeping assignments.</p>
       </div>
     </div>
 
@@ -302,28 +302,28 @@ const getCategoryLabel = (category: string) => {
       <div class="stat-card">
         <span class="stat-icon">📋</span>
         <div>
-          <h3>Total Permintaan</h3>
+          <h3>Total Requests</h3>
           <p class="main-val">{{ totalCount }}</p>
         </div>
       </div>
       <div class="stat-card">
         <span class="stat-icon text-amber-500">⏳</span>
         <div>
-          <h3>Pending Resepsionis</h3>
+          <h3>Pending Reception</h3>
           <p class="main-val text-amber-600">{{ pendingCount }}</p>
         </div>
       </div>
       <div class="stat-card">
         <span class="stat-icon text-indigo-500">🧹</span>
         <div>
-          <h3>Sedang Dikerjakan</h3>
+          <h3>In Progress</h3>
           <p class="main-val text-indigo-600">{{ assignedCount }}</p>
         </div>
       </div>
       <div class="stat-card">
         <span class="stat-icon text-emerald-500">✓</span>
         <div>
-          <h3>Selesai</h3>
+          <h3>Completed</h3>
           <p class="main-val text-emerald-600">{{ completedCount }}</p>
         </div>
       </div>
@@ -337,22 +337,22 @@ const getCategoryLabel = (category: string) => {
             <input
               v-model="searchQuery"
               type="text"
-              placeholder="Cari nama tamu, judul masalah, atau kamar..."
+              placeholder="Search guest name, issue title, or room..."
               class="search-input"
             />
           </div>
           <div class="filter-box">
             <select v-model="statusFilter" class="filter-select">
-              <option value="all">Semua Status</option>
-              <option value="pending_reception">Pending Resepsionis</option>
-              <option value="assigned_to_housekeeping">Ditugaskan ke Housekeeping</option>
-              <option value="completed">Selesai</option>
-              <option value="cancelled">Dibatalkan</option>
+              <option value="all">All Statuses</option>
+              <option value="pending_reception">Pending Reception</option>
+              <option value="assigned_to_housekeeping">Assigned to Housekeeping</option>
+              <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
             </select>
           </div>
           <button @click="openCreateModal" class="btn btn-primary flex items-center gap-1.5 whitespace-nowrap shadow-sm">
             <span>📞</span>
-            <span>+ Catat Laporan Tamu (Telepon / Walk-in)</span>
+            <span>+ Record Guest Report (Phone / Walk-in)</span>
           </button>
         </div>
 
@@ -361,10 +361,10 @@ const getCategoryLabel = (category: string) => {
             <table class="premium-table">
               <thead>
                 <tr>
-                  <th>Unit Kamar</th>
-                  <th>Nama Tamu</th>
-                  <th>Kategori Masalah</th>
-                  <th>Judul Laporan</th>
+                  <th>Room Unit</th>
+                  <th>Guest Name</th>
+                  <th>Issue Category</th>
+                  <th>Report Title</th>
                   <th class="text-center">Prioritas</th>
                   <th class="text-center">Status</th>
                   <th class="text-center">Petugas</th>
@@ -426,7 +426,7 @@ const getCategoryLabel = (category: string) => {
                       v-else-if="req.status === 'completed'"
                       class="px-2.5 py-1 text-xs font-bold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-300"
                     >
-                      ✓ Selesai
+                      ✓ Completed
                     </span>
                     <span v-else class="px-2.5 py-1 text-xs font-bold rounded-full bg-slate-100 text-slate-600">
                       {{ req.status }}
@@ -436,33 +436,33 @@ const getCategoryLabel = (category: string) => {
                     {{ req.assigned_to_user ? `${req.assigned_to_user.first_name} ${req.assigned_to_user.last_name || ''}` : '-' }}
                   </td>
                   <td class="text-center" @click.stop>
-                    <!-- Tombol Resepsionis: Tugaskan ke Housekeeping -->
+                    <!-- Button: Assign to Housekeeping -->
                     <button
                       v-if="req.status === 'pending_reception'"
                       @click="openAssignModal(req)"
                       class="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-lg shadow-sm transition-all flex items-center gap-1 mx-auto"
-                      title="Teruskan tugas ke tim Housekeeping"
+                      title="Forward task to Housekeeping"
                     >
                       <span>📋</span>
-                      <span>Tugaskan</span>
+                      <span>Assign</span>
                     </button>
 
-                    <!-- Tombol Housekeeping: Selesaikan Tugas -->
+                    <!-- Button: Complete Task -->
                     <button
                       v-else-if="req.status === 'assigned_to_housekeeping' || req.status === 'in_progress'"
                       @click="openCompleteModal(req)"
                       class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg shadow-sm transition-all flex items-center gap-1 mx-auto"
-                      title="Tandai tugas ini telah selesai"
+                      title="Mark task as completed"
                     >
                       <span>✨</span>
-                      <span>Selesai</span>
+                      <span>Completed</span>
                     </button>
 
                     <span v-else class="text-xs text-slate-400 font-semibold">Tuntas</span>
                   </td>
                 </tr>
                 <tr v-if="filteredRequests.length === 0">
-                  <td colspan="8" class="no-data">Tidak ada laporan layanan kamar yang cocok.</td>
+                  <td colspan="8" class="no-data">No matching room service report found.</td>
                 </tr>
               </tbody>
             </table>
@@ -475,7 +475,7 @@ const getCategoryLabel = (category: string) => {
         <div v-if="selectedRequest" class="action-drawer-pane">
           <div class="drawer-header">
             <div>
-              <h3>Detail Laporan Tamu</h3>
+              <h3>Guest Report Details</h3>
               <span class="drawer-id">ID: #{{ selectedRequest.id.slice(-6).toUpperCase() }}</span>
             </div>
             <button @click="closeDrawer" class="close-drawer-btn">✕</button>
@@ -483,13 +483,13 @@ const getCategoryLabel = (category: string) => {
 
           <div class="drawer-content">
             <div class="info-block-card">
-              <label>Kamar & Tamu</label>
+              <label>Room & Guest</label>
               <p class="val-large">{{ selectedRequest.room?.name }} ({{ selectedRequest.room?.code }})</p>
               <p class="val-desc mt-1 font-semibold">👤 {{ selectedRequest.guest_name }} {{ selectedRequest.guest_phone ? `· 📞 ${selectedRequest.guest_phone}` : '' }}</p>
             </div>
 
             <div class="info-block-card">
-              <label>Kategori & Prioritas</label>
+              <label>Category & Priority</label>
               <div class="flex items-center gap-2 mt-1">
                 <span class="px-2.5 py-1 text-xs font-bold rounded-full border" :class="getCategoryBadgeClass(selectedRequest.category)">
                   {{ getCategoryLabel(selectedRequest.category) }}
@@ -501,7 +501,7 @@ const getCategoryLabel = (category: string) => {
             </div>
 
             <div class="info-block-card">
-              <label>Judul & Deskripsi Masalah</label>
+              <label>Issue Title & Description</label>
               <p class="val-mid font-bold text-slate-900">{{ selectedRequest.title }}</p>
               <p class="val-desc mt-1">{{ selectedRequest.description }}</p>
             </div>
@@ -522,7 +522,7 @@ const getCategoryLabel = (category: string) => {
                 @click="openAssignModal(selectedRequest)"
                 class="btn btn-primary btn-block"
               >
-                📋 Tugaskan ke Housekeeping
+                📋 Assign to Housekeeping
               </button>
 
               <button
@@ -530,7 +530,7 @@ const getCategoryLabel = (category: string) => {
                 @click="openCompleteModal(selectedRequest)"
                 class="btn btn-checkedin btn-block"
               >
-                ✨ Selesaikan Tugas (Task Completed)
+                ✨ Complete Task
               </button>
 
               <button
@@ -538,7 +538,7 @@ const getCategoryLabel = (category: string) => {
                 @click="handleCancel(selectedRequest.id)"
                 class="btn btn-danger-outline btn-block mt-2"
               >
-                Batalkan Laporan
+                Cancel Report
               </button>
             </div>
           </div>
@@ -550,16 +550,16 @@ const getCategoryLabel = (category: string) => {
     <div v-if="isAssignModalOpen" class="modal-backdrop" @click.self="isAssignModalOpen = false">
       <div class="modal-dialog">
         <div class="modal-dialog-header">
-          <h3>📋 Tugaskan ke Staf Housekeeping</h3>
+          <h3>📋 Assign to Housekeeping Staff</h3>
           <button class="close-btn" @click="isAssignModalOpen = false">✕</button>
         </div>
         <form @submit.prevent="submitAssign" class="modal-dialog-body">
           <p class="text-xs text-slate-600 mb-3">
-            Laporan untuk <strong>{{ selectedRequest?.room?.name }}</strong> ({{ selectedRequest?.title }}) akan diteruskan via Push Notification ke staf Housekeeping.
+            Report for <strong>{{ selectedRequest?.room?.name }}</strong> ({{ selectedRequest?.title }}) will be forwarded via Push Notification to Housekeeping staff.
           </p>
 
           <div class="form-group mb-3">
-            <label class="form-label">Pilih Staf Housekeeping</label>
+            <label class="form-label">Select Housekeeping Staff</label>
             <select v-model="assignForm.assigned_to_user_id" class="form-input">
               <option value="">Semua Tim Housekeeping (Broadcast)</option>
               <option v-for="h in housekeepers" :key="h.id" :value="h.id">
@@ -569,28 +569,28 @@ const getCategoryLabel = (category: string) => {
           </div>
 
           <div class="form-group mb-3">
-            <label class="form-label">Tingkat Prioritas</label>
+            <label class="form-label">Priority Level</label>
             <select v-model="assignForm.priority" class="form-input">
-              <option value="urgent">Urgent (Segera / Pecahan Kaca)</option>
-              <option value="high">High (Tinggi)</option>
-              <option value="medium">Medium (Standar)</option>
-              <option value="low">Low (Santai)</option>
+              <option value="urgent">Urgent (Immediate / Broken Glass)</option>
+              <option value="high">High</option>
+              <option value="medium">Medium (Standard)</option>
+              <option value="low">Low</option>
             </select>
           </div>
 
           <div class="form-group mb-4">
-            <label class="form-label">Catatan Tambahan untuk Housekeeping</label>
+            <label class="form-label">Additional Notes for Housekeeping</label>
             <textarea
               v-model="assignForm.notes"
               rows="3"
               class="form-input"
-              placeholder="Contoh: Tolong sapu pecahan gelas di bawah meja & berikan 1 set gelas baru..."
+              placeholder="e.g. Please sweep broken glass under the table & deliver 1 new glass set..."
             ></textarea>
           </div>
 
           <div class="modal-dialog-footer">
-            <button type="button" class="btn btn-secondary" @click="isAssignModalOpen = false">Batal</button>
-            <button type="submit" class="btn btn-primary" :disabled="loading">Kirim Penugasan (FCM)</button>
+            <button type="button" class="btn btn-secondary" @click="isAssignModalOpen = false">Cancel</button>
+            <button type="submit" class="btn btn-primary" :disabled="loading">Send Assignment (FCM)</button>
           </div>
         </form>
       </div>
@@ -600,30 +600,30 @@ const getCategoryLabel = (category: string) => {
     <div v-if="isCompleteModalOpen" class="modal-backdrop" @click.self="isCompleteModalOpen = false">
       <div class="modal-dialog">
         <div class="modal-dialog-header">
-          <h3>✨ Selesaikan Tugas Layanan Kamar</h3>
+          <h3>✨ Complete Room Service Task</h3>
           <button class="close-btn" @click="isCompleteModalOpen = false">✕</button>
         </div>
         <form @submit.prevent="submitComplete" class="modal-dialog-body">
           <p class="text-xs text-slate-600 mb-3">
-            Konfirmasi bahwa masalah di <strong>{{ selectedRequest?.room?.name }}</strong> telah selesai dibersihkan/ditangani oleh tim Housekeeping.
+            Confirm that the issue at <strong>{{ selectedRequest?.room?.name }}</strong> has been resolved by the Housekeeping team.
           </p>
 
           <div class="form-group mb-4">
-            <label class="form-label">Biaya Ganti Rugi Barang Rusak / Pecah (IDR)</label>
+            <label class="form-label">Damage / Replacement Cost (IDR)</label>
             <input
               v-model.number="completeDamageCharge"
               type="number"
               min="0"
               step="5000"
               class="form-input"
-              placeholder="0 jika tidak ada biaya ganti rugi"
+              placeholder="0 if no damage cost"
             />
-            <span class="text-xs text-slate-400 mt-1 block">Isi jika ada biaya penggantian barang yang akan dibebankan ke tagihan tamu.</span>
+            <span class="text-xs text-slate-400 mt-1 block">Fill in if there is a replacement cost to be charged to the guest's bill.</span>
           </div>
 
           <div class="modal-dialog-footer">
-            <button type="button" class="btn btn-secondary" @click="isCompleteModalOpen = false">Batal</button>
-            <button type="submit" class="btn btn-checkedin" :disabled="loading">✓ Tandai Selesai & Laporkan ke Frontdesk</button>
+            <button type="button" class="btn btn-secondary" @click="isCompleteModalOpen = false">Cancel</button>
+            <button type="submit" class="btn btn-checkedin" :disabled="loading">✓ Mark Completed & Report to Frontdesk</button>
           </div>
         </form>
       </div>
@@ -633,13 +633,13 @@ const getCategoryLabel = (category: string) => {
     <div v-if="isCreateModalOpen" class="modal-backdrop" @click.self="isCreateModalOpen = false">
       <div class="modal-dialog max-w-lg">
         <div class="modal-dialog-header">
-          <h3>📞 Catat Permintaan Tamu (Telepon / Walk-in)</h3>
+          <h3>📞 Record Guest Report (Phone / Walk-in)</h3>
           <button class="close-btn" @click="isCreateModalOpen = false">✕</button>
         </div>
         <form @submit.prevent="submitCreate" class="modal-dialog-body">
           <div class="grid grid-cols-2 gap-3 mb-3">
             <div class="form-group">
-              <label class="form-label">Unit Kamar *</label>
+              <label class="form-label">Room Unit *</label>
               <select v-model="createForm.room_id" class="form-input" required>
                 <option v-for="r in rooms" :key="r.id" :value="r.id">
                   {{ r.name }} ({{ r.code }})
@@ -647,74 +647,74 @@ const getCategoryLabel = (category: string) => {
               </select>
             </div>
             <div class="form-group">
-              <label class="form-label">Sumber Laporan</label>
+              <label class="form-label">Report Source</label>
               <select v-model="createForm.source" class="form-input">
-                <option value="phone_ext0">📞 Telepon Kamar (Ext 0)</option>
-                <option value="whatsapp">💬 WhatsApp Frontdesk</option>
-                <option value="walk_in">🚶 Walk-in (Datang ke Lobby)</option>
+                <option value="phone_ext0">📞 Room Phone (Ext 0)</option>
+                <option value="whatsapp">💬 Frontdesk WhatsApp</option>
+                <option value="walk_in">🚶 Walk-in (Came to Lobby)</option>
               </select>
             </div>
           </div>
 
           <div class="grid grid-cols-2 gap-3 mb-3">
             <div class="form-group">
-              <label class="form-label">Nama Tamu / Pelapor</label>
+              <label class="form-label">Guest / Reporter Name</label>
               <input
                 v-model="createForm.guest_name"
                 type="text"
                 class="form-input"
-                placeholder="Contoh: Pak Budi"
+                placeholder="e.g. John Doe"
                 required
               />
             </div>
             <div class="form-group">
-              <label class="form-label">Jenis Masalah / Insiden *</label>
+              <label class="form-label">Issue / Incident Type *</label>
               <select v-model="createForm.category" @change="onCategoryChangeInCreate" class="form-input" required>
-                <option value="incident_broken_item">🍷 Barang / Gelas Pecah</option>
-                <option value="extra_cleaning">🧹 Pembersihan Ekstra / Tumpahan</option>
-                <option value="amenities_request">🪥 Handuk & Amenities Tambahan</option>
-                <option value="maintenance_repair">🛠️ Kerusakan Fasilitas (AC/Lampu)</option>
-                <option value="other">❓ Bantuan Khusus</option>
+                <option value="incident_broken_item">🍷 Broken Items / Glass</option>
+                <option value="extra_cleaning">🧹 Extra Cleaning / Spills</option>
+                <option value="amenities_request">🪥 Additional Towels & Amenities</option>
+                <option value="maintenance_repair">🛠️ Facility Damage (AC/Lights)</option>
+                <option value="other">❓ Special Assistance</option>
               </select>
             </div>
           </div>
 
           <div class="form-group mb-3">
-            <label class="form-label">Judul Permintaan *</label>
+            <label class="form-label">Request Title *</label>
             <input
               v-model="createForm.title"
               type="text"
               class="form-input"
-              placeholder="Contoh: Gelas pecah di lantai kamar"
+              placeholder="e.g. Broken glass on the room floor"
               required
             />
           </div>
 
           <div class="form-group mb-3">
-            <label class="form-label">Rincian Instruksi untuk Housekeeping *</label>
+            <label class="form-label">Cleaning Instructions / Items to Deliver *</label>
             <textarea
               v-model="createForm.description"
               rows="3"
               class="form-input"
-              placeholder="Jelaskan kebutuhan pembersihan atau barang pengganti yang harus dibawa..."
+              placeholder="Describe the cleaning needs or replacement items to be delivered..."
               required
             ></textarea>
           </div>
 
           <div class="p-3 bg-indigo-50 border border-indigo-100 rounded-xl mb-3">
-            <label class="form-label text-indigo-900 font-bold mb-1">🚀 Langsung Teruskan ke Housekeeping (Opsional)</label>
+            <label class="form-label text-indigo-900 font-bold mb-1">🚀 Directly Forward to Housekeeping (Optional)</label>
             <select v-model="createForm.direct_assign_housekeeper_id" class="form-input bg-white">
-              <option value="">Simpan ke Antrean Saja (Belum Ditugaskan)</option>
+              <option value="">Save to Queue Only (Unassigned)</option>
               <option v-for="h in housekeepers" :key="h.id" :value="h.id">
-                Kirim Notifikasi Push (FCM) ke: {{ h.first_name }} {{ h.last_name || '' }} ({{ h.role }})
+                Send Push Notification (FCM) to: {{ h.first_name }} {{ h.last_name || '' }} ({{ h.role }})
               </option>
             </select>
           </div>
 
           <div class="modal-dialog-footer">
-            <button type="button" class="btn btn-secondary" @click="isCreateModalOpen = false">Batal</button>
+            <button type="button" class="btn btn-secondary" @click="isCreateModalOpen = false">Cancel</button>
             <button type="submit" class="btn btn-primary" :disabled="loading">
-              {{ createForm.direct_assign_housekeeper_id ? 'Simpan & Kirim Push ke Housekeeping' : 'Simpan Laporan' }}
+              {{ createForm.direct_assign_housekeeper_id ? 'Save & Send Push to Housekeeping' : 'Save Report' }}
             </button>
           </div>
         </form>

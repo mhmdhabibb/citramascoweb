@@ -167,7 +167,7 @@ const fetchData = async () => {
     rooms.value = rList
     channels.value = cList
   } catch (err: any) {
-    toastStore.error(err.message || 'Gagal memuat data kalender')
+    toastStore.error(err.message || 'Failed to load calendar data')
   } finally {
     loading.value = false
   }
@@ -406,16 +406,16 @@ const goToChannels = () => router.push('/admin/channels')
           </div>
           <div>
             <h1 class="page-title">Room & Booking Calendar</h1>
-            <p class="page-desc">Matrix timeline reservasi kamar PMS & distribusi channel dari database</p>
+            <p class="page-desc">Room & Booking Calendar matrix timeline & channel distribution from database</p>
           </div>
         </div>
       </div>
 
       <div class="header-controls">
         <!-- Refresh Button -->
-        <button @click="fetchData" :disabled="loading" class="btn-refresh-cal" title="Segarkan Data Database">
+        <button @click="fetchData" :disabled="loading" class="btn-refresh-cal" title="Refresh Database Data">
           <RefreshCw class="w-4 h-4" :class="{ 'animate-spin': loading }" />
-          <span>{{ loading ? 'Memuat...' : 'Sync DB' }}</span>
+          <span>{{ loading ? 'Loading...' : 'Sync DB' }}</span>
         </button>
 
         <!-- Search -->
@@ -424,7 +424,7 @@ const goToChannels = () => router.push('/admin/channels')
           <input
             v-model="searchQuery"
             type="text"
-            placeholder="Cari tamu / kode booking..."
+            placeholder="Search guest / booking code..."
             class="search-field"
           />
         </div>
@@ -433,7 +433,7 @@ const goToChannels = () => router.push('/admin/channels')
         <div class="filter-select-wrap">
           <Radio class="w-4 h-4 text-slate-400 select-icon" />
           <select v-model="selectedChannel" class="custom-select">
-            <option value="all">Semua Channel ({{ channels.length }})</option>
+            <option value="all">All Channels ({{ channels.length }})</option>
             <option v-for="ch in channels" :key="ch.id" :value="ch.id">
               {{ ch.name }}
             </option>
@@ -445,7 +445,7 @@ const goToChannels = () => router.push('/admin/channels')
         <div class="filter-select-wrap">
           <BedDouble class="w-4 h-4 text-slate-400 select-icon" />
           <select v-model="selectedProperty" class="custom-select">
-            <option value="all">Semua Kamar ({{ rooms.length }})</option>
+            <option value="all">All Rooms ({{ rooms.length }})</option>
             <option v-for="r in rooms" :key="r.id" :value="r.id">
               {{ r.name }}
             </option>
@@ -468,13 +468,13 @@ const goToChannels = () => router.push('/admin/channels')
             @click="viewMode = 'month'"
           >
             <CalendarIcon class="w-4 h-4" />
-            <span>Grid Bulan</span>
+            <span>Month Grid</span>
           </button>
         </div>
 
-        <button @click="goToChannels" class="btn-channels-link" title="Kelola Master Channel">
+        <button @click="goToChannels" class="btn-channels-link" title="Manage Master Channel">
           <Radio class="w-4 h-4" />
-          <span>Kelola Channel</span>
+          <span>Manage Channel</span>
         </button>
       </div>
     </div>
@@ -487,7 +487,7 @@ const goToChannels = () => router.push('/admin/channels')
         </div>
         <div class="kpi-content">
           <span class="kpi-label">Arrivals (Check-In)</span>
-          <span class="kpi-val">{{ arrivalsCount }} <span class="kpi-unit">tamu</span></span>
+          <span class="kpi-val">{{ arrivalsCount }} <span class="kpi-unit">guests</span></span>
         </div>
       </div>
 
@@ -497,7 +497,7 @@ const goToChannels = () => router.push('/admin/channels')
         </div>
         <div class="kpi-content">
           <span class="kpi-label">Departures (Check-Out)</span>
-          <span class="kpi-val">{{ departuresCount }} <span class="kpi-unit">tamu</span></span>
+          <span class="kpi-val">{{ departuresCount }} <span class="kpi-unit">guests</span></span>
         </div>
       </div>
 
@@ -507,7 +507,7 @@ const goToChannels = () => router.push('/admin/channels')
         </div>
         <div class="kpi-content">
           <span class="kpi-label">Booked Nights</span>
-          <span class="kpi-val">{{ bookedNightsCount }} <span class="kpi-unit">malam</span></span>
+          <span class="kpi-val">{{ bookedNightsCount }} <span class="kpi-unit">nights</span></span>
         </div>
       </div>
 
@@ -530,12 +530,12 @@ const goToChannels = () => router.push('/admin/channels')
     <!-- Date Navigation Toolbar -->
     <div class="nav-toolbar">
       <div class="nav-left">
-        <button @click="goToToday" class="today-btn">Hari Ini</button>
+        <button @click="goToToday" class="today-btn">Today</button>
         <div class="nav-arrows">
-          <button @click="prevMonth" class="nav-arrow-btn" title="Bulan Sebelumnya">
+          <button @click="prevMonth" class="nav-arrow-btn" title="Previous Month">
             <ChevronLeft class="w-4 h-4" />
           </button>
-          <button @click="nextMonth" class="nav-arrow-btn" title="Bulan Berikutnya">
+          <button @click="nextMonth" class="nav-arrow-btn" title="Next Month">
             <ChevronRight class="w-4 h-4" />
           </button>
         </div>
@@ -545,7 +545,7 @@ const goToChannels = () => router.push('/admin/channels')
       <div class="nav-right">
         <label class="toggle-wrap">
           <input type="checkbox" v-model="showCancelled" />
-          <span class="toggle-label">Tampilkan Dibatalkan</span>
+          <span class="toggle-label">Show Cancelled</span>
         </label>
       </div>
     </div>
@@ -557,7 +557,7 @@ const goToChannels = () => router.push('/admin/channels')
           <!-- Timeline Header Row: Days 1..N -->
           <div class="timeline-header-row">
             <div class="room-col-header">
-              <span>Unit Kamar</span>
+              <span>Room Unit</span>
             </div>
             <div
               class="days-header-grid"
@@ -586,7 +586,7 @@ const goToChannels = () => router.push('/admin/channels')
               <div class="room-label-cell">
                 <div class="room-cell-info">
                   <span class="room-title">{{ room.name }}</span>
-                  <span class="room-price-tag">{{ formatIDR(room.price || 0) }} / mlm</span>
+                  <span class="room-price-tag">{{ formatIDR(room.price || 0) }} / night</span>
                 </div>
               </div>
 
@@ -629,8 +629,8 @@ const goToChannels = () => router.push('/admin/channels')
             <!-- Empty State for Timeline -->
             <div v-if="effectiveRooms.length === 0" class="empty-timeline-state">
               <BedDouble class="w-10 h-10 text-slate-300 mx-auto mb-2" />
-              <p class="font-bold text-slate-700">Belum ada unit kamar di database</p>
-              <p class="text-xs text-slate-400 mt-1">Tambahkan unit kamar melalui menu 'Manage Rooms' &rarr; 'Rooms'</p>
+              <p class="font-bold text-slate-700">No room units in database yet</p>
+              <p class="text-xs text-slate-400 mt-1">Add room units via the 'Manage Rooms' &rarr; 'Rooms' menu</p>
             </div>
           </div>
         </div>
@@ -677,7 +677,7 @@ const goToChannels = () => router.push('/admin/channels')
                 color: getChannelStyle(getBookingChannelKey(b)).text,
               }"
               @click="openBookingDetail(b)"
-              :title="`${b.full_name} (${b.room?.name || 'Kamar'}) - ${formatIDR(b.total_price)}`"
+              :title="`${b.full_name} (${b.room?.name || 'Room'}) - ${formatIDR(b.total_price)}`"
             >
               <span class="booking-inner-name">&lt; {{ b.full_name || 'Guest' }} &gt;</span>
             </div>
@@ -741,11 +741,11 @@ const goToChannels = () => router.push('/admin/channels')
 
           <div class="modal-grid-info">
             <div class="info-item">
-              <span class="info-label">Kamar / Unit</span>
-              <span class="info-val font-semibold">{{ selectedBooking.room?.name || 'Unit Kamar' }}</span>
+              <span class="info-label">Room / Unit</span>
+              <span class="info-val font-semibold">{{ selectedBooking.room?.name || 'Room Unit' }}</span>
             </div>
             <div class="info-item">
-              <span class="info-label">Status Reservasi</span>
+              <span class="info-label">Reservation Status</span>
               <span class="status-chip" :class="`status-${selectedBooking.status}`">
                 {{ selectedBooking.status }}
               </span>
@@ -759,33 +759,33 @@ const goToChannels = () => router.push('/admin/channels')
               <span class="info-val">{{ selectedBooking.checkout_date }}</span>
             </div>
             <div class="info-item">
-              <span class="info-label">Durasi Menginap</span>
-              <span class="info-val">{{ selectedBooking.total_night || 1 }} Malam</span>
+              <span class="info-label">Stay Duration</span>
+              <span class="info-val">{{ selectedBooking.total_night || 1 }} Night(s)</span>
             </div>
             <div class="info-item">
-              <span class="info-label">Jumlah Tamu</span>
-              <span class="info-val">{{ (selectedBooking.number_of_adult || 1) + (selectedBooking.number_of_children || 0) }} Orang</span>
+              <span class="info-label">Number of Guests</span>
+              <span class="info-val">{{ (selectedBooking.number_of_adult || 1) + (selectedBooking.number_of_children || 0) }} Person(s)</span>
             </div>
           </div>
 
           <div class="price-highlight-box">
             <div class="price-row">
-              <span>Tarif per Malam</span>
+              <span>Rate per Night</span>
               <span>{{ formatIDR(selectedBooking.price || 0) }}</span>
             </div>
             <div class="price-row total-row">
-              <span>Total Biaya</span>
+              <span>Total Cost</span>
               <span class="total-amount">{{ formatIDR(selectedBooking.total_price || 0) }}</span>
             </div>
             <div v-if="selectedBooking.deposit" class="price-row deposit-row">
-              <span>Deposit Terbayar</span>
+              <span>Deposit Paid</span>
               <span class="text-emerald-600 font-semibold">{{ formatIDR(selectedBooking.deposit) }}</span>
             </div>
           </div>
         </div>
 
         <div class="modal-footer">
-          <button @click="closeBookingDetail" class="btn-close-modal">Tutup</button>
+          <button @click="closeBookingDetail" class="btn-close-modal">Close</button>
         </div>
       </div>
     </div>

@@ -36,7 +36,7 @@ const fetchFloors = async () => {
     floors.value = await floorService.getAll()
   } catch (error: any) {
     console.error('Error fetching floors:', error)
-    toastStore.error(error.message || 'Gagal memuat data lantai')
+    toastStore.error(error.message || 'Failed to load floor data')
   } finally {
     loading.value = false
   }
@@ -61,7 +61,7 @@ const openCreateModal = () => {
   isEditing.value = false
   editingId.value = ''
   form.value = {
-    name: `Lantai ${maxFloor.value + 1}`,
+    name: `Floor ${maxFloor.value + 1}`,
     floor_number: maxFloor.value + 1,
     description: '',
   }
@@ -85,7 +85,7 @@ const closeModal = () => {
 
 const saveFloor = async () => {
   if (!form.value.name.trim()) {
-    toastStore.warning('Nama lantai tidak boleh kosong!')
+    toastStore.warning('Floor name cannot be empty!')
     return
   }
 
@@ -93,32 +93,32 @@ const saveFloor = async () => {
     loading.value = true
     if (isEditing.value) {
       const msg = await floorService.update(editingId.value, form.value)
-      toastStore.success(msg || 'Lantai berhasil diperbarui!')
+      toastStore.success(msg || 'Floor updated successfully!')
     } else {
       const msg = await floorService.create(form.value)
-      toastStore.success(msg || 'Lantai berhasil ditambahkan!')
+      toastStore.success(msg || 'Floor added successfully!')
     }
     await fetchFloors()
     closeModal()
   } catch (error: any) {
     console.error('Error saving floor:', error)
-    toastStore.error(error.response?.data?.message || error.message || 'Gagal menyimpan lantai')
+    toastStore.error(error.response?.data?.message || error.message || 'Failed to save floor')
   } finally {
     loading.value = false
   }
 }
 
 const deleteFloor = async (id: string, name: string) => {
-  if (!confirm(`Apakah Anda yakin ingin menghapus "${name}"?`)) return
+  if (!confirm(`Are you sure you want to delete "${name}"?`)) return
 
   try {
     loading.value = true
     const msg = await floorService.delete(id)
-    toastStore.success(msg || 'Lantai berhasil dihapus!')
+    toastStore.success(msg || 'Floor deleted successfully!')
     await fetchFloors()
   } catch (error: any) {
     console.error('Error deleting floor:', error)
-    toastStore.error(error.response?.data?.message || error.message || 'Gagal menghapus lantai')
+    toastStore.error(error.response?.data?.message || error.message || 'Failed to delete floor')
   } finally {
     loading.value = false
   }
@@ -130,14 +130,14 @@ const deleteFloor = async (id: string, name: string) => {
     <!-- Header Section -->
     <div class="header-section">
       <div>
-        <h1 class="page-title">Master Data Lantai (Floors)</h1>
-        <p class="subtitle">Kelola daftar lantai gedung hotel untuk penempatan unit kamar.</p>
+        <h1 class="page-title">Floor Master Data</h1>
+        <p class="subtitle">Manage hotel building floors for room unit placement.</p>
       </div>
       <button v-if="canMutateData(authStore.role)" @click="openCreateModal" class="btn-primary">
-        <span>+</span> Tambah Lantai
+        <span>+</span> Add Floor
       </button>
       <div v-else class="px-3.5 py-2 rounded-xl bg-slate-900 text-amber-300 text-xs font-bold border border-indigo-900/50 flex items-center gap-2 shadow-sm">
-        <span>👑</span> Mode Tinjauan Manager (Read-Only)
+        <span>👑</span> Manager Review Mode (Read-Only)
       </div>
     </div>
 
@@ -146,15 +146,15 @@ const deleteFloor = async (id: string, name: string) => {
       <div class="stat-card">
         <div class="stat-icon">🏢</div>
         <div>
-          <h3>Total Lantai Terdaftar</h3>
-          <p class="main-val">{{ totalFloors }} Lantai</p>
+          <h3>Total Registered Floors</h3>
+          <p class="main-val">{{ totalFloors }} Floor(s)</p>
         </div>
       </div>
       <div class="stat-card">
         <div class="stat-icon text-indigo-600">🔝</div>
         <div>
-          <h3>Lantai Tertinggi</h3>
-          <p class="main-val">Lantai {{ maxFloor }}</p>
+          <h3>Highest Floor</h3>
+          <p class="main-val">Floor {{ maxFloor }}</p>
         </div>
       </div>
     </div>
@@ -166,7 +166,7 @@ const deleteFloor = async (id: string, name: string) => {
           <input
             v-model="searchQuery"
             type="text"
-            placeholder="Cari nama lantai atau nomor..."
+            placeholder="Search floor name or number..."
             class="search-input"
           />
         </div>
@@ -177,10 +177,10 @@ const deleteFloor = async (id: string, name: string) => {
           <table class="premium-table">
             <thead>
               <tr>
-                <th class="w-24 text-center">No. Lantai</th>
-                <th>Nama Lantai</th>
-                <th>Deskripsi</th>
-                <th v-if="canMutateData(authStore.role)" class="text-center w-32">Aksi</th>
+                <th class="w-24 text-center">Floor No.</th>
+                <th>Floor Name</th>
+                <th>Description</th>
+                <th v-if="canMutateData(authStore.role)" class="text-center w-32">Action</th>
               </tr>
             </thead>
             <tbody>
@@ -204,13 +204,13 @@ const deleteFloor = async (id: string, name: string) => {
                       @click="deleteFloor(fl.id, fl.name)"
                       class="px-2.5 py-1 text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-lg transition-colors cursor-pointer"
                     >
-                      Hapus
+                      Delete
                     </button>
                   </div>
                 </td>
               </tr>
               <tr v-if="filteredFloors.length === 0">
-                <td :colspan="canMutateData(authStore.role) ? 4 : 3" class="no-data">Tidak ada data lantai yang cocok.</td>
+                <td :colspan="canMutateData(authStore.role) ? 4 : 3" class="no-data">No matching floor data found.</td>
               </tr>
             </tbody>
           </table>
@@ -222,44 +222,44 @@ const deleteFloor = async (id: string, name: string) => {
     <div v-if="isModalOpen" class="modal-backdrop">
       <div class="modal-card">
         <div class="modal-header">
-          <h3>{{ isEditing ? 'Edit Lantai' : 'Tambah Lantai Baru' }}</h3>
+          <h3>{{ isEditing ? 'Edit Floor' : 'Add New Floor' }}</h3>
           <button @click="closeModal" class="close-btn">✕</button>
         </div>
         <div class="modal-body">
           <div class="form-group">
-            <label>Nomor Urut Lantai *</label>
+            <label>Floor Number *</label>
             <input
               v-model.number="form.floor_number"
               type="number"
-              placeholder="Contoh: 1, 2, 3"
+              placeholder="e.g.: 1, 2, 3"
               class="form-input"
               required
             />
           </div>
           <div class="form-group">
-            <label>Nama Lantai *</label>
+            <label>Floor Name *</label>
             <input
               v-model="form.name"
               type="text"
-              placeholder="Contoh: Lantai 1, Ground Floor"
+              placeholder="e.g.: Floor 1, Ground Floor"
               class="form-input"
               required
             />
           </div>
           <div class="form-group">
-            <label>Deskripsi / Keterangan</label>
+            <label>Description / Notes</label>
             <textarea
               v-model="form.description"
               rows="3"
-              placeholder="Keterangan tambahan (opsional)..."
+              placeholder="Additional notes (optional)..."
               class="form-textarea"
             ></textarea>
           </div>
         </div>
         <div class="modal-footer">
-          <button @click="closeModal" class="btn-secondary">Batal</button>
+          <button @click="closeModal" class="btn-secondary">Cancel</button>
           <button @click="saveFloor" :disabled="loading" class="btn-primary">
-            {{ loading ? 'Menyimpan...' : 'Simpan' }}
+            {{ loading ? 'Saving...' : 'Save' }}
           </button>
         </div>
       </div>

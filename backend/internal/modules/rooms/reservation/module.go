@@ -4,6 +4,7 @@ import (
 	"citramascoweb-backend/internal/middlewares"
 	"citramascoweb-backend/internal/modules/notification"
 	"citramascoweb-backend/internal/modules/rooms"
+	"citramascoweb-backend/pkg/email"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -17,8 +18,9 @@ func InitModule(db *gorm.DB) *Module {
 	repo := NewReservationRepository(db)
 	roomRepo := rooms.NewRoomRepository(db)
 	notifier := notification.NewNotificationService(notification.NewNotificationRepository(db))
+	emailService := email.NewEmailService()
 
-	service := NewReservationService(repo, roomRepo, notifier)
+	service := NewReservationService(repo, roomRepo, notifier, emailService)
 	handler := NewReservationHandler(service)
 
 	return &Module{

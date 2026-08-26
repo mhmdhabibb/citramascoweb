@@ -200,7 +200,7 @@ const unitsByFloor = computed(() => {
 
   if (noFloorUnits.length > 0) {
     result.push({
-      floor: { id: 'other', name: 'Lainnya', floor_number: 99 },
+      floor: { id: 'other',       name: 'Other', floor_number: 99 },
       units: noFloorUnits,
     })
   }
@@ -248,7 +248,7 @@ onMounted(async () => {
     roomUnits.value = unitsData || []
     floors.value = floorsData || []
   } catch (error) {
-    console.error('Gagal memuat dashboard:', error)
+    console.error('Failed to load dashboard:', error)
   } finally {
     await nextTick()
     isPageLoading.value = false
@@ -267,8 +267,8 @@ onMounted(async () => {
         </h1>
         <p class="subtitle text-xs text-slate-500 font-medium">
           {{ isManagerRole(authStore.role) 
-              ? 'Laporan Eksekutif KPI Hotel, Tingkat Hunian (Occupancy Rate), Revenue & Pengawasan Operasional Staf.' 
-              : 'Monitoring real-time ketersediaan kamar, operasional check-in/out, dan pendapatan.' }}
+              ? 'Executive Hotel KPI Report, Occupancy Rate, Revenue & Staff Operations Supervision.' 
+              : 'Real-time room availability monitoring, check-in/out operations, and revenue.' }}
         </p>
       </div>
       <div class="header-actions" v-if="!isPageLoading">
@@ -278,21 +278,21 @@ onMounted(async () => {
             :class="{ active: dashboardStore.currentRange === 'today' }"
             @click="changeRange('today')"
           >
-            Hari Ini
+            Today
           </button>
           <button
             class="filter-btn"
             :class="{ active: dashboardStore.currentRange === 'weekly' }"
             @click="changeRange('weekly')"
           >
-            Minggu Ini
+            This Week
           </button>
           <button
             class="filter-btn"
             :class="{ active: dashboardStore.currentRange === 'monthly' }"
             @click="changeRange('monthly')"
           >
-            Bulan Ini
+            This Month
           </button>
         </div>
       </div>
@@ -309,13 +309,13 @@ onMounted(async () => {
         </div>
         <div>
           <div class="flex items-center gap-2">
-            <h3 class="font-extrabold text-sm text-white">Mode Pengawasan Hotel Manager (Read-Only)</h3>
+            <h3 class="font-extrabold text-sm text-white">Hotel Manager Supervisory Mode (Read-Only)</h3>
             <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-400/20 text-amber-300 border border-amber-400/30">
               Supervisor Access
             </span>
           </div>
           <p class="text-xs text-slate-300 mt-0.5 leading-relaxed">
-            Anda memiliki akses monitoring penuh terhadap seluruh operasional front desk, matriks ketersediaan kamar, analitik tingkat hunian, dan laporan keuangan hotel.
+            You have full monitoring access to all front desk operations, room availability matrix, occupancy analytics, and hotel financial reports.
           </p>
         </div>
       </div>
@@ -348,10 +348,10 @@ onMounted(async () => {
           <div class="stat-card unique-purple">
             <div class="card-info">
               <span class="card-icon">👥</span>
-              <h3>Tingkat Hunian (Occupancy)</h3>
+              <h3>Occupancy Rate</h3>
               <p class="main-val">{{ Math.round(dashboardStore.occupancyRate) }}%</p>
               <span class="text-[11px] text-indigo-700 font-semibold mt-1">
-                {{ occupiedUnitsCount }} terisi dari {{ roomUnits.length || dashboardStore.totalRooms }} unit
+                {{ occupiedUnitsCount }} occupied out of {{ roomUnits.length || dashboardStore.totalRooms }} units
               </span>
             </div>
             <div class="card-chart">
@@ -368,13 +368,13 @@ onMounted(async () => {
           <div class="stat-card unique-green">
             <div class="card-info">
               <span class="card-icon">✨</span>
-              <h3>Kamar Siap Pakai (Ready)</h3>
+              <h3>Ready Rooms</h3>
               <p class="main-val">
                 {{ availableUnitsCount }}
                 <span class="sub-label">/ {{ roomUnits.length }} Unit</span>
               </p>
               <span class="text-[11px] text-emerald-700 font-semibold mt-1">
-                Tersedia untuk alokasi otomatis
+                Available for automatic allocation
               </span>
             </div>
             <div class="card-chart">
@@ -395,10 +395,10 @@ onMounted(async () => {
           <div class="stat-card unique-amber">
             <div class="card-info">
               <span class="card-icon">🧹</span>
-              <h3>Housekeeping (Pembersihan)</h3>
-              <p class="main-val text-amber-700">{{ dirtyUnitsCount }} <span class="sub-label">Kamar</span></p>
+              <h3>Housekeeping (Cleaning)</h3>
+              <p class="main-val text-amber-700">{{ dirtyUnitsCount }} <span class="sub-label">Rooms</span></p>
               <span class="text-[11px] text-amber-800 font-semibold mt-1">
-                {{ maintenanceUnitsCount > 0 ? `${maintenanceUnitsCount} unit rusak (maintenance)` : 'Tidak ada kamar rusak' }}
+                {{ maintenanceUnitsCount > 0 ? `${maintenanceUnitsCount} units in maintenance` : 'No rooms in maintenance' }}
               </span>
             </div>
             <div class="card-chart">
@@ -415,12 +415,12 @@ onMounted(async () => {
           <div class="stat-card unique-orange">
             <div class="card-info">
               <span class="card-icon">💰</span>
-              <h3>Total Pendapatan (Revenue)</h3>
+              <h3>Total Revenue</h3>
               <p class="main-val text-xl font-black">
                 {{ dashboardStore.formattedRevenue }}
               </p>
               <span class="text-[11px] text-amber-900 font-semibold mt-1">
-                Periode: {{ dashboardStore.currentRange }}
+                Period: {{ dashboardStore.currentRange }}
               </span>
             </div>
             <div class="card-chart">
@@ -442,8 +442,8 @@ onMounted(async () => {
                 🏢
               </div>
               <div>
-                <h2 class="font-extrabold text-sm text-slate-900">Status Kamar Fisik Real-time (Live Room Rack)</h2>
-                <p class="text-xs text-slate-400">Monitoring nomor kamar hotel per lantai secara visual.</p>
+                <h2 class="font-extrabold text-sm text-slate-900">Real-time Physical Room Status (Live Room Rack)</h2>
+                <p class="text-xs text-slate-400">Visual monitoring of hotel room numbers by floor.</p>
               </div>
             </div>
 
@@ -475,7 +475,7 @@ onMounted(async () => {
                 <span class="text-xs font-black text-slate-700 uppercase tracking-wider block">
                   {{ group.floor.name }}
                 </span>
-                <span class="text-[10px] text-slate-400 font-medium">Lantai {{ group.floor.floor_number }}</span>
+                <span class="text-[10px] text-slate-400 font-medium">Floor {{ group.floor.floor_number }}</span>
               </div>
 
               <div class="flex flex-wrap gap-2 flex-1">
@@ -494,14 +494,14 @@ onMounted(async () => {
                   <span>🚪</span>
                   <span>{{ unit.room_number }}</span>
                   <span class="text-[10px] opacity-85 font-semibold">
-                    {{ unit.status === 'available' ? 'Ready' : unit.status === 'occupied' ? 'Terisi' : unit.status === 'dirty' ? 'Dirty' : 'Rusak' }}
+                    {{ unit.status === 'available' ? 'Ready' : unit.status === 'occupied' ? 'Occupied' : unit.status === 'dirty' ? 'Dirty' : 'Maintenance' }}
                   </span>
                 </div>
               </div>
             </div>
           </div>
           <div v-else class="text-center py-4 text-xs text-slate-400">
-            Belum ada data unit kamar fisik. Daftarkan di menu Room Units.
+            No physical room unit data yet. Register in the Room Units menu.
           </div>
         </div>
 
@@ -511,7 +511,7 @@ onMounted(async () => {
           <div class="dashboard-card chart-main-box">
             <div class="card-header">
               <div class="header-left">
-                <h2 class="font-extrabold text-sm text-slate-900">Grafik Pendapatan (Revenue)</h2>
+                <h2 class="font-extrabold text-sm text-slate-900">Revenue Chart</h2>
               </div>
               <div class="custom-legend">
                 <div class="legend-item">
@@ -533,7 +533,7 @@ onMounted(async () => {
           <!-- Booking Breakdown Donut -->
           <div class="dashboard-card breakdown-chart">
             <div class="card-header">
-              <h2 class="font-extrabold text-sm text-slate-900">Distribusi Status Booking</h2>
+              <h2 class="font-extrabold text-sm text-slate-900">Booking Status Distribution</h2>
             </div>
 
             <div class="donut-wrapper">
@@ -588,10 +588,10 @@ onMounted(async () => {
             <div class="flex items-center justify-between pb-2 border-b border-slate-100">
               <div class="flex items-center gap-2">
                 <span class="text-base">📋</span>
-                <h2 class="font-extrabold text-sm text-slate-900">Aktivitas In / Out Terkini</h2>
+                <h2 class="font-extrabold text-sm text-slate-900">Recent In / Out Activity</h2>
               </div>
               <router-link to="/admin/guestbook" class="text-xs font-bold text-indigo-600 hover:text-indigo-800">
-                Lihat Semua →
+                View All →
               </router-link>
             </div>
 
@@ -606,7 +606,7 @@ onMounted(async () => {
                   <div>
                     <strong class="text-slate-900 font-bold block">{{ log.guest_name }}</strong>
                     <span class="text-[11px] text-slate-500">
-                      {{ log.room_number ? `Kamar ${log.room_number} • ` : '' }}{{ log.room_name }}
+                      {{ log.room_number ? `Room ${log.room_number} • ` : '' }}{{ log.room_name }}
                     </span>
                   </div>
                 </div>
@@ -625,7 +625,7 @@ onMounted(async () => {
               </div>
             </div>
             <div v-else class="text-center py-6 text-xs text-slate-400">
-              Belum ada log check-in/out terbaru.
+              No recent check-in/out logs yet.
             </div>
           </div>
 
@@ -634,10 +634,10 @@ onMounted(async () => {
             <div class="flex items-center justify-between pb-2 border-b border-slate-100">
               <div class="flex items-center gap-2">
                 <span class="text-base">📅</span>
-                <h2 class="font-extrabold text-sm text-slate-900">Reservasi Terbaru</h2>
+                <h2 class="font-extrabold text-sm text-slate-900">Recent Reservations</h2>
               </div>
               <router-link to="/admin/reservations" class="text-xs font-bold text-indigo-600 hover:text-indigo-800">
-                Lihat Semua →
+                View All →
               </router-link>
             </div>
 
@@ -645,9 +645,9 @@ onMounted(async () => {
               <table class="premium-table">
                 <thead>
                   <tr>
-                    <th>Tamu</th>
-                    <th>Kamar</th>
-                    <th>Tgl In - Out</th>
+                    <th>Guest</th>
+                    <th>Room</th>
+                    <th>Check-in - Check-out</th>
                     <th class="text-center">Status</th>
                   </tr>
                 </thead>
@@ -661,7 +661,7 @@ onMounted(async () => {
                       </span>
                     </td>
                     <td class="text-[11px] text-slate-600 font-medium">
-                      {{ res.checkin_date }} s/d {{ res.checkout_date }}
+                      {{ res.checkin_date }} to {{ res.checkout_date }}
                     </td>
                     <td class="text-center">
                       <span

@@ -161,7 +161,7 @@ function triggerImport() {
             </div>
             <div class="form-group">
               <label>Account Name</label>
-              <input type="text" v-model="form.name" required placeholder="e.g., Kas Besar" />
+              <input type="text" v-model="form.name" required placeholder="e.g., Main Cash" />
             </div>
             <div class="form-group">
               <label>Parent Code (Optional)</label>

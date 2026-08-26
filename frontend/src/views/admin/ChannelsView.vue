@@ -130,7 +130,7 @@ const closeModal = () => {
 const saveChannel = async () => {
   const trimmedName = form.value.name.trim()
   if (!trimmedName) {
-    toastStore.warning('Nama channel tidak boleh kosong!')
+    toastStore.warning('Channel name cannot be empty!')
     return
   }
 
@@ -138,16 +138,16 @@ const saveChannel = async () => {
     submitting.value = true
     if (isEditing.value) {
       const msg = await channelStore.update(editingId.value, { name: trimmedName })
-      toastStore.success(msg || 'Channel berhasil diperbarui!')
+      toastStore.success(msg || 'Channel updated successfully!')
     } else {
       const msg = await channelStore.store({ name: trimmedName })
-      toastStore.success(msg || 'Channel berhasil ditambahkan!')
+      toastStore.success(msg || 'Channel added successfully!')
     }
     await channelStore.fetchChannels()
     closeModal()
   } catch (err: any) {
     const errorMsg =
-      err.response?.data?.message || err.message || 'Gagal menyimpan channel'
+      err.response?.data?.message || err.message || 'Failed to save channel'
     toastStore.error(errorMsg)
   } finally {
     submitting.value = false
@@ -170,12 +170,12 @@ const executeDelete = async () => {
   try {
     submitting.value = true
     const msg = await channelStore.destroy(channelToDelete.value.id)
-    toastStore.success(msg || 'Channel berhasil dihapus!')
+    toastStore.success(msg || 'Channel deleted successfully!')
     await channelStore.fetchChannels()
     closeDeleteModal()
   } catch (err: any) {
     const errorMsg =
-      err.response?.data?.message || err.message || 'Gagal menghapus channel'
+      err.response?.data?.message || err.message || 'Failed to delete channel'
     toastStore.error(errorMsg)
   } finally {
     submitting.value = false
@@ -188,9 +188,9 @@ const executeDelete = async () => {
     <!-- Header Section -->
     <div class="page-header">
       <div class="header-content">
-        <h2 class="title">Kelola Channel</h2>
+        <h2 class="title">Manage Channels</h2>
         <p class="subtitle">
-          Atur master data saluran distribusi pemesanan (Online Travel Agents, Direct Website, Walk-in, dll).
+          Manage booking distribution channel names (Online Travel Agents, Direct Website, Walk-in, etc).
         </p>
       </div>
       <button @click="openCreateModal" class="btn btn-primary btn-add">
@@ -198,7 +198,7 @@ const executeDelete = async () => {
           <line x1="12" y1="5" x2="12" y2="19"></line>
           <line x1="5" y1="12" x2="19" y2="12"></line>
         </svg>
-        <span>Tambah Channel</span>
+        <span>Add Channel</span>
       </button>
     </div>
 
@@ -212,7 +212,7 @@ const executeDelete = async () => {
           </svg>
         </div>
         <div class="kpi-info">
-          <span class="kpi-label">Total Channel Aktif</span>
+          <span class="kpi-label">Total Active Channels</span>
           <span class="kpi-value">{{ totalChannels }}</span>
         </div>
       </div>
@@ -226,7 +226,7 @@ const executeDelete = async () => {
           </svg>
         </div>
         <div class="kpi-info">
-          <span class="kpi-label">Channel Terbaru</span>
+          <span class="kpi-label">Latest Channel</span>
           <span class="kpi-value-sm">{{ latestChannel ? latestChannel.name : '-' }}</span>
         </div>
       </div>
@@ -239,7 +239,7 @@ const executeDelete = async () => {
           </svg>
         </div>
         <div class="kpi-info">
-          <span class="kpi-label">Kode Terakhir</span>
+          <span class="kpi-label">Latest Code</span>
           <span class="kpi-value-sm font-mono">{{ latestChannel ? latestChannel.code : 'C-1' }}</span>
         </div>
       </div>
@@ -255,7 +255,7 @@ const executeDelete = async () => {
         <input
           v-model="searchQuery"
           type="text"
-          placeholder="Cari berdasarkan nama channel atau kode (misal: Traveloka, C-1)..."
+          placeholder="Search by channel name or code (e.g.: Traveloka, C-1)..."
           class="search-input"
         />
         <button v-if="searchQuery" @click="searchQuery = ''" class="clear-search-btn" title="Clear">
@@ -277,18 +277,18 @@ const executeDelete = async () => {
     <div class="table-card">
       <div v-if="channelStore.loading && channelStore.channels.length === 0" class="loading-state">
         <div class="spinner"></div>
-        <p>Memuat daftar channel...</p>
+        <p>Loading channel list...</p>
       </div>
 
       <div v-else class="table-container">
         <table class="data-table">
           <thead>
             <tr>
-              <th style="width: 100px;">Kode</th>
-              <th>Nama Channel</th>
-              <th>Kategori Saluran</th>
-              <th>Dibuat Pada</th>
-              <th style="text-align: right; width: 140px;">Aksi</th>
+              <th style="width: 100px;">Code</th>
+              <th>Channel Name</th>
+              <th>Channel Category</th>
+              <th>Created At</th>
+              <th style="text-align: right; width: 140px;">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -328,7 +328,7 @@ const executeDelete = async () => {
                   <button
                     @click="confirmDelete(channel)"
                     class="action-btn delete-btn"
-                    title="Hapus Channel"
+                    title="Delete Channel"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                       <polyline points="3 6 5 6 21 6"></polyline>
@@ -344,11 +344,11 @@ const executeDelete = async () => {
               <td colspan="5" class="empty-state">
                 <div class="empty-content">
                   <div class="empty-icon">📡</div>
-                  <h4>Tidak ada channel ditemukan</h4>
-                  <p v-if="searchQuery">Tidak ada channel yang cocok dengan pencarian "{{ searchQuery }}".</p>
-                  <p v-else>Belum ada master data channel yang terdaftar.</p>
+                  <h4>No channels found</h4>
+                  <p v-if="searchQuery">No channel matches the search "{{ searchQuery }}".</p>
+                  <p v-else>No channel data registered yet.</p>
                   <button v-if="!searchQuery" @click="openCreateModal" class="btn btn-primary btn-sm mt-3">
-                    + Tambah Channel Pertama
+                    + Add First Channel
                   </button>
                 </div>
               </td>
@@ -370,8 +370,8 @@ const executeDelete = async () => {
               </svg>
             </div>
             <div>
-              <h3>{{ isEditing ? 'Edit Channel' : 'Tambah Channel Baru' }}</h3>
-              <p class="modal-subtitle">Kelola nama channel distribusi pemesanan</p>
+              <h3>{{ isEditing ? 'Edit Channel' : 'Add New Channel' }}</h3>
+              <p class="modal-subtitle">Manage booking distribution channel names</p>
             </div>
           </div>
           <button @click="closeModal" class="close-btn" aria-label="Close modal">&times;</button>
@@ -381,12 +381,12 @@ const executeDelete = async () => {
           <!-- Form Input -->
           <div class="form-group">
             <label class="form-label">
-              Nama Channel <span class="required">*</span>
+              Channel Name <span class="required">*</span>
             </label>
             <input
               v-model="form.name"
               type="text"
-              placeholder="Contoh: Traveloka, Booking.com, Direct Website..."
+              placeholder="e.g.: Traveloka, Booking.com, Direct Website..."
               class="form-input"
               @keyup.enter="saveChannel"
               autofocus
@@ -395,7 +395,7 @@ const executeDelete = async () => {
 
           <!-- Quick Suggestions Chips (only in create mode) -->
           <div v-if="!isEditing" class="suggestions-section">
-            <span class="suggestions-label">Pilihan Cepat:</span>
+            <span class="suggestions-label">Quick Picks:</span>
             <div class="chips-container">
               <button
                 v-for="item in popularChannels"
@@ -412,7 +412,7 @@ const executeDelete = async () => {
 
           <!-- Live Preview Card -->
           <div v-if="form.name.trim()" class="preview-box">
-            <span class="preview-title">Preview Tampilan:</span>
+            <span class="preview-title">Preview:</span>
             <div class="preview-item">
               <span class="channel-avatar">{{ getChannelIcon(form.name) }}</span>
               <div class="preview-details">
@@ -427,11 +427,11 @@ const executeDelete = async () => {
 
         <div class="modal-footer">
           <button @click="closeModal" class="btn btn-secondary" :disabled="submitting">
-            Batal
+            Cancel
           </button>
           <button @click="saveChannel" class="btn btn-primary" :disabled="submitting">
-            <span v-if="submitting">Menyimpan...</span>
-            <span v-else>{{ isEditing ? 'Simpan Perubahan' : 'Tambah Channel' }}</span>
+            <span v-if="submitting">Saving...</span>
+            <span v-else>{{ isEditing ? 'Save Changes' : 'Add Channel' }}</span>
           </button>
         </div>
       </div>
@@ -447,20 +447,20 @@ const executeDelete = async () => {
             <line x1="12" y1="17" x2="12.01" y2="17"></line>
           </svg>
         </div>
-        <h3 class="delete-title">Hapus Channel?</h3>
+        <h3 class="delete-title">Delete Channel?</h3>
         <p class="delete-desc">
-          Apakah Anda yakin ingin menghapus channel
+          Are you sure you want to delete this channel
           <strong>"{{ channelToDelete?.name }}"</strong> ({{ channelToDelete?.code }})?
-          Tindakan ini tidak dapat dibatalkan.
+          This action cannot be undone.
         </p>
 
         <div class="modal-footer delete-footer">
           <button @click="closeDeleteModal" class="btn btn-secondary" :disabled="submitting">
-            Batal
+            Cancel
           </button>
           <button @click="executeDelete" class="btn btn-danger" :disabled="submitting">
-            <span v-if="submitting">Menghapus...</span>
-            <span v-else>Ya, Hapus</span>
+            <span v-if="submitting">Deleting...</span>
+            <span v-else>Yes, Delete</span>
           </button>
         </div>
       </div>

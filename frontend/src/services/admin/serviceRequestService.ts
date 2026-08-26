@@ -29,7 +29,7 @@ export const serviceRequestService = {
   create: async (payload: CreateServiceRequestPayload): Promise<ServiceRequest> => {
     const response = await api.post<ApiResponse<ServiceRequest>>('/service-requests', payload)
     if (!response.data.success) {
-      throw new Error(response.data.message || 'Gagal mengirim laporan layanan kamar')
+      throw new Error(response.data.message || 'Failed to send room service report')
     }
     return response.data.data!
   },
@@ -40,7 +40,7 @@ export const serviceRequestService = {
   getAll: async (status: string = 'all'): Promise<ServiceRequest[]> => {
     const response = await api.get<ApiResponse<ServiceRequest[]>>(`/service-requests?status=${status}`)
     if (!response.data.success) {
-      throw new Error(response.data.message || 'Gagal memuat daftar permintaan layanan')
+      throw new Error(response.data.message || 'Failed to load service requests')
     }
     return response.data.data || []
   },
@@ -51,7 +51,7 @@ export const serviceRequestService = {
   getById: async (id: string): Promise<ServiceRequest> => {
     const response = await api.get<ApiResponse<ServiceRequest>>(`/service-requests/${id}`)
     if (!response.data.success) {
-      throw new Error(response.data.message || 'Laporan tidak ditemukan')
+      throw new Error(response.data.message || 'Report not found')
     }
     return response.data.data!
   },
@@ -62,7 +62,7 @@ export const serviceRequestService = {
   assignToHousekeeping: async (id: string, payload: AssignTaskPayload): Promise<void> => {
     const response = await api.patch<ApiResponse<null>>(`/service-requests/${id}/assign`, payload)
     if (!response.data.success) {
-      throw new Error(response.data.message || 'Gagal menugaskan ke Housekeeping')
+      throw new Error(response.data.message || 'Failed to assign to Housekeeping')
     }
   },
 
@@ -72,7 +72,7 @@ export const serviceRequestService = {
   complete: async (id: string, payload: CompleteTaskPayload = { damage_charge: 0 }): Promise<void> => {
     const response = await api.patch<ApiResponse<null>>(`/service-requests/${id}/complete`, payload)
     if (!response.data.success) {
-      throw new Error(response.data.message || 'Gagal menyelesaikan tugas')
+      throw new Error(response.data.message || 'Failed to complete task')
     }
   },
 
@@ -82,7 +82,7 @@ export const serviceRequestService = {
   cancel: async (id: string): Promise<void> => {
     const response = await api.patch<ApiResponse<null>>(`/service-requests/${id}/cancel`)
     if (!response.data.success) {
-      throw new Error(response.data.message || 'Gagal membatalkan laporan')
+      throw new Error(response.data.message || 'Failed to cancel report')
     }
   },
 }

@@ -153,7 +153,7 @@ const clearDateFilter = () => {
     <!-- Header Section -->
     <div class="header-section">
       <div>
-        <h1 class="page-title">Buku Tamu & Log Aktivitas Harian</h1>
+        <h1 class="page-title">Guest Book & Daily Activity Log</h1>
         <p class="subtitle">Rekap riwayat check-in & check-out harian serta catatan kedatangan tamu.</p>
       </div>
 
@@ -164,14 +164,14 @@ const clearDateFilter = () => {
           class="tab-pill-btn"
           :class="{ 'tab-pill-active': activeTab === 'daily-logs' }"
         >
-          <span>📋</span> Log In / Out Harian
+          <span>📋</span> Daily In / Out Log
         </button>
         <button
           @click="activeTab = 'guest-history'"
           class="tab-pill-btn"
           :class="{ 'tab-pill-active': activeTab === 'guest-history' }"
         >
-          <span>👥</span> Buku Tamu Reservasi
+          <span>👥</span> Reservation Guest Book
         </button>
       </div>
     </div>
@@ -183,21 +183,21 @@ const clearDateFilter = () => {
         <div class="stat-card">
           <span class="stat-icon bg-indigo-50 text-indigo-600">📊</span>
           <div>
-            <h3>Total Aktivitas Log</h3>
+            <h3>Total Activity Logs</h3>
             <p class="main-val">{{ totalDailyLogs }}</p>
           </div>
         </div>
         <div class="stat-card">
           <span class="stat-icon bg-emerald-50 text-emerald-600">🛎️</span>
           <div>
-            <h3>Check In (Masuk)</h3>
+            <h3>Check In</h3>
             <p class="main-val text-emerald-600">{{ totalCheckIns }}</p>
           </div>
         </div>
         <div class="stat-card">
           <span class="stat-icon bg-slate-100 text-slate-700">🚪</span>
           <div>
-            <h3>Check Out (Keluar)</h3>
+            <h3>Check Out</h3>
             <p class="main-val text-slate-800">{{ totalCheckOuts }}</p>
           </div>
         </div>
@@ -218,14 +218,14 @@ const clearDateFilter = () => {
               <input
                 v-model="logSearchQuery"
                 type="text"
-                placeholder="Cari nama tamu, no. kamar..."
+                placeholder="Search guest name, room no...."
                 class="search-input"
               />
             </div>
 
             <!-- Date Picker Filter -->
             <div class="flex items-center gap-1.5 bg-white border border-slate-200 rounded-xl px-3 py-1.5 shadow-xs">
-              <span class="text-xs text-slate-500 font-semibold">📅 Tanggal:</span>
+              <span class="text-xs text-slate-500 font-semibold">📅 Date:</span>
               <input
                 v-model="selectedLogDate"
                 type="date"
@@ -235,7 +235,7 @@ const clearDateFilter = () => {
                 v-if="selectedLogDate"
                 @click="clearDateFilter"
                 class="text-xs text-slate-400 hover:text-rose-600 ml-1 font-bold"
-                title="Hapus filter tanggal"
+                title="Clear date filter"
               >
                 ✕
               </button>
@@ -245,14 +245,14 @@ const clearDateFilter = () => {
               @click="setTodayFilter"
               class="px-3 py-2 text-xs font-bold rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 transition-colors cursor-pointer"
             >
-              Hari Ini
+              Today
             </button>
 
             <!-- Action Filter -->
             <select v-model="actionFilter" class="filter-select">
-              <option value="All">Semua Aktivitas</option>
-              <option value="check_in">Check In Saja</option>
-              <option value="check_out">Check Out Saja</option>
+              <option value="All">All Activities</option>
+              <option value="check_in">Check In Only</option>
+              <option value="check_out">Check Out Only</option>
             </select>
           </div>
         </div>
@@ -263,11 +263,11 @@ const clearDateFilter = () => {
             <table class="premium-table">
               <thead>
                 <tr>
-                  <th class="w-44">Waktu (WIB)</th>
-                  <th>Nama Tamu</th>
-                  <th>Unit & Tipe Kamar</th>
-                  <th class="text-center w-36">Aktivitas</th>
-                  <th>Catatan</th>
+                  <th class="w-44">Time</th>
+                  <th>Guest Name</th>
+                  <th>Unit & Room Type</th>
+                  <th class="text-center w-36">Activity</th>
+                  <th>Notes</th>
                 </tr>
               </thead>
               <tbody>
@@ -319,16 +319,16 @@ const clearDateFilter = () => {
                   </td>
                   <td class="text-xs text-slate-500">
                     <span v-if="log.is_early" class="text-amber-800 font-semibold bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
-                      🌅 Tiba sebelum jam 14:00
+                      ⚠️ Arrived before 14:00
                     </span>
-                    <span v-else>{{ log.notes || 'Aktivitas reguler' }}</span>
+                    <span v-else>{{ log.notes || 'Regular activity' }}</span>
                   </td>
                 </tr>
                 <tr v-if="filteredLogs.length === 0">
                   <td colspan="5" class="no-data">
                     <div class="py-6 text-center">
                       <p class="text-2xl mb-1">📭</p>
-                      <p class="text-slate-500 font-medium text-xs">Belum ada riwayat aktivitas check-in / check-out pada filter ini.</p>
+                      <p class="text-slate-500 font-medium text-xs">No check-in / check-out history for this filter.</p>
                     </div>
                   </td>
                 </tr>
@@ -345,15 +345,15 @@ const clearDateFilter = () => {
         <div class="stat-card">
           <span class="stat-icon">👥</span>
           <div>
-            <h3>Total Tamu Terdaftar</h3>
-            <p class="main-val">{{ totalGuests }} Tamu</p>
+            <h3>Total Registered Guests</h3>
+            <p class="main-val">{{ totalGuests }} Guest(s)</p>
           </div>
         </div>
         <div class="stat-card">
           <span class="stat-icon text-success">🛎️</span>
           <div>
-            <h3>Sedang Menginap</h3>
-            <p class="main-val">{{ checkedInGuests }} Tamu</p>
+            <h3>Currently Staying</h3>
+            <p class="main-val">{{ checkedInGuests }} Guest(s)</p>
           </div>
         </div>
       </div>
@@ -364,13 +364,13 @@ const clearDateFilter = () => {
             <input
               v-model="searchQuery"
               type="text"
-              placeholder="Cari nama tamu, no. kamar, tipe..."
+              placeholder="Search guest name, room no., type..."
               class="search-input"
             />
           </div>
           <div class="filter-box">
             <select v-model="statusFilter" class="filter-select">
-              <option value="All">Semua Status</option>
+              <option value="All">All Statuses</option>
               <option value="checked-in">Checked In</option>
               <option value="checked-out">Checked Out</option>
               <option value="pending">Pending</option>
@@ -385,11 +385,11 @@ const clearDateFilter = () => {
             <table class="premium-table">
               <thead>
                 <tr>
-                  <th>Nama Tamu</th>
-                  <th>Kamar & No. Fisik</th>
-                  <th>Tgl Check In</th>
-                  <th>Tgl Check Out</th>
-                  <th class="text-center">Malam</th>
+                  <th>Guest Name</th>
+                  <th>Room & Physical No.</th>
+                  <th>Check In Date</th>
+                  <th>Check Out Date</th>
+                  <th class="text-center">Nights</th>
                   <th class="text-center">Status</th>
                 </tr>
               </thead>
@@ -423,7 +423,7 @@ const clearDateFilter = () => {
                     <span class="date-text">{{ res.checkout_date }}</span>
                   </td>
                   <td class="text-center">
-                    <span class="night-count">{{ res.total_night }} Malam</span>
+                    <span class="night-count">{{ res.total_night }} Night(s)</span>
                   </td>
                   <td class="text-center">
                     <span
@@ -441,7 +441,7 @@ const clearDateFilter = () => {
                   </td>
                 </tr>
                 <tr v-if="filteredReservations.length === 0">
-                  <td colspan="6" class="no-data">Tidak ditemukan data buku tamu yang cocok.</td>
+                  <td colspan="6" class="no-data">No matching guest book data found.</td>
                 </tr>
               </tbody>
             </table>

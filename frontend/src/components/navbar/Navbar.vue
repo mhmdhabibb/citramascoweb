@@ -52,7 +52,7 @@ const { elementRef: navRef, isVisible: navVisible } = useScrollReveal(0.1)
         <router-link to="/offers" class="mobile-link" @click="menuOpen = false">Offers</router-link>
         <router-link to="/contact" class="mobile-link" @click="menuOpen = false">Contact</router-link>
         <button @click="isGuestServiceOpen = true; menuOpen = false" class="w-full text-left py-2 text-amber-600 font-bold flex items-center gap-1.5">
-          <span>🛎️</span> <span>Layanan Kamar / Bantuan Tamu</span>
+          <span>🛎️</span>           <span>Room Service / Guest Assistance</span>
         </button>
         <router-link to="/booking" class="mobile-book-btn" @click="menuOpen = false">Book Now</router-link>
       </div>

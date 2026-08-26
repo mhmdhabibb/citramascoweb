@@ -100,10 +100,10 @@ const approveReservation = async (id) => {
   try {
     loading.value = true
     const msg = await reservationService.approve(id)
-    toastStore.success(msg || 'Reservasi berhasil disetujui!')
+    toastStore.success(msg || 'Reservation approved successfully!')
     await refreshData()
   } catch (error) {
-    toastStore.error(error.message || 'Gagal menyetujui reservasi')
+    toastStore.error(error.message || 'Failed to approve reservation')
   } finally {
     loading.value = false
   }
@@ -113,10 +113,10 @@ const verifyFinancePayment = async (id, status = 'confirmed') => {
   try {
     loading.value = true
     await financeService.verifyPayment(id, status)
-    toastStore.success(status === 'confirmed' ? 'Pembayaran berhasil diverifikasi oleh Tim Finance (Status: Dibayar)!' : 'Pembayaran ditolak')
+    toastStore.success(status === 'confirmed' ? 'Payment verified by Finance Team successfully!' : 'Payment rejected')
     await refreshData()
   } catch (error) {
-    toastStore.error(error.message || 'Gagal memverifikasi pembayaran')
+    toastStore.error(error.message || 'Failed to verify payment')
   } finally {
     loading.value = false
   }
@@ -126,10 +126,10 @@ const rejectReservation = async (id) => {
   try {
     loading.value = true
     const msg = await reservationService.reject(id)
-    toastStore.success(msg || 'Reservasi berhasil ditolak!')
+    toastStore.success(msg || 'Reservation rejected successfully!')
     await refreshData()
   } catch (error) {
-    toastStore.error(error.message || 'Gagal menolak reservasi')
+    toastStore.error(error.message || 'Failed to reject reservation')
   } finally {
     loading.value = false
   }
@@ -178,25 +178,25 @@ const confirmCheckIn = async () => {
   try {
     loading.value = true
     const msg = await reservationService.checkIn(checkInTarget.value.id)
-    toastStore.success(isEarlyCheckInOption.value ? 'Tamu berhasil Early Check In!' : (msg || 'Tamu berhasil Check In!'))
+    toastStore.success(isEarlyCheckInOption.value ? 'Guest Early Check In successful!' : (msg || 'Guest Check In successful!'))
     closeCheckInModal()
     await refreshData()
   } catch (error) {
-    toastStore.error(error.message || 'Gagal melakukan Check In')
+    toastStore.error(error.message || 'Failed to Check In')
   } finally {
     loading.value = false
   }
 }
 
 const handleCheckOut = async (id) => {
-  if (confirm('Selesaikan masa inap kamar tamu ini (Check Out)?')) {
+  if (confirm('Complete this guest room stay (Check Out)?')) {
     try {
       loading.value = true
       const msg = await reservationService.checkOut(id)
-      toastStore.success(msg || 'Tamu berhasil Check Out!')
+      toastStore.success(msg || 'Guest Check Out successful!')
       await refreshData()
     } catch (error) {
-      toastStore.error(error.message || 'Gagal melakukan Check Out')
+      toastStore.error(error.message || 'Failed to Check Out')
     } finally {
       loading.value = false
     }
@@ -204,14 +204,14 @@ const handleCheckOut = async (id) => {
 }
 
 const cancelReservation = async (id) => {
-  if (confirm('Batalkan reservasi ini?')) {
+  if (confirm('Cancel this reservation?')) {
     try {
       loading.value = true
       const msg = await reservationService.cancel(id)
-      toastStore.success(msg || 'Reservasi berhasil dibatalkan!')
+      toastStore.success(msg || 'Reservation cancelled successfully!')
       await refreshData()
     } catch (error) {
-      toastStore.error(error.message || 'Gagal membatalkan reservasi')
+      toastStore.error(error.message || 'Failed to cancel reservation')
     } finally {
       loading.value = false
     }
@@ -287,7 +287,7 @@ onUnmounted(() => {
           </div>
           <div class="filter-box">
             <select v-model="statusFilter" class="filter-select">
-              <option value="All">Semua Status</option>
+              <option value="All">All Statuses</option>
               <option value="pending">Pending</option>
               <option value="approve">Approved</option>
               <option value="checked-in">Checked In</option>
@@ -312,9 +312,9 @@ onUnmounted(() => {
                   <th>Check In</th>
                   <th>Check Out</th>
                   <th>Total Price</th>
-                  <th class="text-center">Pembayaran</th>
+                  <th class="text-center">Payment</th>
                   <th class="text-center">Status</th>
-                  <th class="text-center">Aksi Resepsionis</th>
+                  <th class="text-center">Receptionist Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -337,7 +337,7 @@ onUnmounted(() => {
                       v-if="res.room_unit?.room_number"
                       class="block text-[11px] font-extrabold text-indigo-700 bg-indigo-50 border border-indigo-200 rounded px-1.5 py-0.5 mt-1 w-fit"
                     >
-                      🚪 Kamar {{ res.room_unit.room_number }} {{ res.room_unit.floor?.name ? `(${res.room_unit.floor.name})` : '' }}
+                      Room {{ res.room_unit.room_number }} {{ res.room_unit.floor?.name ? `(${res.room_unit.floor.name})` : '' }}
                     </span>
                   </td>
                   <td>
@@ -355,7 +355,7 @@ onUnmounted(() => {
                       class="px-2.5 py-1 text-xs font-bold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-300 inline-flex items-center gap-1"
                     >
                       <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                      Dibayar
+                      Paid
                     </span>
                     <span
                       v-else-if="res.transaction_status === 'down_payment' || (res.deposit > 0)"
@@ -369,7 +369,7 @@ onUnmounted(() => {
                       class="px-2.5 py-1 text-xs font-bold rounded-full bg-amber-50 text-amber-700 border border-amber-300 inline-flex items-center gap-1"
                     >
                       <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-                      Belum Bayar
+                      Unpaid
                     </span>
                   </td>
                   <td class="text-center">
@@ -401,7 +401,7 @@ onUnmounted(() => {
                       <button
                         @click="approveReservation(res.id)"
                         class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg shadow-sm transition-all flex items-center gap-1"
-                        title="Klik untuk Approve Reservasi & Kunci Kamar"
+                        title="Approve Reservation & Lock Room"
                       >
                         <span>✓</span>
                         <span>Approve</span>
@@ -409,7 +409,7 @@ onUnmounted(() => {
                       <button
                         @click="rejectReservation(res.id)"
                         class="px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 font-semibold text-xs rounded-lg border border-rose-200"
-                        title="Tolak Reservasi"
+                        title="Reject Reservation"
                       >
                         ✕
                       </button>
@@ -423,7 +423,7 @@ onUnmounted(() => {
                       <button
                         @click="verifyFinancePayment(res.id, 'confirmed')"
                         class="px-2 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold text-xs rounded-lg border border-amber-300 transition-all flex items-center gap-1"
-                        title="Klik untuk konfirmasi bahwa pembayaran sudah masuk rekening"
+                        title="Confirm payment received"
                       >
                         <span>💳</span>
                         <span>Finance Confirm</span>
@@ -438,7 +438,7 @@ onUnmounted(() => {
                       <button
                         @click="openCheckInModal(res)"
                         class="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-lg shadow-sm transition-all flex items-center gap-1 cursor-pointer"
-                        title="Proses Check In Tamu"
+                        title="Process Guest Check In"
                       >
                         <span>🛎️</span>
                         <span>Check In</span>
@@ -453,7 +453,7 @@ onUnmounted(() => {
                       <button
                         @click="handleCheckOut(res.id)"
                         class="px-2.5 py-1 bg-slate-700 hover:bg-slate-800 text-white font-bold text-xs rounded-lg shadow-sm transition-all flex items-center gap-1 cursor-pointer"
-                        title="Proses Check Out Tamu"
+                        title="Process Guest Check Out"
                       >
                         <span>🚪</span>
                         <span>Check Out</span>
@@ -468,19 +468,19 @@ onUnmounted(() => {
                       <button
                         @click="openCheckInModal(res)"
                         class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg shadow-sm transition-all flex items-center gap-1 cursor-pointer"
-                        title="Tamu Masuk / Check-In Kembali (Hari Berikutnya)"
+                        title="Guest Re-Check-In (Next Day)"
                       >
                         <span>🔄</span>
-                        <span>Check In Lagi</span>
+                        <span>Check In Again</span>
                       </button>
                     </div>
 
                     <!-- KONDISI LAIN: SELESAI / CANCEL -->
-                    <span v-else class="text-xs text-slate-400 font-medium">Selesai</span>
+                    <span v-else class="text-xs text-slate-400 font-medium">Completed</span>
                   </td>
                 </tr>
                 <tr v-if="filteredReservations.length === 0">
-                  <td colspan="9" class="no-data">Tidak ditemukan data reservasi yang cocok.</td>
+                  <td colspan="9" class="no-data">No matching reservation data found.</td>
                 </tr>
               </tbody>
             </table>
@@ -516,7 +516,7 @@ onUnmounted(() => {
     <div class="drawer-body p-6 space-y-4 overflow-y-auto flex-1">
       <!-- Contact & Room Card -->
       <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-xs hover:border-slate-200 transition-all">
-        <span class="text-[11px] font-bold tracking-wider text-slate-400 uppercase">Kontak & Kamar</span>
+        <span class="text-[11px] font-bold tracking-wider text-slate-400 uppercase">Contact & Room</span>
         <div class="flex items-center gap-2 mt-2">
           <div class="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 text-sm">
             ✉️
@@ -531,14 +531,14 @@ onUnmounted(() => {
             v-if="selectedReservation.room_unit?.room_number"
             class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-black bg-emerald-50 text-emerald-700 border border-emerald-200"
           >
-            🚪 No. Kamar: {{ selectedReservation.room_unit.room_number }} {{ selectedReservation.room_unit.floor?.name ? `(${selectedReservation.room_unit.floor.name})` : '' }}
+            Room No.: {{ selectedReservation.room_unit.room_number }} {{ selectedReservation.room_unit.floor?.name ? `(${selectedReservation.room_unit.floor.name})` : '' }}
           </span>
         </div>
       </div>
 
       <!-- Stay Schedule & Guests Card -->
       <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-xs hover:border-slate-200 transition-all">
-        <span class="text-[11px] font-bold tracking-wider text-slate-400 uppercase">Jadwal & Tamu</span>
+        <span class="text-[11px] font-bold tracking-wider text-slate-400 uppercase">Schedule & Guests</span>
         
         <!-- Date Timeline -->
         <div class="mt-2 bg-slate-50 rounded-xl p-3 border border-slate-100 space-y-2">
@@ -549,7 +549,7 @@ onUnmounted(() => {
             </div>
             <div class="flex flex-col items-center px-2">
               <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white text-indigo-600 shadow-xs border border-slate-100">
-                {{ selectedReservation.total_night }} Malam
+                {{ selectedReservation.total_night }} Night(s)
               </span>
               <div class="w-12 h-0.5 bg-slate-200 my-1 relative">
                 <span class="absolute -right-0.5 -top-0.5 w-1.5 h-1.5 rounded-full bg-slate-400"></span>
@@ -570,7 +570,7 @@ onUnmounted(() => {
               <span>🌅</span> Early Check-in
             </span>
             <span class="font-semibold text-slate-700 bg-white px-2 py-0.5 rounded border border-slate-200">
-              {{ selectedReservation.actual_checkin_at ? new Date(selectedReservation.actual_checkin_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB' : 'Tiba Lebih Awal' }}
+              {{ selectedReservation.actual_checkin_at ? new Date(selectedReservation.actual_checkin_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB' : 'Arrived Early' }}
             </span>
           </div>
         </div>
@@ -580,18 +580,18 @@ onUnmounted(() => {
           <div class="flex items-center gap-2.5 p-2 rounded-xl bg-amber-50/60 border border-amber-100/80">
             <div class="w-7 h-7 rounded-lg bg-amber-100 flex items-center justify-center text-xs">👤</div>
             <div>
-              <div class="text-[10px] text-amber-700/70 font-semibold">Dewasa</div>
+              <div class="text-[10px] text-amber-700/70 font-semibold">Adults</div>
               <div class="text-xs font-extrabold text-amber-900">
-                {{ selectedReservation.adults || selectedReservation.number_of_adult || selectedReservation.adult || 1 }} Orang
+                {{ selectedReservation.adults || selectedReservation.number_of_adult || selectedReservation.adult || 1 }} Person(s)
               </div>
             </div>
           </div>
           <div class="flex items-center gap-2.5 p-2 rounded-xl bg-sky-50/60 border border-sky-100/80">
             <div class="w-7 h-7 rounded-lg bg-sky-100 flex items-center justify-center text-xs">🧒</div>
             <div>
-              <div class="text-[10px] text-sky-700/70 font-semibold">Anak-anak</div>
+              <div class="text-[10px] text-sky-700/70 font-semibold">Children</div>
               <div class="text-xs font-extrabold text-sky-900">
-                {{ selectedReservation.children || selectedReservation.number_of_children || selectedReservation.child || 0 }} Anak
+                {{ selectedReservation.children || selectedReservation.number_of_children || selectedReservation.child || 0 }} Child
               </div>
             </div>
           </div>
@@ -601,9 +601,9 @@ onUnmounted(() => {
       <!-- Daily In/Out Activity Logs Card -->
       <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-xs">
         <div class="flex items-center justify-between mb-2.5">
-          <span class="text-[11px] font-bold tracking-wider text-slate-400 uppercase">Log Aktivitas In / Out Harian</span>
+          <span class="text-[11px] font-bold tracking-wider text-slate-400 uppercase">Daily In / Out Activity Log</span>
           <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
-            {{ (selectedReservation.logs || []).length }} Aktivitas
+            {{ (selectedReservation.logs || []).length }} Activity(ies)
           </span>
         </div>
 
@@ -631,7 +631,7 @@ onUnmounted(() => {
           </div>
         </div>
         <div v-else class="text-xs text-slate-400 text-center py-2.5 bg-slate-50 rounded-xl">
-          Belum ada riwayat aktivitas check in / out.
+          No check-in / out activity history yet.
         </div>
       </div>
 
@@ -642,7 +642,7 @@ onUnmounted(() => {
             💳
           </div>
           <div>
-            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Metode Bayar</div>
+            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Payment Method</div>
             <div class="text-xs font-bold text-slate-800">
               {{ selectedReservation.payment_method ? selectedReservation.payment_method.toUpperCase().replace('_', ' ') : 'BANK TRANSFER' }}
             </div>
@@ -655,14 +655,14 @@ onUnmounted(() => {
             class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-600 border border-emerald-200"
           >
             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-            Dibayar
+            Paid
           </span>
           <span
             v-else
             class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200"
           >
             <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-            Belum Bayar
+            Unpaid
           </span>
         </div>
       </div>
@@ -670,7 +670,7 @@ onUnmounted(() => {
       <!-- Billing Statement Highlight Card -->
       <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500 via-orange-500 to-rose-500 p-5 text-white shadow-lg shadow-orange-500/20">
         <div class="absolute -right-4 -bottom-4 w-24 h-24 rounded-full bg-white/10 blur-xl pointer-events-none"></div>
-        <div class="text-xs font-medium text-orange-100 tracking-wider uppercase">Total Pembayaran</div>
+        <div class="text-xs font-medium text-orange-100 tracking-wider uppercase">Total Payment</div>
         <div class="mt-1 flex items-baseline gap-1">
           <span class="text-sm font-semibold opacity-90">Rp</span>
           <span class="text-2xl font-black tracking-tight">
@@ -695,7 +695,7 @@ onUnmounted(() => {
             <div class="p-3 bg-emerald-50/80 border border-emerald-200/70 rounded-xl text-xs text-emerald-900 flex items-start gap-2.5">
               <span class="text-base leading-none">✅</span>
               <div>
-                <strong class="font-bold">Pembayaran Diterima:</strong> Kamar siap dikonfirmasi oleh resepsionis.
+                <strong class="font-bold">Payment Received:</strong> Room ready for confirmation.
               </div>
             </div>
             <div class="flex gap-2">
@@ -709,7 +709,7 @@ onUnmounted(() => {
                 @click="rejectReservation(selectedReservation.id)"
                 class="py-2.5 px-4 rounded-xl font-bold text-xs text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 transition-all cursor-pointer"
               >
-                Tolak
+                Reject
               </button>
             </div>
           </div>
@@ -719,7 +719,7 @@ onUnmounted(() => {
             <div class="p-3 bg-amber-50 border border-amber-200/80 rounded-xl text-xs text-amber-900 flex items-start gap-2.5">
               <span class="text-base leading-none">⏳</span>
               <div class="leading-relaxed">
-                <strong class="font-bold">Menunggu Tim Finance:</strong> Verifikasi mutasi transfer untuk mengaktifkan persetujuan.
+                <strong class="font-bold">Waiting for Finance:</strong> Verify transfer to activate approval.
               </div>
             </div>
 
@@ -728,13 +728,13 @@ onUnmounted(() => {
                 @click="verifyFinancePayment(selectedReservation.id, 'confirmed')"
                 class="flex-1 py-2.5 px-4 rounded-xl font-bold text-xs text-white bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-600/20 transition-all cursor-pointer"
               >
-                💳 Confirm Bayar (Finance)
+                💳 Confirm Payment (Finance)
               </button>
               <button
                 @click="rejectReservation(selectedReservation.id)"
                 class="py-2.5 px-4 rounded-xl font-bold text-xs text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 transition-all cursor-pointer"
               >
-                Tolak
+                Reject
               </button>
             </div>
           </div>
@@ -751,7 +751,7 @@ onUnmounted(() => {
           @click="openCheckInModal(selectedReservation)"
           class="w-full py-3 px-4 rounded-xl font-bold text-sm text-white bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-600/25 transition-all cursor-pointer"
         >
-          {{ selectedReservation.status === 'checked-out' ? '🔄 Check In Kembali (Hari Berikutnya)' : '🛎️ Check In Tamu' }}
+          {{ selectedReservation.status === 'checked-out' ? '🔄 Re-Check In (Next Day)' : '🛎️ Guest Check In' }}
         </button>
 
         <button
@@ -759,7 +759,7 @@ onUnmounted(() => {
           @click="handleCheckOut(selectedReservation.id)"
           class="w-full py-3 px-4 rounded-xl font-bold text-sm text-white bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-600/25 transition-all cursor-pointer"
         >
-          🚪 Proses Check Out
+          🚪 Process Check Out
         </button>
 
         <!-- Cancel Action -->
@@ -773,7 +773,7 @@ onUnmounted(() => {
           @click="cancelReservation(selectedReservation.id)"
           class="w-full mt-2 py-2 px-4 rounded-xl font-semibold text-xs text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-100 transition-all cursor-pointer"
         >
-          Batalkan Reservasi
+          Cancel Reservation
         </button>
       </div>
     </div>
@@ -794,8 +794,8 @@ onUnmounted(() => {
               🛎️
             </div>
             <div>
-              <h3 class="font-extrabold text-lg">Proses Check In</h3>
-              <p class="text-xs text-slate-300">Konfirmasi kedatangan tamu di hotel</p>
+              <h3 class="font-extrabold text-lg">Check In Process</h3>
+              <p class="text-xs text-slate-300">Confirm guest arrival at hotel</p>
             </div>
           </div>
           <button
@@ -811,36 +811,36 @@ onUnmounted(() => {
           <!-- Guest & Room Allocation Summary Card -->
           <div class="bg-slate-50 rounded-xl p-4 border border-slate-100 space-y-2.5">
             <div class="flex justify-between items-center">
-              <span class="text-xs text-slate-400 uppercase font-semibold">Tamu</span>
+              <span class="text-xs text-slate-400 uppercase font-semibold">Guest</span>
               <strong class="text-sm font-bold text-slate-800">{{ checkInTarget.full_name }}</strong>
             </div>
             <div class="flex justify-between items-center">
-              <span class="text-xs text-slate-400 uppercase font-semibold">Tipe Kamar</span>
+              <span class="text-xs text-slate-400 uppercase font-semibold">Room Type</span>
               <span class="px-2 py-0.5 rounded text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-100">
-                {{ checkInTarget.room?.name || 'Kamar Standar' }}
+                {{ checkInTarget.room?.name || 'Standard Room' }}
               </span>
             </div>
 
             <!-- Auto-Assigned Room Unit Badge -->
             <div class="flex justify-between items-center pt-2 border-t border-slate-200/60">
-              <span class="text-xs text-slate-400 uppercase font-semibold">Alokasi No. Kamar</span>
+              <span class="text-xs text-slate-400 uppercase font-semibold">Room Number Allocation</span>
               <span
                 v-if="autoAssignedUnit"
                 class="px-2.5 py-1 rounded-lg text-xs font-black bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1.5"
               >
                 <span>🚪</span>
-                <span>Kamar {{ autoAssignedUnit.room_number }} ({{ autoAssignedUnit.floor?.name || 'Lantai 1' }})</span>
+                <span>Room {{ autoAssignedUnit.room_number }} ({{ autoAssignedUnit.floor?.name || 'Floor 1' }})</span>
                 <span class="text-[9px] font-extrabold px-1.5 py-0.2 bg-emerald-200 text-emerald-900 rounded-full">Auto-Assign</span>
               </span>
               <span v-else class="text-xs text-amber-700 font-semibold italic">
-                Auto-Assign saat konfirmasi
+                Auto-Assign at confirmation
               </span>
             </div>
 
             <div class="flex justify-between items-center">
-              <span class="text-xs text-slate-400 uppercase font-semibold">Jadwal Menginap</span>
+              <span class="text-xs text-slate-400 uppercase font-semibold">Stay Schedule</span>
               <span class="text-xs font-semibold text-slate-700">
-                {{ checkInTarget.checkin_date }} s/d {{ checkInTarget.checkout_date }}
+                {{ checkInTarget.checkin_date }} to {{ checkInTarget.checkout_date }}
               </span>
             </div>
           </div>
@@ -852,18 +852,18 @@ onUnmounted(() => {
               <div class="flex-1">
                 <div class="flex items-center justify-between">
                   <span class="text-xs font-bold" :class="isEarlyCheckInOption ? 'text-amber-900' : 'text-emerald-900'">
-                    {{ isEarlyCheckInOption ? 'Early Check-In Terdeteksi' : 'Check-In Reguler' }}
+                    {{ isEarlyCheckInOption ? 'Early Check-In Detected' : 'Regular Check-In' }}
                   </span>
                   <span class="text-xs font-black px-2 py-0.5 rounded bg-white" :class="isEarlyCheckInOption ? 'text-amber-800' : 'text-emerald-800'">
-                    Jam: {{ checkInCurrentTime }} WIB
+                    Time: {{ checkInCurrentTime }} WIB
                   </span>
                 </div>
                 <p class="text-[11px] mt-1 text-slate-600 leading-relaxed">
                   <template v-if="isEarlyCheckInOption">
-                    Tamu tiba sebelum jam standar <strong>14:00</strong>. Sistem akan mencatat sebagai <strong>Early Check-in</strong> tanpa biaya tambahan.
+                    Guest arrives before standard <strong>14:00</strong>. System will record as <strong>Early Check-in</strong> at no additional charge.
                   </template>
                   <template v-else>
-                    Check-in pada waktu standar operasional hotel.
+                    Check-in at standard hotel operating hours.
                   </template>
                 </p>
               </div>
@@ -877,7 +877,7 @@ onUnmounted(() => {
             @click="closeCheckInModal"
             class="flex-1 py-2.5 px-4 rounded-xl font-bold text-xs text-slate-700 bg-white border border-slate-200 hover:bg-slate-100 transition-all cursor-pointer"
           >
-            Batal
+            Cancel
           </button>
           <button
             @click="confirmCheckIn"
@@ -885,7 +885,7 @@ onUnmounted(() => {
             class="flex-1 py-2.5 px-4 rounded-xl font-bold text-xs text-white bg-indigo-600 hover:bg-indigo-700 shadow-md shadow-indigo-600/20 transition-all cursor-pointer flex items-center justify-center gap-1.5"
           >
             <span>✓</span>
-            <span>{{ loading ? 'Memproses...' : 'Konfirmasi Check In' }}</span>
+            <span>{{ loading ? 'Processing...' : 'Confirm Check In' }}</span>
           </button>
         </div>
       </div>

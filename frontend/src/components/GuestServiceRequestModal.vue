@@ -30,11 +30,11 @@ const form = ref({
 })
 
 const categoryOptions = [
-  { value: 'incident_broken_item', label: '🍷 Gelas / Barang Pecah (Insiden)', defaultTitle: 'Gelas/Barang Pecah di Kamar' },
-  { value: 'extra_cleaning', label: '🧹 Pembersihan Ekstra / Tumpahan Air', defaultTitle: 'Permintaan Pembersihan Tambahan' },
-  { value: 'amenities_request', label: '🪥 Tambahan Handuk / Amenities', defaultTitle: 'Permintaan Handuk / Perlengkapan' },
-  { value: 'maintenance_repair', label: '🛠️ Kerusakan Fasilitas (AC / Lampu / Air)', defaultTitle: 'Laporan Kerusakan Fasilitas' },
-  { value: 'other', label: '❓ Bantuan Lainnya', defaultTitle: 'Permintaan Bantuan Khusus' },
+  { value: 'incident_broken_item', label: '🍷 Broken Glass / Item (Incident)', defaultTitle: 'Broken Glass/Item in Room' },
+  { value: 'extra_cleaning', label: '🧹 Extra Cleaning / Spill Cleanup', defaultTitle: 'Additional Cleaning Request' },
+  { value: 'amenities_request', label: '🪥 Extra Towels / Amenities', defaultTitle: 'Towel / Amenity Request' },
+  { value: 'maintenance_repair', label: '🛠️ Facility Damage (AC / Lights / Water)', defaultTitle: 'Facility Damage Report' },
+  { value: 'other', label: '❓ Other Assistance', defaultTitle: 'Special Assistance Request' },
 ]
 
 onMounted(async () => {
@@ -60,7 +60,7 @@ const onCategoryChange = () => {
 
 const handleSubmit = async () => {
   if (!form.value.room_id || !form.value.guest_name || !form.value.title || !form.value.description) {
-    toastStore.error('Mohon lengkapi semua kolom yang wajib diisi.')
+    toastStore.error('Please fill in all required fields.')
     return
   }
 
@@ -76,10 +76,10 @@ const handleSubmit = async () => {
     })
 
     isSubmitted.value = true
-    toastStore.success('Laporan berhasil dikirim ke Resepsionis!')
+    toastStore.success('Report successfully sent to Reception!')
     emit('success')
   } catch (error: any) {
-    toastStore.error(error.message || 'Gagal mengirim laporan')
+    toastStore.error(error.message || 'Failed to send report')
   } finally {
     loading.value = false
   }
@@ -108,8 +108,8 @@ const resetAndClose = () => {
           <span class="icon">🛎️</span>
         </div>
         <div>
-          <h2>Layanan Kamar & Bantuan Tamu</h2>
-          <p>Hubungi Resepsionis untuk permintaan pembersihan, insiden, atau perlengkapan kamar</p>
+          <h2>Room Service & Guest Assistance</h2>
+          <p>Contact Reception for cleaning requests, incidents, or room amenities</p>
         </div>
         <button class="close-btn" @click="resetAndClose">✕</button>
       </div>
@@ -117,18 +117,18 @@ const resetAndClose = () => {
       <!-- Sukses State -->
       <div v-if="isSubmitted" class="success-body">
         <div class="success-icon">✓</div>
-        <h3>Laporan Anda Telah Diterima!</h3>
+        <h3>Your Report Has Been Received!</h3>
         <p>
-          Resepsionis kami telah menerima laporan Anda dan segera menugaskan tim <strong>Housekeeping</strong> ke kamar Anda.
+          Our receptionist has received your report and will immediately assign the <strong>Housekeeping</strong> team to your room.
         </p>
-        <button class="btn btn-primary" @click="resetAndClose">Tutup Jendela</button>
+        <button class="btn btn-primary" @click="resetAndClose">Close Window</button>
       </div>
 
       <!-- Form Body -->
       <form v-else @submit.prevent="handleSubmit" class="modal-body">
         <div class="form-grid-2">
           <div class="form-group">
-            <label>Pilih Unit Kamar <span class="req">*</span></label>
+            <label>Select Room Unit <span class="req">*</span></label>
             <select v-model="form.room_id" class="input-field" required>
               <option v-for="r in rooms" :key="r.id" :value="r.id">
                 {{ r.name }} ({{ r.code }})
@@ -137,12 +137,12 @@ const resetAndClose = () => {
           </div>
 
           <div class="form-group">
-            <label>Nama Tamu <span class="req">*</span></label>
+            <label>Guest Name <span class="req">*</span></label>
             <input
               v-model="form.guest_name"
               type="text"
               class="input-field"
-              placeholder="Contoh: Pak Budi"
+              placeholder="e.g. John Doe"
               required
             />
           </div>
@@ -150,7 +150,7 @@ const resetAndClose = () => {
 
         <div class="form-grid-2">
           <div class="form-group">
-            <label>Jenis Bantuan / Insiden <span class="req">*</span></label>
+            <label>Assistance Type / Incident <span class="req">*</span></label>
             <select v-model="form.category" @change="onCategoryChange" class="input-field" required>
               <option v-for="opt in categoryOptions" :key="opt.value" :value="opt.value">
                 {{ opt.label }}
@@ -159,49 +159,49 @@ const resetAndClose = () => {
           </div>
 
           <div class="form-group">
-            <label>No. Kontak / WhatsApp (Opsional)</label>
+            <label>Contact No. / WhatsApp (Optional)</label>
             <input
               v-model="form.guest_phone"
               type="tel"
               class="input-field"
-              placeholder="0812xxxx"
+              placeholder="e.g. 0812xxxx"
             />
           </div>
         </div>
 
         <div class="form-group">
-          <label>Judul Laporan <span class="req">*</span></label>
+          <label>Report Title <span class="req">*</span></label>
           <input
             v-model="form.title"
             type="text"
             class="input-field"
-            placeholder="Contoh: Gelas pecah di lantai dekat meja"
+            placeholder="e.g. Broken glass near the desk"
             required
           />
         </div>
 
         <div class="form-group">
-          <label>Rincian Masalah / Permintaan <span class="req">*</span></label>
+          <label>Issue Details / Request <span class="req">*</span></label>
           <textarea
             v-model="form.description"
             rows="3"
             class="input-field"
-            placeholder="Jelaskan kebutuhan Anda agar tim kami dapat membawa peralatan yang tepat..."
+            placeholder="Describe your needs so our team can bring the right equipment..."
             required
           ></textarea>
         </div>
 
         <div class="notice-box">
           <span>💡</span>
-          <span>Laporan Anda akan otomatis diteruskan ke tim Frontdesk & Housekeeping secara real-time.</span>
+          <span>Your report will be automatically forwarded to the Frontdesk & Housekeeping team in real-time.</span>
         </div>
 
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" @click="resetAndClose" :disabled="loading">
-            Batal
+            Cancel
           </button>
           <button type="submit" class="btn btn-primary" :disabled="loading">
-            {{ loading ? 'Mengirim...' : 'Kirim ke Resepsionis' }}
+            {{ loading ? 'Sending...' : 'Send to Reception' }}
           </button>
         </div>
       </form>
