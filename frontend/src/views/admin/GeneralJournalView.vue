@@ -91,7 +91,7 @@ onMounted(() => {
   <div class="journal-page">
       <div class="header">
         <div>
-          <h1>Jurnal Umum</h1>
+          <h1>General Journal</h1>
           <p class="subtitle">General Journal and Ledger Entries.</p>
         </div>
         <button class="btn-primary" @click="openModal()">+ Add Entry</button>

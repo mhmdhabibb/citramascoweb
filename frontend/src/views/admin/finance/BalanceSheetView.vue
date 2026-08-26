@@ -104,25 +104,25 @@ onMounted(() => {
   <div class="finance-page">
     <div class="header">
       <div>
-        <h1>Neraca & Arus Kas</h1>
+        <h1>Balance Sheet & Cash Flow</h1>
         <p class="subtitle">Balance Sheet</p>
       </div>
       <button class="btn-secondary" @click="fetchData">Refresh Data</button>
     </div>
 
     <div v-if="loading" class="text-center p-8 text-gray-500">
-      Menghitung laporan neraca...
+      Calculating balance sheet report...
     </div>
     
     <div v-else class="report-container">
       
       <!-- ASSETS -->
       <div class="report-section">
-        <h2 class="section-title">Aktiva (Assets)</h2>
+        <h2 class="section-title">Assets</h2>
         <table class="report-table">
           <tbody>
             <tr v-if="assets.length === 0">
-              <td class="text-gray-400 italic">Belum ada data aktiva.</td>
+              <td class="text-gray-400 italic">No asset data yet.</td>
               <td class="text-right">-</td>
             </tr>
             <tr v-for="asset in assets" :key="asset.code">
@@ -132,7 +132,7 @@ onMounted(() => {
           </tbody>
           <tfoot>
             <tr class="total-row bg-blue-50">
-              <td>Total Aktiva</td>
+              <td>Total Assets</td>
               <td class="text-right font-bold text-blue-800">{{ formatIDR(totalAssets) }}</td>
             </tr>
           </tfoot>
@@ -141,13 +141,13 @@ onMounted(() => {
 
       <!-- LIABILITIES & EQUITY -->
       <div class="report-section mt-8">
-        <h2 class="section-title">Kewajiban & Ekuitas (Liabilities & Equity)</h2>
+        <h2 class="section-title">Liabilities & Equity</h2>
         
-        <h3 class="subsection-title">Kewajiban (Liabilities)</h3>
+        <h3 class="subsection-title">Liabilities</h3>
         <table class="report-table mb-4">
           <tbody>
             <tr v-if="liabilities.length === 0">
-              <td class="text-gray-400 italic">Belum ada data kewajiban.</td>
+              <td class="text-gray-400 italic">No liability data yet.</td>
               <td class="text-right">-</td>
             </tr>
             <tr v-for="liab in liabilities" :key="liab.code">
@@ -157,7 +157,7 @@ onMounted(() => {
           </tbody>
         </table>
 
-        <h3 class="subsection-title">Ekuitas (Equity)</h3>
+        <h3 class="subsection-title">Equity</h3>
         <table class="report-table">
           <tbody>
             <tr v-for="eq in equities" :key="eq.code">
@@ -165,7 +165,7 @@ onMounted(() => {
               <td class="text-right">{{ formatIDR(eq.balance) }}</td>
             </tr>
             <tr>
-              <td>Laba/Rugi Berjalan <span class="text-xs text-gray-400">(Net Income)</span></td>
+              <td>Net Income <span class="text-xs text-gray-400">(Current Period)</span></td>
               <td class="text-right font-bold" :class="netIncome >= 0 ? 'text-green-600' : 'text-red-600'">
                 {{ formatIDR(netIncome) }}
               </td>
@@ -173,7 +173,7 @@ onMounted(() => {
           </tbody>
           <tfoot>
             <tr class="total-row bg-blue-50">
-              <td>Total Kewajiban & Ekuitas</td>
+              <td>Total Liabilities & Equity</td>
               <td class="text-right font-bold text-blue-800">{{ formatIDR(totalLiabilities + totalEquity) }}</td>
             </tr>
           </tfoot>
@@ -183,7 +183,7 @@ onMounted(() => {
       <!-- BALANCE CHECK -->
       <div class="balance-check mt-8" :class="totalAssets === (totalLiabilities + totalEquity) ? 'bg-green-50 border-green-200 text-green-700' : 'bg-red-50 border-red-200 text-red-700'">
         <div class="font-bold">{{ totalAssets === (totalLiabilities + totalEquity) ? 'BALANCE' : 'UNBALANCED' }}</div>
-        <div>Selisih: {{ formatIDR(Math.abs(totalAssets - (totalLiabilities + totalEquity))) }}</div>
+        <div>Difference: {{ formatIDR(Math.abs(totalAssets - (totalLiabilities + totalEquity))) }}</div>
       </div>
     </div>
   </div>

@@ -174,13 +174,13 @@ const router = createRouter({
           path: 'finance/cash-bank',
           name: 'admin-finance-cash',
           component: CashBankView,
-          meta: { title: 'Kas & Bank' }
+          meta: { title: 'Cash & Bank' }
         },
         {
           path: 'finance/general-journal',
           name: 'admin-finance-journal',
           component: GeneralJournalView,
-          meta: { title: 'Jurnal Umum' }
+          meta: { title: 'General Journal' }
         },
         {
           path: 'finance/coa',
@@ -192,25 +192,25 @@ const router = createRouter({
           path: 'finance/ap-ar',
           name: 'admin-finance-apar',
           component: ApArView,
-          meta: { title: 'Hutang & Piutang' }
+          meta: { title: 'Payables & Receivables' }
         },
         {
           path: 'finance/general-ledger',
           name: 'admin-finance-gl',
           component: GeneralLedgerView,
-          meta: { title: 'Buku Besar' }
+          meta: { title: 'General Ledger' }
         },
         {
           path: 'finance/profit-loss',
           name: 'admin-finance-pl',
           component: ProfitLossView,
-          meta: { title: 'Laba Rugi' }
+          meta: { title: 'Profit & Loss' }
         },
         {
           path: 'finance/balance-sheet',
           name: 'admin-finance-bs',
           component: BalanceSheetView,
-          meta: { title: 'Neraca & Arus Kas' }
+          meta: { title: 'Balance Sheet & Cash Flow' }
         },
         {
           path: 'rooms',
@@ -222,13 +222,13 @@ const router = createRouter({
           path: 'room-units',
           name: 'admin-room-units',
           component: RoomUnitsView,
-          meta: { title: 'Room Units (No. Kamar)' },
+          meta: { title: 'Room Units' },
         },
         {
           path: 'floors',
           name: 'admin-floors',
           component: FloorsView,
-          meta: { title: 'Floors (Lantai)' },
+          meta: { title: 'Floors' },
         },
         {
           path: 'room-types',

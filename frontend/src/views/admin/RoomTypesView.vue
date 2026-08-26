@@ -66,7 +66,7 @@ const closeModal = () => {
 
 const saveRoomType = async () => {
   if (!form.value.name.trim()) {
-    toastStore.warning("Mohon masukkan nama tipe kamar.")
+    toastStore.warning("Please enter a room type name.")
     return
   }
 
@@ -78,10 +78,10 @@ const saveRoomType = async () => {
 
     if (isEditing.value) {
       const msg = await typeStore.update(editingId.value, payload)
-      toastStore.success(msg || 'Tipe kamar berhasil diperbarui!')
+      toastStore.success(msg || 'Room type updated successfully!')
     } else {
       const msg = await typeStore.store(payload)
-      toastStore.success(msg || 'Tipe kamar berhasil ditambahkan!')
+      toastStore.success(msg || 'Room type added successfully!')
     }
 
     // Refresh list
@@ -90,7 +90,7 @@ const saveRoomType = async () => {
     closeModal()
   } catch (error) {
     console.error(error)
-    toastStore.error(error.response?.data?.message || error.message || 'Terjadi kesalahan saat menyimpan tipe kamar')
+    toastStore.error(error.response?.data?.message || error.message || 'An error occurred while saving room type')
   } finally {
     loading.value = false
   }
@@ -98,16 +98,16 @@ const saveRoomType = async () => {
 
 const deleteRoomType = async (index) => {
   const item = types.value[index]
-  if (confirm(`Apakah Anda yakin ingin menghapus Tipe: ${item.name}?`)) {
+  if (confirm(`Are you sure you want to delete Type: ${item.name}?`)) {
     try {
       loading.value = true
       const msg = await typeStore.destroy(item.id)
-      toastStore.success(msg || 'Tipe kamar berhasil dihapus!')
+      toastStore.success(msg || 'Room type deleted successfully!')
       await typeStore.fetchTypes()
       types.value = typeStore.types
     } catch (error) {
       console.error(error)
-      toastStore.error(error.response?.data?.message || error.message || 'Terjadi kesalahan saat menghapus tipe kamar')
+      toastStore.error(error.response?.data?.message || error.message || 'An error occurred while deleting room type')
     } finally {
       loading.value = false
     }

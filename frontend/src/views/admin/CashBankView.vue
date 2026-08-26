@@ -116,7 +116,7 @@ onMounted(() => {
   <div class="cash-page">
       <div class="header">
         <div>
-          <h1>Kas & Bank</h1>
+          <h1>Cash & Bank</h1>
           <p class="subtitle">Manage cash flows and petty cash.</p>
         </div>
         <button class="btn-primary" @click="openModal()">+ Record Transaction</button>
@@ -183,8 +183,8 @@ onMounted(() => {
             <div class="form-group">
               <label>Type</label>
               <div class="radio-group">
-                <label><input type="radio" v-model="form.type" value="in" /> In (Pemasukan)</label>
-                <label><input type="radio" v-model="form.type" value="out" /> Out (Pengeluaran)</label>
+                <label><input type="radio" v-model="form.type" value="in" /> In (Income)</label>
+                <label><input type="radio" v-model="form.type" value="out" /> Out (Expense)</label>
               </div>
             </div>
             <div class="form-group">

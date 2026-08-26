@@ -94,7 +94,7 @@ const mutateRoomStatus = async (id, targetStatus) => {
   try {
     loading.value = true
     const msg = await roomService.updateStatus(id, targetStatus)
-    toastStore.success(msg || `Status kamar berhasil diubah ke ${targetStatus}`)
+    toastStore.success(msg || `Room status changed to ${targetStatus} successfully`)
 
     // Refresh Stream Data
     rooms.value = await roomService.getAll()
@@ -105,7 +105,7 @@ const mutateRoomStatus = async (id, targetStatus) => {
     }
   } catch (error) {
     console.error(error)
-    toastStore.error(error.message || 'Gagal memperbarui operasional kamar')
+    toastStore.error(error.message || 'Failed to update room operations')
   } finally {
     loading.value = false
   }
@@ -156,11 +156,11 @@ const closeModal = () => {
 
 const saveRoom = async () => {
   if (!form.value.category_id) {
-    toastStore.warning('Mohon pilih kategori kamar.')
+    toastStore.warning('Please select a room category.')
     return
   }
   if (!form.value.type_id) {
-    toastStore.warning('Mohon pilih tipe kamar.')
+    toastStore.warning('Please select a room type.')
     return
   }
 
@@ -187,10 +187,10 @@ const saveRoom = async () => {
 
     if (isEditing.value) {
       const msg = await roomService.update(editingId.value, formData)
-      toastStore.success(msg || 'Kamar berhasil diperbarui!')
+      toastStore.success(msg || 'Room updated successfully!')
     } else {
       const msg = await roomService.create(formData)
-      toastStore.success(msg || 'Kamar baru berhasil ditambahkan!')
+      toastStore.success(msg || 'New room added successfully!')
     }
 
     rooms.value = await roomService.getAll()
@@ -199,7 +199,7 @@ const saveRoom = async () => {
   } catch (error) {
     console.error(error)
     toastStore.error(
-      error.response?.data?.message || error.message || 'Gagal menyimpan detail kamar',
+      error.response?.data?.message || error.message || 'Failed to save room details',
     )
   } finally {
     loading.value = false
@@ -207,16 +207,16 @@ const saveRoom = async () => {
 }
 
 const deleteRoom = async (id) => {
-  if (confirm(`Apakah Anda yakin ingin menghapus kamar ini?`)) {
+  if (confirm(`Are you sure you want to delete this room?`)) {
     try {
       loading.value = true
       const msg = await roomService.delete(id)
-      toastStore.success(msg || 'Kamar berhasil dihapus!')
+      toastStore.success(msg || 'Room deleted successfully!')
       rooms.value = await roomService.getAll()
       closeDrawer()
     } catch (error) {
       console.error(error)
-      toastStore.error(error.response?.data?.message || error.message || 'Gagal menghapus kamar')
+      toastStore.error(error.response?.data?.message || error.message || 'Failed to delete room')
     } finally {
       loading.value = false
     }
@@ -291,22 +291,22 @@ onMounted(async () => {
             <input
               v-model="searchQuery"
               type="text"
-              placeholder="Cari berdasarkan kode kamar, tipe, atau kategori..."
+              placeholder="Search by room code, type, or category..."
               class="search-input"
             />
           </div>
           <div class="filter-box">
             <select v-model="statusFilter" class="filter-select">
-              <option value="All">Semua Status</option>
+              <option value="All">All Statuses</option>
               <option value="active">Active / Available</option>
               <option value="Occupied">Occupied</option>
-              <option value="dirty">Dirty (Perlu Pembersihan)</option>
+              <option value="dirty">Dirty (Needs Cleaning)</option>
               <option value="maintenance">Maintenance</option>
             </select>
           </div>
           <button v-if="canMutateData(authStore.role)" @click="openCreateModal" class="btn btn-primary">+ Add Room</button>
           <div v-else class="px-3.5 py-2 rounded-xl bg-slate-900 text-amber-300 text-xs font-bold border border-indigo-900/50 flex items-center gap-1.5 shadow-xs">
-            <span>👑</span> Mode Tinjauan Manager (Read-Only)
+            <span>👑</span> Manager Review Mode (Read-Only)
           </div>
         </div>
 
@@ -321,7 +321,7 @@ onMounted(async () => {
                   <th>Price / Night</th>
                   <th>Image</th>
                   <th class="text-center">Status</th>
-                  <th v-if="canMutateData(authStore.role)" class="text-center">Aksi Cepat</th>
+                  <th v-if="canMutateData(authStore.role)" class="text-center">Quick Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -369,16 +369,16 @@ onMounted(async () => {
                       v-if="room.status?.toLowerCase() === 'dirty'"
                       @click="mutateRoomStatus(room.id, 'active')"
                       class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg shadow-sm transition-all flex items-center gap-1 mx-auto"
-                      title="Klik untuk konfirmasi bahwa kamar telah selesai dibersihkan (Kembali Available)"
+                      title="Confirm room cleaned (Return to Available)"
                     >
                       <span>✨</span>
-                      <span>Telah Dibersihkan</span>
+                      <span>Cleaned</span>
                     </button>
                     <button
                       v-else-if="room.status?.toLowerCase() === 'active' || room.status?.toLowerCase() === 'available'"
                       @click="mutateRoomStatus(room.id, 'dirty')"
                       class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 font-semibold text-xs rounded-lg border border-amber-300 transition-all flex items-center gap-1 mx-auto"
-                      title="Tandai kamar kotor (Kirim Notifikasi Housekeeping)"
+                      title="Mark room dirty (Notify Housekeeping)"
                     >
                       <span>🧹</span>
                       <span>Set Dirty</span>
@@ -387,7 +387,7 @@ onMounted(async () => {
                       v-else-if="room.status?.toLowerCase() === 'maintenance'"
                       @click="mutateRoomStatus(room.id, 'active')"
                       class="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold text-xs rounded-lg border border-blue-300 transition-all flex items-center gap-1 mx-auto"
-                      title="Selesai Perbaikan (Set Available)"
+                      title="Repair Complete (Set Available)"
                     >
                       <span>🔧</span>
                       <span>Set Active</span>
@@ -396,7 +396,7 @@ onMounted(async () => {
                   </td>
                 </tr>
                 <tr v-if="filteredRooms.length === 0">
-                  <td colspan="7" class="no-data">Tidak ditemukan unit kamar yang cocok.</td>
+                  <td colspan="7" class="no-data">No matching room unit found.</td>
                 </tr>
               </tbody>
             </table>
@@ -453,22 +453,22 @@ onMounted(async () => {
             <div v-if="selectedRoom.status?.toLowerCase() === 'dirty'" class="p-3.5 mb-3 bg-amber-50 border border-amber-300 rounded-xl">
               <div class="flex items-center gap-2 text-amber-900 font-bold text-sm mb-1">
                 <span class="text-lg">🧹</span>
-                <span>Kamar Perlu Dibersihkan</span>
+                <span>Room Needs Cleaning</span>
               </div>
               <p class="text-xs text-amber-800 leading-relaxed mb-3">
-                Kamar ini telah diset <strong>Dirty</strong> dan tim Housekeeping menerima notifikasi. Klik tombol di bawah setelah kamar selesai dibersihkan agar otomatis kembali <strong>Available</strong>.
+                This room has been set to <strong>Dirty</strong> and Housekeeping notified. Click below after cleaning to return to <strong>Available</strong>.
               </p>
               <button
                 @click="mutateRoomStatus(selectedRoom.id, 'active')"
                 class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-lg shadow-sm transition-all flex items-center justify-center gap-2"
               >
                 <span>✨</span>
-                <span>Tandai Telah Dibersihkan (Set Available)</span>
+                <span>Mark as Cleaned (Set Available)</span>
               </button>
             </div>
 
             <div class="info-block-card oper-card">
-              <label>Ubah Status Operasional Fisik</label>
+              <label>Change Physical Operational Status</label>
               <div class="oper-buttons-group">
                 <button
                   @click="mutateRoomStatus(selectedRoom.id, 'active')"
@@ -509,7 +509,7 @@ onMounted(async () => {
             <div class="info-block-card">
               <label>Description / Features</label>
               <p class="val-desc">
-                {{ selectedRoom.description || 'Tidak ada deskripsi tambahan.' }}
+                {{ selectedRoom.description || 'No additional description.' }}
               </p>
             </div>
 
@@ -527,7 +527,7 @@ onMounted(async () => {
               </button>
             </div>
             <div v-else class="p-3 bg-slate-900 text-amber-300 text-xs font-bold rounded-xl border border-indigo-900/50 text-center shadow-xs">
-              👑 Mode Tinjauan Manager (Spesifikasi Terkunci)
+              👑 Manager Review Mode (Specifications Locked)
             </div>
           </div>
         </div>
@@ -582,7 +582,7 @@ onMounted(async () => {
               v-model="form.description"
               class="form-input"
               rows="8"
-              placeholder="Tulis deskripsi fasilitas kamar..."
+              placeholder="Write room facility description..."
             ></textarea>
           </div>
           <div class="form-group">

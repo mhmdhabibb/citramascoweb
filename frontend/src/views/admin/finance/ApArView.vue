@@ -132,15 +132,15 @@ onMounted(() => {
   <div class="finance-page">
     <div class="header">
       <div>
-        <h1>Hutang & Piutang (AP & AR)</h1>
-        <p class="subtitle">Kelola Accounts Payable & Accounts Receivable</p>
+        <h1>Payables & Receivables (AP & AR)</h1>
+        <p class="subtitle">Manage Accounts Payable & Accounts Receivable</p>
       </div>
       <button class="btn-primary" @click="openModal()">+ Add {{ activeTab }}</button>
     </div>
 
     <div class="tabs">
-      <button :class="{ active: activeTab === 'AP' }" @click="activeTab = 'AP'">Hutang (Accounts Payable)</button>
-      <button :class="{ active: activeTab === 'AR' }" @click="activeTab = 'AR'">Piutang (Accounts Receivable)</button>
+      <button :class="{ active: activeTab === 'AP' }" @click="activeTab = 'AP'">Payables (AP)</button>
+      <button :class="{ active: activeTab === 'AR' }" @click="activeTab = 'AR'">Receivables (AR)</button>
     </div>
 
     <div class="stat-card">
@@ -195,7 +195,7 @@ onMounted(() => {
     <!-- Create Invoice Modal -->
     <div class="modal-overlay" v-if="showModal" @click.self="closeModal">
       <div class="modal">
-        <h2>New {{ activeTab === 'AP' ? 'Hutang (AP)' : 'Piutang (AR)' }}</h2>
+        <h2>New {{ activeTab === 'AP' ? 'Payable (AP)' : 'Receivable (AR)' }}</h2>
         <form @submit.prevent="saveInvoice">
           <div class="form-group">
             <label>Partner Name (Supplier / Customer)</label>
@@ -217,7 +217,7 @@ onMounted(() => {
           </div>
           <div class="form-group">
             <label>Description</label>
-            <textarea v-model="form.description" required rows="2" placeholder="e.g. Pembelian perlengkapan"></textarea>
+            <textarea v-model="form.description" required rows="2" placeholder="e.g. Purchase of supplies"></textarea>
           </div>
           <div class="modal-actions">
             <button type="button" class="btn-secondary" @click="closeModal">Cancel</button>
@@ -231,7 +231,7 @@ onMounted(() => {
     <div class="modal-overlay" v-if="showPayModal" @click.self="closePayModal">
       <div class="modal">
         <h2>Process Payment</h2>
-        <p class="text-sm text-gray-500 mb-4">Membayar tagihan ini akan secara otomatis membuat Jurnal Umum baru.</p>
+        <p class="text-sm text-gray-500 mb-4">Paying this bill will automatically create a new General Journal entry.</p>
         <form @submit.prevent="payInvoice">
           <div class="form-group">
             <label>Pay From / Receive To Account</label>

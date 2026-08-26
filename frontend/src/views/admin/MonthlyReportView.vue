@@ -79,7 +79,7 @@ const fetchData = async () => {
     rooms.value = rList
     channels.value = cList
   } catch (err: any) {
-    toastStore.error(err.message || 'Gagal memuat data laporan bulanan')
+    toastStore.error(err.message || 'Failed to load monthly report data')
   } finally {
     loading.value = false
   }
@@ -90,8 +90,8 @@ onMounted(() => {
 })
 
 const handleGenerate = () => {
-  const m = monthsList[selectedMonth.value]?.label || 'Bulan'
-  toastStore.success(`Laporan ${m} ${selectedYear.value} berhasil diperbarui!`)
+  const m = monthsList[selectedMonth.value]?.label || 'Month'
+  toastStore.success(`Report ${m} ${selectedYear.value} updated successfully!`)
 }
 
 // Report Period Days
@@ -311,7 +311,7 @@ const revenueChartOptions = computed<ApexOptions>(() => ({
     axisBorder: { show: false },
     axisTicks: { show: false },
     title: {
-      text: `Tanggal (1 - ${daysInSelectedMonth.value} ${monthTitle.value})`,
+      text: `Date (1 - ${daysInSelectedMonth.value} ${monthTitle.value})`,
       style: { color: '#94a3b8', fontSize: '11px', fontWeight: 600 },
       offsetY: 8,
     },
@@ -340,10 +340,10 @@ const revenueChartOptions = computed<ApexOptions>(() => ({
       const formatted = formatIDR(val)
       return `
         <div style="padding: 10px 14px; font-family: Plus Jakarta Sans, sans-serif; font-size: 12px; background: #0f172a; color: #fff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
-          <div style="font-weight: 800; color: #94a3b8; margin-bottom: 4px;">Tanggal ${day} ${monthTitle.value}</div>
+          <div style="font-weight: 800; color: #94a3b8; margin-bottom: 4px;">Date ${day} ${monthTitle.value}</div>
           <div style="font-size: 14px; font-weight: 800; color: #38bdf8;">${formatted}</div>
           <div style="font-size: 11px; color: ${val > 0 ? '#4ade80' : '#94a3b8'}; margin-top: 4px;">
-            ${val > 0 ? '✓ Ada Pemesanan Menginap' : 'Tidak ada booking aktif'}
+            ${val > 0 ? '✓ Stay Reservation Exists' : 'No Active Booking'}
           </div>
         </div>
       `
@@ -353,7 +353,7 @@ const revenueChartOptions = computed<ApexOptions>(() => ({
 
 const revenueChartSeries = computed(() => [
   {
-    name: 'Pendapatan Harian Database',
+    name: 'Database Daily Revenue',
     data: dailyTrendData.value.revenueSeries,
   },
 ])
@@ -432,12 +432,12 @@ const dailyOccupancyMap = computed(() => {
 
 // Export Handlers
 const exportPDF = () => {
-  toastStore.info('Menyiapkan file PDF laporan performa bulanan...')
+  toastStore.info('Preparing monthly performance report PDF file...')
   window.print()
 }
 
 const exportCSV = () => {
-  const headers = ['Properti/Kamar', 'Reservasi', 'Total Nights', 'Occupancy (%)', 'Total Revenue (IDR)', 'ADR (IDR)', 'RevPAR (IDR)']
+  const headers = ['Property/Room', 'Reservasi', 'Total Nights', 'Occupancy (%)', 'Total Revenue (IDR)', 'ADR (IDR)', 'RevPAR (IDR)']
   const rows = propertyRows.value.map((p) => [
     `"${p.name}"`,
     p.reservations,
@@ -448,7 +448,7 @@ const exportCSV = () => {
     p.revpar,
   ])
   rows.push([
-    '"TOTAL KESELURUHAN"',
+    '"GRAND TOTAL"',
     totalReservations.value,
     totalNights.value,
     `${occupancyRate.value}%`,
@@ -465,7 +465,7 @@ const exportCSV = () => {
   document.body.appendChild(link)
   link.click()
   document.body.removeChild(link)
-  toastStore.success('File CSV berhasil diunduh!')
+  toastStore.success('CSV file downloaded successfully!')
 }
 </script>
 
@@ -479,7 +479,7 @@ const exportCSV = () => {
         </div>
         <div>
           <h1 class="page-title">Monthly Revenue & Performance</h1>
-          <p class="page-desc">Laporan komprehensif okupansi, ADR, RevPAR, dan analisis channel</p>
+          <p class="page-desc">Comprehensive report of occupancy, ADR, RevPAR, and channel analysis</p>
         </div>
       </div>
 
@@ -505,7 +505,7 @@ const exportCSV = () => {
         <!-- Property Filter -->
         <div class="filter-item">
           <select v-model="selectedProperty" class="form-select">
-            <option value="all">Semua Properti ({{ effectiveRooms.length }})</option>
+            <option value="all">All Properties ({{ effectiveRooms.length }})</option>
             <option v-for="r in effectiveRooms" :key="r.id" :value="r.id">
               {{ r.name }}
             </option>
@@ -544,7 +544,7 @@ const exportCSV = () => {
         </div>
         <div class="kpi-main">
           <span class="kpi-val">{{ totalReservations }}</span>
-          <span class="kpi-sub">Total booking masuk</span>
+          <span class="kpi-sub">Total incoming bookings</span>
         </div>
       </div>
 
@@ -558,7 +558,7 @@ const exportCSV = () => {
         </div>
         <div class="kpi-main">
           <span class="kpi-val">{{ totalNights }}</span>
-          <span class="kpi-sub">Malam terjual</span>
+          <span class="kpi-sub">Nights sold</span>
         </div>
       </div>
 
@@ -590,7 +590,7 @@ const exportCSV = () => {
         </div>
         <div class="kpi-main">
           <span class="kpi-val font-extrabold text-indigo-700">{{ formatIDR(totalRevenue) }}</span>
-          <span class="kpi-sub">∑ Total Pendapatan Kotor</span>
+          <span class="kpi-sub">∑ Total Gross Revenue</span>
         </div>
       </div>
 
@@ -618,7 +618,7 @@ const exportCSV = () => {
         </div>
         <div class="kpi-main">
           <span class="kpi-val">{{ formatIDR(revPAR) }}</span>
-          <span class="kpi-sub">Revenue / Total Kamar × Hari</span>
+          <span class="kpi-sub">Revenue / Total Rooms × Days</span>
         </div>
       </div>
     </div>
@@ -630,7 +630,7 @@ const exportCSV = () => {
         <div class="card-header">
           <div>
             <h3 class="card-title">Daily Revenue Trend</h3>
-            <p class="card-subtitle">Grafik fluktuasi pendapatan harian (IDR) selama periode {{ monthTitle }}</p>
+            <p class="card-subtitle">Daily revenue fluctuation chart (IDR) during period {{ monthTitle }}</p>
           </div>
         </div>
         <div class="chart-body">
@@ -648,7 +648,7 @@ const exportCSV = () => {
         <div class="card-header">
           <div>
             <h3 class="card-title">Revenue Share by Channel</h3>
-            <p class="card-subtitle">Distribusi kontribusi pendapatan per channel online</p>
+            <p class="card-subtitle">Revenue contribution distribution per online channel</p>
           </div>
         </div>
         <div class="chart-body flex items-center justify-center">
@@ -659,7 +659,7 @@ const exportCSV = () => {
             :options="channelChartOptions"
             :series="channelChartSeries"
           />
-          <div v-else class="text-slate-400 text-sm py-12">Belum ada data channel</div>
+          <div v-else class="text-slate-400 text-sm py-12">No channel data available</div>
         </div>
       </div>
     </div>
@@ -669,7 +669,7 @@ const exportCSV = () => {
       <div class="card-header">
         <div>
           <h3 class="card-title">Performance by Property / Room</h3>
-          <p class="card-subtitle">Rincian performa dan statistik per unit kamar untuk {{ monthTitle }}</p>
+          <p class="card-subtitle">Performance details and statistics per room unit for {{ monthTitle }}</p>
         </div>
       </div>
 
@@ -709,7 +709,7 @@ const exportCSV = () => {
           </tbody>
           <tfoot>
             <tr class="totals-row">
-              <td class="font-extrabold uppercase text-slate-900">Total Keseluruhan</td>
+              <td class="font-extrabold uppercase text-slate-900">Grand Total</td>
               <td class="text-center font-extrabold">{{ totalReservations }}</td>
               <td class="text-center font-extrabold">{{ totalNights }}</td>
               <td class="text-center font-extrabold text-emerald-700">{{ occupancyRate }}%</td>
@@ -727,7 +727,7 @@ const exportCSV = () => {
       <div class="card-header">
         <div>
           <h3 class="card-title">Daily Occupancy Heatmap</h3>
-          <p class="card-subtitle">Tingkat hunian harian kamar sepanjang bulan {{ monthTitle }}</p>
+          <p class="card-subtitle">Daily room occupancy rate throughout the month {{ monthTitle }}</p>
         </div>
       </div>
 
@@ -742,7 +742,7 @@ const exportCSV = () => {
             'heat-mid': d.occupancyPercent > 35 && d.occupancyPercent <= 70,
             'heat-high': d.occupancyPercent > 70,
           }"
-          :title="`${d.dateStr}: ${d.occupied}/${totalRoomsCount} kamar (${d.occupancyPercent}%)`"
+          :title="`${d.dateStr}: ${d.occupied}/${totalRoomsCount} rooms (${d.occupancyPercent}%)`"
         >
           <span class="heat-day-name">{{ d.dayName }}</span>
           <span class="heat-day-num">{{ d.day }}</span>

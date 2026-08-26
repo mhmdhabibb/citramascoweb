@@ -27,7 +27,7 @@ export const initFirebaseMessaging = async () => {
     // Listen for foreground push notifications
     onMessage(messaging, (payload) => {
       const toastStore = useToastStore()
-      const title = payload.notification?.title || (payload.data && payload.data.title) || 'Notifikasi Baru'
+      const title = payload.notification?.title || (payload.data && payload.data.title) || 'New Notification'
       const body = payload.notification?.body || (payload.data && payload.data.body) || ''
       toastStore.info(`${title}: ${body}`)
     })

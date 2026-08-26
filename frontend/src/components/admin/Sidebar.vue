@@ -271,9 +271,9 @@ const allowedMenuGroups = computed(() => {
     .map((group) => {
       let groupName = group.groupName
       if (isManager) {
-        if (groupName === 'Utama') groupName = 'Pengawasan Eksekutif'
-        else if (groupName === 'Manajemen Kamar') groupName = 'Monitoring Kamar'
-        else if (groupName === 'Finance & Accounting') groupName = 'Laporan Keuangan Eksekutif'
+        if (groupName === 'Utama') groupName = 'Executive Supervision'
+        else if (groupName === 'Room Management') groupName = 'Room Monitoring'
+        else if (groupName === 'Finance & Accounting') groupName = 'Executive Financial Reports'
       }
 
       return {

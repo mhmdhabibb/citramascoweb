@@ -90,7 +90,7 @@ const canModifyUser = (user: User) => {
 
 const handleDelete = async (user: User) => {
   if (!canModifyUser(user)) {
-    toastStore.error('Manager tidak diizinkan menghapus akun Admin atau Manager')
+    toastStore.error('Manager is not allowed to delete Admin or Manager accounts')
     return
   }
 
@@ -288,7 +288,7 @@ onMounted(fetchUsers)
         {{ loading ? 'Loading...' : 'Refresh' }}
       </button>
       <button @click="openCreateModal" class="btn btn-primary">
-        <span>+</span> {{ authStore.role === 'manager' ? 'Tambah Akun Staf' : 'Tambah Pengguna' }}
+        <span>+</span>         {{ authStore.role === 'manager' ? 'Add Staff Account' : 'Add User' }}
       </button>
     </div>
 
@@ -335,15 +335,15 @@ onMounted(fetchUsers)
                     @click="openRoleModal(user)"
                     class="btn btn-sm btn-primary-outline"
                     :disabled="loading"
-                  >Ubah Role</button>
+                  >Change Role</button>
                   <button
                     @click="handleDelete(user)"
                     class="btn btn-sm btn-danger-outline"
                     :disabled="loading"
-                  >Hapus</button>
+                  >Delete</button>
                 </div>
                 <div v-else class="text-xs text-slate-400 font-semibold italic flex items-center gap-1">
-                  <span>🔒</span> Akses Terkunci
+                  <span>🔒</span> Access Locked
                 </div>
               </td>
             </tr>

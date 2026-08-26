@@ -87,24 +87,24 @@ onMounted(() => {
   <div class="finance-page">
     <div class="header">
       <div>
-        <h1>Laporan Laba Rugi</h1>
+        <h1>Profit & Loss Report</h1>
         <p class="subtitle">Profit & Loss / Income Statement</p>
       </div>
       <button class="btn-secondary" @click="fetchData">Refresh Data</button>
     </div>
 
     <div v-if="loading" class="text-center p-8 text-gray-500">
-      Menghitung laporan laba rugi...
+      Calculating profit & loss report...
     </div>
     
     <div v-else class="report-container">
       <!-- REVENUES -->
       <div class="report-section">
-        <h2 class="section-title">Pendapatan (Revenues)</h2>
+        <h2 class="section-title">Revenues</h2>
         <table class="report-table">
           <tbody>
             <tr v-if="revenues.length === 0">
-              <td class="text-gray-400 italic">Belum ada data pendapatan.</td>
+              <td class="text-gray-400 italic">No revenue data yet.</td>
               <td class="text-right">-</td>
             </tr>
             <tr v-for="rev in revenues" :key="rev.code">
@@ -114,7 +114,7 @@ onMounted(() => {
           </tbody>
           <tfoot>
             <tr class="total-row">
-              <td>Total Pendapatan</td>
+              <td>Total Revenue</td>
               <td class="text-right font-bold">{{ formatIDR(totalRevenue) }}</td>
             </tr>
           </tfoot>
@@ -123,11 +123,11 @@ onMounted(() => {
 
       <!-- EXPENSES -->
       <div class="report-section mt-8">
-        <h2 class="section-title">Biaya (Expenses)</h2>
+        <h2 class="section-title">Expenses</h2>
         <table class="report-table">
           <tbody>
             <tr v-if="expenses.length === 0">
-              <td class="text-gray-400 italic">Belum ada data biaya.</td>
+              <td class="text-gray-400 italic">No expense data yet.</td>
               <td class="text-right">-</td>
             </tr>
             <tr v-for="exp in expenses" :key="exp.code">
@@ -137,7 +137,7 @@ onMounted(() => {
           </tbody>
           <tfoot>
             <tr class="total-row">
-              <td>Total Biaya</td>
+              <td>Total Expenses</td>
               <td class="text-right font-bold">{{ formatIDR(totalExpense) }}</td>
             </tr>
           </tfoot>
@@ -146,7 +146,7 @@ onMounted(() => {
 
       <!-- NET INCOME -->
       <div class="net-income-section mt-8" :class="netIncome >= 0 ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'">
-        <h2>{{ netIncome >= 0 ? 'Laba Bersih (Net Income)' : 'Rugi Bersih (Net Loss)' }}</h2>
+        <h2>{{ netIncome >= 0 ? 'Net Income' : 'Net Loss' }}</h2>
         <h1 :class="netIncome >= 0 ? 'text-green-700' : 'text-red-700'">{{ formatIDR(netIncome) }}</h1>
       </div>
     </div>
