@@ -378,8 +378,8 @@ const timeframeFlowData = computed(() => {
     const late: number[] = Array.from({ length: slots.length }, () => 0)
     filteredDatabaseTasks.value.forEach((t) => {
       const idx = Math.min(slots.length - 1, Math.max(0, fn(t.dateObj)))
-      if (t.isSlaMet) onTime[idx]++
-      else if (t.isSlaBreached) late[idx]++
+      if (t.isSlaMet) onTime[idx] = (onTime[idx] ?? 0) + 1
+      else if (t.isSlaBreached) late[idx] = (late[idx] ?? 0) + 1
     })
     return { categories: slots, onTime, late }
   }
@@ -420,7 +420,7 @@ const taskTrendData = computed(() => {
     filteredDatabaseTasks.value.forEach((t) => {
       if (t.status === 'completed') {
         const idx = Math.min(slots.length - 1, Math.max(0, fn(t.dateObj)))
-        counts[idx]++
+        counts[idx] = (counts[idx] ?? 0) + 1
       }
     })
     const cumulative: number[] = []
@@ -660,8 +660,8 @@ const receptionistHourlyDistribution = computed(() => {
   filteredReceptionistLogs.value.forEach((log) => {
     const h = log.timestamp.getHours()
     const idx = Math.max(0, Math.min(15, h - 6))
-    if (log.action === 'check_in') checkInCounts[idx]++
-    else if (log.action === 'check_out') checkOutCounts[idx]++
+    if (log.action === 'check_in') checkInCounts[idx] = (checkInCounts[idx] ?? 0) + 1
+    else if (log.action === 'check_out') checkOutCounts[idx] = (checkOutCounts[idx] ?? 0) + 1
   })
   return { categories: hours, checkIns: checkInCounts, checkOuts: checkOutCounts }
 })
