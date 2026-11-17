@@ -55,6 +55,8 @@ type SignInResponse struct {
 	RefreshToken   string       `json:"refresh_token"`
 	User           ExternalUser `json:"user"`
 	CitramascoRole string       `json:"citramasco_role"`
+	Role           string       `json:"role"`
+	FirstName      string       `json:"first_name"`
 	Department     string       `json:"department,omitempty"`
 	Position       string       `json:"position,omitempty"`
 	Permissions    []string     `json:"permissions"`

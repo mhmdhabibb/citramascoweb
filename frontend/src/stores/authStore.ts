@@ -6,11 +6,13 @@ export const MOCK_DEV_TOKEN = 'mock-developer-token-citramas'
 
 interface ProfileUser {
   id?: string
-  first_name: string
+  first_name?: string
   last_name?: string
   username?: string
   email?: string
   role: string
+  citramasco_role?: string
+  user?: any
 }
 
 export const useAuthStore = defineStore('auth', () => {
@@ -18,7 +20,7 @@ export const useAuthStore = defineStore('auth', () => {
   const loaded = ref(false)
   const loadingProfile = ref(false)
 
-  const role = computed(() => user.value?.role || '')
+  const role = computed(() => user.value?.role || user.value?.citramasco_role || user.value?.user?.role || '')
   const isAuthenticated = computed(() => !!user.value)
 
   async function fetchProfile(stale = false): Promise<ProfileUser | null> {
@@ -50,8 +52,15 @@ export const useAuthStore = defineStore('auth', () => {
     }
 
     try {
-      const data = await authService.getProfile()
-      user.value = data as ProfileUser
+      const data: any = await authService.getProfile()
+      const resolvedRole = data?.role || data?.citramasco_role || data?.user?.role || ''
+      const resolvedName = data?.first_name || data?.user?.name || data?.username || data?.user?.username || 'Admin'
+      user.value = {
+        ...data,
+        first_name: resolvedName,
+        role: resolvedRole,
+        citramasco_role: resolvedRole,
+      }
     } catch {
       user.value = null
     }

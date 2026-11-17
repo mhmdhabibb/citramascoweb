@@ -225,6 +225,8 @@ func (s *authService) SignIn(req *SignInRequest) (*SignInResponse, error) {
 		RefreshToken:   authResp.Data.RefreshToken,
 		User:           user,
 		CitramascoRole: citramascoRole,
+		Role:           citramascoRole,
+		FirstName:      user.Name,
 		Department:     deptName,
 		Position:       posName,
 		Permissions:    permissions,
@@ -357,8 +359,27 @@ func (s *authService) GetProfile(userId string, token string) (*SignInResponse, 
 					Limit(1).
 					Pluck("roles.slug", &roleSlug)
 
-				if roleSlug == "" {
-					roleSlug = mapDepartmentAndPositionToRole(&meResp.Data)
+				mappedSlug := mapDepartmentAndPositionToRole(&meResp.Data)
+
+				if roleSlug == "" || ((mappedSlug == "admin" || mappedSlug == "manager") && roleSlug != mappedSlug) {
+					var targetRole rbac.Role
+					if err := s.db.Where("slug = ?", mappedSlug).First(&targetRole).Error; err == nil {
+						var existingUserRole rbac.UserRole
+						if err := s.db.Where("user_id = ?", userId).First(&existingUserRole).Error; err == nil {
+							s.db.Model(&existingUserRole).Update("role_id", targetRole.Id)
+						} else {
+							assignedBy := "auto-hr-mapping"
+							s.db.Create(&rbac.UserRole{
+								UserId:     userId,
+								RoleId:     targetRole.Id,
+								AssignedBy: &assignedBy,
+								AssignedAt: time.Now(),
+							})
+						}
+						roleSlug = targetRole.Slug
+					} else {
+						roleSlug = mappedSlug
+					}
 				}
 
 				deptName := ""
@@ -389,6 +410,8 @@ func (s *authService) GetProfile(userId string, token string) (*SignInResponse, 
 					AccessToken:    token,
 					User:           meResp.Data,
 					CitramascoRole: roleSlug,
+					Role:           roleSlug,
+					FirstName:      meResp.Data.Name,
 					Department:     deptName,
 					Position:       posName,
 					Permissions:    permissions,

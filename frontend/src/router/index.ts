@@ -280,18 +280,24 @@ router.beforeEach(async (to) => {
   const profile = await authStore.fetchProfile()
   if (!profile) return { name: 'login' }
 
+  const effectiveRole = profile.role || (profile as any).citramasco_role || authStore.role
+
   // always allow the forbidden fallback page itself
   if (to.path === '/admin/forbidden') return true
 
   // default landing for /admin and empty paths
   if (to.path === '/admin' || to.path === '/admin/') {
-    return { name: firstAllowedPage(profile.role) }
+    return { name: firstAllowedPage(effectiveRole) }
   }
 
-  if (canAccess(profile.role, to.path)) return true
+  if (canAccess(effectiveRole, to.path)) return true
 
-  // not permitted -> send to that role's first accessible page
-  return { name: firstAllowedPage(profile.role) }
+  // not permitted -> send to that role's first accessible page (prevent infinite redirect loop)
+  const targetPageName = firstAllowedPage(effectiveRole)
+  if (to.name === targetPageName) {
+    return { name: 'admin-forbidden' }
+  }
+  return { name: targetPageName }
 })
 
 export default router
