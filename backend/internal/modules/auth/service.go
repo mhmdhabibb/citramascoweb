@@ -53,6 +53,7 @@ func cleanStr(s string) string {
 	s = strings.ReplaceAll(s, " ", "")
 	s = strings.ReplaceAll(s, "-", "")
 	s = strings.ReplaceAll(s, "_", "")
+	s = strings.ReplaceAll(s, ".", "")
 	return s
 }
 
@@ -60,11 +61,6 @@ func cleanStr(s string) string {
 func mapDepartmentAndPositionToRole(user *ExternalUser) string {
 	roleClean := cleanStr(user.Role)
 	usernameClean := cleanStr(user.Username)
-
-	// 1. System Administrator / Owner from HRIS
-	if roleClean == "admin" || roleClean == "owner" || usernameClean == "admin" {
-		return "admin"
-	}
 
 	deptClean := ""
 	posClean := ""
@@ -75,6 +71,11 @@ func mapDepartmentAndPositionToRole(user *ExternalUser) string {
 		if user.Employee.Position != nil {
 			posClean = cleanStr(user.Employee.Position.Name)
 		}
+	}
+
+	// 1. System Administrator / Owner from HRIS
+	if strings.Contains(roleClean, "admin") || strings.Contains(roleClean, "owner") || strings.Contains(usernameClean, "admin") || strings.Contains(posClean, "admin") {
+		return "admin"
 	}
 
 	// 2. Executive / General Manager -> Hotel Manager
@@ -166,9 +167,10 @@ func (s *authService) SignIn(req *SignInRequest) (*SignInResponse, error) {
 	var userRole rbac.UserRole
 	err = s.db.Preload("Role").Where("user_id = ?", user.Id).First(&userRole).Error
 
+	mappedSlug := mapDepartmentAndPositionToRole(&user)
+
 	if err != nil && errors.Is(err, gorm.ErrRecordNotFound) {
 		// Auto-map based on Department & Position from HRIS
-		mappedSlug := mapDepartmentAndPositionToRole(&user)
 		var targetRole rbac.Role
 		if err := s.db.Where("slug = ?", mappedSlug).First(&targetRole).Error; err == nil {
 			assignedBy := "auto-hr-mapping"
@@ -183,6 +185,14 @@ func (s *authService) SignIn(req *SignInRequest) (*SignInResponse, error) {
 		}
 	} else if err == nil && userRole.Role != nil {
 		citramascoRole = userRole.Role.Slug
+		// If mapped role is admin or manager but DB has a lower role, upgrade to admin/manager
+		if (mappedSlug == "admin" || mappedSlug == "manager") && citramascoRole != mappedSlug {
+			var upgradedRole rbac.Role
+			if err := s.db.Where("slug = ?", mappedSlug).First(&upgradedRole).Error; err == nil {
+				s.db.Model(&userRole).Update("role_id", upgradedRole.Id)
+				citramascoRole = upgradedRole.Slug
+			}
+		}
 	}
 
 	deptName := ""
@@ -222,6 +232,11 @@ func (s *authService) SignIn(req *SignInRequest) (*SignInResponse, error) {
 }
 
 func (s *authService) checkShiftAccess(token string, user *ExternalUser, roleSlug string) error {
+	// 0. Optional environment bypass (useful for development / testing without active shift roster)
+	if config.Config("BYPASS_SHIFT_CHECK") == "true" {
+		return nil
+	}
+
 	// 1. Role Admin and Manager have 24/7 bypass access
 	if roleSlug == "admin" || roleSlug == "manager" {
 		return nil
