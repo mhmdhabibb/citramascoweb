@@ -2,17 +2,31 @@ package config
 
 import (
 	"os"
+	"sync"
 
 	"github.com/joho/godotenv"
 )
 
-func Config(key string) string {
+var (
+	envOnce sync.Once
+)
 
-	err := godotenv.Load()
-	if err != nil {
-		// This will print a warning in your terminal if it can't find the file
+func loadEnv() {
+	envOnce.Do(func() {
+		// Attempt to load .env from current directory, backend directory, or parent directory
+		paths := []string{".env", "backend/.env", "../.env"}
+		for _, p := range paths {
+			if _, err := os.Stat(p); err == nil {
+				if err := godotenv.Load(p); err == nil {
+					return
+				}
+			}
+		}
 		println("Warning: .env file not found!")
-	}
-	return os.Getenv(key)
+	})
+}
 
+func Config(key string) string {
+	loadEnv()
+	return os.Getenv(key)
 }

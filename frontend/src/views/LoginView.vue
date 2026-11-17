@@ -111,7 +111,7 @@ const handleLogin = async () => {
                            
     
     
-    errorMessage.value =  'Invalid credentials. Please try again.'
+    errorMessage.value = error.response?.data?.message || error.message || 'Invalid credentials. Please try again.'
   } finally {
     isLoading.value = false
   }
