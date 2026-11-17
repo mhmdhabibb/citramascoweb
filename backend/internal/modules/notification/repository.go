@@ -1,8 +1,6 @@
 package notification
 
 import (
-	"citramascoweb-backend/internal/modules/auth"
-
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
@@ -49,46 +47,39 @@ func (r *notificationRepository) MarkRead(id, userId string) error {
 }
 
 func (r *notificationRepository) GetFinanceUserIds() ([]string, error) {
-	var users []auth.User
-	if err := r.db.Select("id").Where("role = ?", "finance").Find(&users).Error; err != nil {
-		return nil, err
-	}
-	ids := make([]string, 0, len(users))
-	for _, u := range users {
-		ids = append(ids, u.Id)
-	}
-	return ids, nil
+	var userIds []string
+	err := r.db.Table("user_roles").
+		Joins("JOIN roles ON roles.id = user_roles.role_id").
+		Where("roles.slug = ? AND roles.deleted_at IS NULL", "finance").
+		Pluck("user_roles.user_id", &userIds).Error
+	return userIds, err
 }
 
 func (r *notificationRepository) GetHousekeepingUserIds() ([]string, error) {
-	var users []auth.User
-	// Cari role housekeeping terlebih dahulu
-	if err := r.db.Select("id").Where("role = ?", "housekeeping").Find(&users).Error; err != nil {
+	var userIds []string
+	err := r.db.Table("user_roles").
+		Joins("JOIN roles ON roles.id = user_roles.role_id").
+		Where("roles.slug = ? AND roles.deleted_at IS NULL", "housekeeping").
+		Pluck("user_roles.user_id", &userIds).Error
+	if err != nil {
 		return nil, err
 	}
-	// Jika belum ada user spesifik dengan role housekeeping, fallback ke reception, admin, dan manager
-	if len(users) == 0 {
-		if err := r.db.Select("id").Where("role IN ?", []string{"admin", "manager", "reception"}).Find(&users).Error; err != nil {
-			return nil, err
-		}
+	if len(userIds) == 0 {
+		err = r.db.Table("user_roles").
+			Joins("JOIN roles ON roles.id = user_roles.role_id").
+			Where("roles.slug IN ? AND roles.deleted_at IS NULL", []string{"admin", "manager", "reception"}).
+			Pluck("user_roles.user_id", &userIds).Error
 	}
-	ids := make([]string, 0, len(users))
-	for _, u := range users {
-		ids = append(ids, u.Id)
-	}
-	return ids, nil
+	return userIds, err
 }
 
 func (r *notificationRepository) GetReceptionAndAdminUserIds() ([]string, error) {
-	var users []auth.User
-	if err := r.db.Select("id").Where("role IN ?", []string{"admin", "manager", "reception"}).Find(&users).Error; err != nil {
-		return nil, err
-	}
-	ids := make([]string, 0, len(users))
-	for _, u := range users {
-		ids = append(ids, u.Id)
-	}
-	return ids, nil
+	var userIds []string
+	err := r.db.Table("user_roles").
+		Joins("JOIN roles ON roles.id = user_roles.role_id").
+		Where("roles.slug IN ? AND roles.deleted_at IS NULL", []string{"admin", "manager", "reception"}).
+		Pluck("user_roles.user_id", &userIds).Error
+	return userIds, err
 }
 
 func (r *notificationRepository) CreateMany(items []Notification) error {

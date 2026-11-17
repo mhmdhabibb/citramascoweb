@@ -1,6 +1,7 @@
 package service_request
 
 import (
+	"citramascoweb-backend/config"
 	"citramascoweb-backend/internal/modules/notification"
 	"citramascoweb-backend/internal/modules/rooms"
 	"errors"
@@ -32,11 +33,11 @@ type CompleteTaskDto struct {
 }
 
 type ServiceRequestServiceInterface interface {
-	CreateRequest(dto *CreateServiceRequestDto) (*ServiceRequest, error)
+	CreateRequest(dto *CreateServiceRequestDto, userId string) (*ServiceRequest, error)
 	GetAll(status string) ([]ServiceRequest, error)
 	GetById(id string) (*ServiceRequest, error)
 	AssignToHousekeeping(id string, dto *AssignTaskDto) error
-	CompleteRequest(id string, dto *CompleteTaskDto) error
+	CompleteRequest(id string, dto *CompleteTaskDto, userId string) error
 	CancelRequest(id string) error
 }
 
@@ -58,10 +59,10 @@ func NewServiceRequestService(
 	}
 }
 
-func (s *serviceRequestService) CreateRequest(dto *CreateServiceRequestDto) (*ServiceRequest, error) {
+func (s *serviceRequestService) CreateRequest(dto *CreateServiceRequestDto, userId string) (*ServiceRequest, error) {
 	room, err := s.roomRepo.GetById(dto.RoomId)
 	if err != nil {
-		return nil, errors.New("kamar tidak ditemukan")
+		return nil, errors.New("room not found")
 	}
 
 	priority := dto.Priority
@@ -73,20 +74,26 @@ func (s *serviceRequestService) CreateRequest(dto *CreateServiceRequestDto) (*Se
 		}
 	}
 
+	var reportedBy *string
+	if userId != "" {
+		reportedBy = &userId
+	}
+
 	req := &ServiceRequest{
-		Id:            uuid.New().String(),
-		RoomId:        dto.RoomId,
-		ReservationId: dto.ReservationId,
-		GuestName:     dto.GuestName,
-		GuestPhone:    dto.GuestPhone,
-		Category:      dto.Category,
-		Title:         dto.Title,
-		Description:   dto.Description,
-		Priority:      priority,
-		Status:        StatusPendingReception,
-		DamageCharge:  0,
-		CreatedAt:     time.Now(),
-		UpdatedAt:     time.Now(),
+		Id:               uuid.New().String(),
+		RoomId:           dto.RoomId,
+		ReservationId:    dto.ReservationId,
+		GuestName:        dto.GuestName,
+		GuestPhone:       dto.GuestPhone,
+		Category:         dto.Category,
+		Title:            dto.Title,
+		Description:      dto.Description,
+		Priority:         priority,
+		ReportedByUserId: reportedBy,
+		Status:           StatusPendingReception,
+		DamageCharge:     0,
+		CreatedAt:        time.Now(),
+		UpdatedAt:        time.Now(),
 	}
 
 	if err := s.repo.Create(req); err != nil {
@@ -95,9 +102,9 @@ func (s *serviceRequestService) CreateRequest(dto *CreateServiceRequestDto) (*Se
 
 	// Otomatis kirim notifikasi ke Frontdesk & Admin via Notification & FCM
 	if s.notifService != nil {
-		title := fmt.Sprintf("🚨 Laporan Tamu (%s): %s", room.Name, req.Title)
-		msg := fmt.Sprintf("Tamu %s di kamar %s melaporkan: %s. Mohon segera ditinjau dan ditugaskan.", req.GuestName, room.Name, req.Description)
-		_ = s.notifService.NotifyRoomCleaned(room.Name, room.Code, req.Id) // Trigger push ke Frontdesk
+		title := fmt.Sprintf("🚨 Guest Report (%s): %s", room.Name, req.Title)
+		msg := fmt.Sprintf("Guest %s in room %s reported: %s. Please review and assign immediately.", req.GuestName, room.Name, req.Description)
+		_ = s.notifService.NotifyRoomCleaned(room.Name, room.Code, req.Id)
 		go func() {
 			_ = notification.SendFCMPush(nil, title, msg, map[string]interface{}{
 				"type":       "guest_service_request",
@@ -121,7 +128,7 @@ func (s *serviceRequestService) GetById(id string) (*ServiceRequest, error) {
 func (s *serviceRequestService) AssignToHousekeeping(id string, dto *AssignTaskDto) error {
 	item, err := s.repo.GetById(id)
 	if err != nil {
-		return errors.New("laporan tidak ditemukan")
+		return errors.New("report not found")
 	}
 
 	if err := s.repo.AssignTask(id, dto.AssignedToUserId, dto.Notes, dto.Priority); err != nil {
@@ -130,7 +137,7 @@ func (s *serviceRequestService) AssignToHousekeeping(id string, dto *AssignTaskD
 
 	// Otomatis kirim notifikasi ke seluruh staf HOUSEKEEPING (HP Android + Web)
 	if s.notifService != nil {
-		roomName := "Kamar"
+		roomName := "Room"
 		if item.Room.Name != "" {
 			roomName = item.Room.Name
 		}
@@ -140,10 +147,10 @@ func (s *serviceRequestService) AssignToHousekeeping(id string, dto *AssignTaskD
 	return nil
 }
 
-func (s *serviceRequestService) CompleteRequest(id string, dto *CompleteTaskDto) error {
+func (s *serviceRequestService) CompleteRequest(id string, dto *CompleteTaskDto, userId string) error {
 	item, err := s.repo.GetById(id)
 	if err != nil {
-		return errors.New("laporan tidak ditemukan")
+		return errors.New("report not found")
 	}
 
 	charge := 0
@@ -151,13 +158,46 @@ func (s *serviceRequestService) CompleteRequest(id string, dto *CompleteTaskDto)
 		charge = dto.DamageCharge
 	}
 
-	if err := s.repo.CompleteTask(id, charge); err != nil {
+	now := time.Now()
+	resMinutes := int(now.Sub(item.CreatedAt).Minutes())
+
+	targetMinutes := 60
+	switch item.Priority {
+	case PriorityUrgent:
+		targetMinutes = 30
+	case PriorityHigh:
+		targetMinutes = 45
+	case PriorityMedium:
+		targetMinutes = 60
+	case PriorityLow:
+		targetMinutes = 120
+	}
+
+	isBreached := resMinutes > targetMinutes
+	breachReason := ""
+	if isBreached {
+		breachReason = fmt.Sprintf("Waktu penanganan (%d menit) melebihi batas target SLA (%d menit)", resMinutes, targetMinutes)
+	}
+
+	if err := s.repo.CompleteTask(id, charge, resMinutes, isBreached, breachReason); err != nil {
 		return err
+	}
+
+	// Update SLA Performance harian untuk staf yang mengerjakan
+	staffId := ""
+	if item.AssignedToUserId != nil && *item.AssignedToUserId != "" {
+		staffId = *item.AssignedToUserId
+	} else if userId != "" {
+		staffId = userId
+	}
+
+	if staffId != "" {
+		s.updateStaffDailySLA(staffId, isBreached, resMinutes)
 	}
 
 	// Otomatis kirim notifikasi ke Frontdesk bahwa tugas telah selesai
 	if s.notifService != nil {
-		roomName := "Kamar"
+		roomName := "Room"
 		if item.Room.Name != "" {
 			roomName = item.Room.Name
 		}
@@ -165,6 +205,66 @@ func (s *serviceRequestService) CompleteRequest(id string, dto *CompleteTaskDto)
 	}
 
 	return nil
+}
+
+func (s *serviceRequestService) updateStaffDailySLA(staffId string, isBreached bool, resMinutes int) {
+	if config.DB == nil {
+		return
+	}
+	loc := time.FixedZone("WIB", 7*3600)
+	today := time.Now().In(loc).Truncate(24 * time.Hour)
+
+	type DailyPerf struct {
+		Id                       string
+		TotalTasksAssigned       int
+		TotalTasksCompleted      int
+		TotalBreachedTasks       int
+		SLAComplianceRate        float64
+		AvgResolutionTimeMinutes float64
+	}
+
+	var record DailyPerf
+	err := config.DB.Table("staff_sla_performance_daily").
+		Where("snapshot_date = ? AND staff_id = ?", today, staffId).
+		First(&record).Error
+
+	if err != nil {
+		breachedCount := 0
+		compliance := 100.0
+		if isBreached {
+			breachedCount = 1
+			compliance = 0.0
+		}
+		config.DB.Table("staff_sla_performance_daily").Create(map[string]interface{}{
+			"id":                          uuid.New().String(),
+			"snapshot_date":               today,
+			"staff_id":                    staffId,
+			"department":                  "housekeeping",
+			"total_tasks_assigned":        1,
+			"total_tasks_completed":       1,
+			"total_breached_tasks":        breachedCount,
+			"sla_compliance_rate":         compliance,
+			"avg_resolution_time_minutes": float64(resMinutes),
+			"created_at":                  time.Now(),
+		})
+	} else {
+		completed := record.TotalTasksCompleted + 1
+		breached := record.TotalBreachedTasks
+		if isBreached {
+			breached++
+		}
+		compliance := float64(completed-breached) / float64(completed) * 100.0
+		avgRes := (record.AvgResolutionTimeMinutes*float64(record.TotalTasksCompleted) + float64(resMinutes)) / float64(completed)
+
+		config.DB.Table("staff_sla_performance_daily").
+			Where("id = ?", record.Id).
+			Updates(map[string]interface{}{
+				"total_tasks_completed":       completed,
+				"total_breached_tasks":        breached,
+				"sla_compliance_rate":         compliance,
+				"avg_resolution_time_minutes": avgRes,
+			})
+	}
 }
 
 func (s *serviceRequestService) CancelRequest(id string) error {

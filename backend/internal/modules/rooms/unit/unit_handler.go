@@ -68,7 +68,7 @@ func (h *roomUnitHandler) Create(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": err.Error()})
 		return
 	}
-	c.JSON(http.StatusCreated, gin.H{"success": true, "message": "Unit nomor kamar berhasil ditambahkan"})
+	c.JSON(http.StatusCreated, gin.H{"success": true, "message": "Room unit added successfully"})
 }
 
 func (h *roomUnitHandler) Update(c *gin.Context) {
@@ -83,7 +83,7 @@ func (h *roomUnitHandler) Update(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"success": true, "message": "Unit nomor kamar berhasil diperbarui"})
+	c.JSON(http.StatusOK, gin.H{"success": true, "message": "Room unit updated successfully"})
 }
 
 func (h *roomUnitHandler) UpdateStatus(c *gin.Context) {
@@ -98,7 +98,7 @@ func (h *roomUnitHandler) UpdateStatus(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"success": true, "message": "Status kamar berhasil diubah"})
+	c.JSON(http.StatusOK, gin.H{"success": true, "message": "Room status changed successfully"})
 }
 
 func (h *roomUnitHandler) Delete(c *gin.Context) {
@@ -107,5 +107,5 @@ func (h *roomUnitHandler) Delete(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"success": true, "message": "Unit nomor kamar berhasil dihapus"})
+	c.JSON(http.StatusOK, gin.H{"success": true, "message": "Room unit deleted successfully"})
 }

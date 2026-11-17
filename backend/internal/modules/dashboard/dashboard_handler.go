@@ -34,7 +34,7 @@ func (h *DashboardHandler) GetDashboardData(c *gin.Context) {
 
 	// Response sukses membawa data Card, Line Chart, dan Pie Chart sekaligus
 	c.JSON(http.StatusOK, gin.H{
-		"message": "Berhasil mengambil data dashboard",
+		"message": "Dashboard data retrieved successfully",
 		"data":    data,
 	})
 }

@@ -44,7 +44,8 @@ func (h *reservationHandler) Store(c *gin.Context) {
 		return
 	}
 
-	err = h.reservationService.Store(&req)
+	userId := c.GetString("user_id")
+	err = h.reservationService.Store(&req, userId)
 	if err != nil {
 		c.JSON(400, gin.H{"success": false, "message": err.Error()})
 		return
@@ -146,18 +147,20 @@ func (h *reservationHandler) CheckAvailability(c *gin.Context) {
 
 func (h *reservationHandler) CheckIn(c *gin.Context) {
 	id := c.Param("id")
-	if err := h.reservationService.CheckIn(id); err != nil {
+	userId := c.GetString("user_id") // Asumsi context dari JWT middleware
+	if err := h.reservationService.CheckIn(id, userId); err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(200, gin.H{"message": "Proses check-in berhasil, status kamar diubah menjadi Occupied"})
+	c.JSON(200, gin.H{"message": "Check-in successful, room status changed to Occupied"})
 }
 
 func (h *reservationHandler) CheckOut(c *gin.Context) {
 	id := c.Param("id")
-	if err := h.reservationService.CheckOut(id); err != nil {
+	userId := c.GetString("user_id") // Asumsi context dari JWT middleware
+	if err := h.reservationService.CheckOut(id, userId); err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(200, gin.H{"message": "Proses check-out berhasil, status kamar kembali Available"})
+	c.JSON(200, gin.H{"message": "Check-out successful, room status back to Available"})
 }

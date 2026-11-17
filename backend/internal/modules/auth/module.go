@@ -12,8 +12,7 @@ type Module struct {
 }
 
 func InitModule(db *gorm.DB) *Module {
-	repo := NewAuthRepository(db)
-	service := NewAuthService(repo)
+	service := NewAuthService(db)
 	handler := NewAuthHandler(service)
 
 	return &Module{
@@ -23,9 +22,10 @@ func InitModule(db *gorm.DB) *Module {
 
 func (m *Module) AuthRoutes(router *gin.RouterGroup) {
 	auth := router.Group("/auth")
-	auth.POST("/sign-up", m.Handler.Register)
-	auth.POST("/sign-in", m.Handler.Login)
-	auth.GET("/me", middlewares.AuthMiddleware(), m.Handler.Profile)
-	auth.PATCH("/update-profile", middlewares.AuthMiddleware(), m.Handler.UpdateProfile)
-	auth.POST("/sign-out", middlewares.AuthMiddleware(), m.Handler.Logout)
+	{
+		auth.POST("/sign-in", m.Handler.SignIn)
+		auth.POST("/login", m.Handler.SignIn)
+		auth.GET("/me", middlewares.AuthMiddleware(), m.Handler.Profile)
+	}
 }
+

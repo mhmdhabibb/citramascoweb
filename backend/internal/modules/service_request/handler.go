@@ -21,7 +21,8 @@ func (h *serviceRequestHandler) Create(c *gin.Context) {
 		return
 	}
 
-	result, err := h.service.CreateRequest(&dto)
+	userId := c.GetString("user_id")
+	result, err := h.service.CreateRequest(&dto, userId)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": err.Error()})
 		return
@@ -29,7 +30,7 @@ func (h *serviceRequestHandler) Create(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, gin.H{
 		"success": true,
-		"message": "Laporan layanan kamar berhasil dikirim ke Resepsionis.",
+		"message": "Room service report successfully sent to Receptionist.",
 		"data":    result,
 	})
 }
@@ -71,7 +72,7 @@ func (h *serviceRequestHandler) AssignToHousekeeping(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
-		"message": "Tugas berhasil diteruskan ke tim Housekeeping.",
+		"message": "Task successfully forwarded to Housekeeping team.",
 	})
 }
 
@@ -80,14 +81,15 @@ func (h *serviceRequestHandler) CompleteRequest(c *gin.Context) {
 	var dto CompleteTaskDto
 	_ = c.ShouldBindJSON(&dto)
 
-	if err := h.service.CompleteRequest(id, &dto); err != nil {
+	userId := c.GetString("user_id")
+	if err := h.service.CompleteRequest(id, &dto, userId); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": err.Error()})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
-		"message": "Tugas berhasil diselesaikan oleh Housekeeping.",
+		"message": "Task successfully completed by Housekeeping.",
 	})
 }
 
@@ -100,6 +102,6 @@ func (h *serviceRequestHandler) CancelRequest(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
-		"message": "Laporan layanan kamar berhasil dibatalkan.",
+		"message": "Room service report successfully cancelled.",
 	})
 }

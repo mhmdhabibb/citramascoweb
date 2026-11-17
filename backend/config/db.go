@@ -42,6 +42,8 @@ func ConnectDB() *gorm.DB {
 
 	seedCOA(db)
 
+	DB = db
+
 	return db
 }
 

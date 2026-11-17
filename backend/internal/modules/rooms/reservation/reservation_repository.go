@@ -18,8 +18,8 @@ type ReservationRepositoryInterface interface {
 	CancelReservation(id string) error
 	RejectReservation(id string) error
 	CheckAvailability(checkInDate time.Time, checkOutDate time.Time) ([]rooms.Room, error)
-	CheckIn(id string, roomId string) error
-	CheckOut(id string, roomId string) error
+	CheckIn(id string, roomId string, userId string) error
+	CheckOut(id string, roomId string, userId string) error
 }
 
 type reservationRepo struct {
@@ -66,7 +66,7 @@ func (r *reservationRepo) Delete(id string) error {
 
 func (r *reservationRepo) GetByStatus(status string) ([]Reservation, error) {
 	var reservations []Reservation
-	err := r.db.Preload("User").Preload("Room").Preload("RoomUnit").Preload("RoomUnit.Floor").Preload("Channel").Preload("Logs", func(db *gorm.DB) *gorm.DB {
+	err := r.db.Preload("Room").Preload("RoomUnit").Preload("RoomUnit.Floor").Preload("Channel").Preload("Logs", func(db *gorm.DB) *gorm.DB {
 		return db.Order("timestamp asc")
 	}).Where("status = ?", status).Find(&reservations).Error
 	if err != nil {
@@ -173,9 +173,10 @@ func (r *reservationRepo) CheckAvailability(checkInDate time.Time, checkOutDate 
 	return availableRooms, nil
 }
 
-func (r *reservationRepo) CheckIn(id string, roomId string) error {
+func (r *reservationRepo) CheckIn(id string, roomId string, userId string) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
-		now := time.Now()
+		loc, _ := time.LoadLocation("Asia/Jakarta")
+		now := time.Now().In(loc)
 		isEarly := now.Hour() < 14
 
 		// 1. Ambil data reservasi saat ini untuk cek apakah sudah ada unit fisik
@@ -218,13 +219,19 @@ func (r *reservationRepo) CheckIn(id string, roomId string) error {
 		}
 
 		// 4. Simpan Riwayat Log Check In Harian
+		handledById := &userId
+		if userId == "" {
+			handledById = nil
+		}
+
 		logEntry := ReservationLog{
 			Id:            time.Now().Format("20060102150405.000000"),
 			ReservationId: id,
 			Action:        "check_in",
 			Timestamp:     now,
 			IsEarly:       isEarly,
-			Notes:         "Tamu Check In",
+			Notes:         "Guest Check-in",
+			HandledById:   handledById,
 			CreatedAt:     now,
 		}
 		if err := tx.Create(&logEntry).Error; err != nil {
@@ -245,7 +252,7 @@ func (r *reservationRepo) CheckIn(id string, roomId string) error {
 }
 
 // Implementasi fungsi CheckOut
-func (r *reservationRepo) CheckOut(id string, roomId string) error {
+func (r *reservationRepo) CheckOut(id string, roomId string, userId string) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
 		now := time.Now()
 
@@ -266,12 +273,18 @@ func (r *reservationRepo) CheckOut(id string, roomId string) error {
 		}
 
 		// 2. Simpan Riwayat Log Check Out Harian
+		handledById := &userId
+		if userId == "" {
+			handledById = nil
+		}
+
 		logEntry := ReservationLog{
 			Id:            time.Now().Format("20060102150405.000000"),
 			ReservationId: id,
 			Action:        "check_out",
 			Timestamp:     now,
-			Notes:         "Tamu Check Out",
+			Notes:         "Guest Check-out",
+			HandledById:   handledById,
 			CreatedAt:     now,
 		}
 		if err := tx.Create(&logEntry).Error; err != nil {

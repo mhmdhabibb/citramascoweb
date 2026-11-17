@@ -11,7 +11,7 @@ type ServiceRequestRepositoryInterface interface {
 	GetAll(status string) ([]ServiceRequest, error)
 	GetById(id string) (*ServiceRequest, error)
 	AssignTask(id string, assignedUserId string, notes string, priority string) error
-	CompleteTask(id string, damageCharge int) error
+	CompleteTask(id string, damageCharge int, resMinutes int, isBreached bool, breachReason string) error
 	Cancel(id string) error
 }
 
@@ -30,7 +30,7 @@ func (r *serviceRequestRepository) Create(req *ServiceRequest) error {
 
 func (r *serviceRequestRepository) GetAll(status string) ([]ServiceRequest, error) {
 	var items []ServiceRequest
-	query := r.db.Preload("Room").Preload("AssignedToUser").Order("created_at DESC")
+	query := r.db.Preload("Room").Order("created_at DESC")
 	if status != "" && status != "all" {
 		query = query.Where("status = ?", status)
 	}
@@ -40,7 +40,7 @@ func (r *serviceRequestRepository) GetAll(status string) ([]ServiceRequest, erro
 
 func (r *serviceRequestRepository) GetById(id string) (*ServiceRequest, error) {
 	var item ServiceRequest
-	err := r.db.Preload("Room").Preload("AssignedToUser").Where("id = ?", id).First(&item).Error
+	err := r.db.Preload("Room").Where("id = ?", id).First(&item).Error
 	if err != nil {
 		return nil, err
 	}
@@ -49,9 +49,9 @@ func (r *serviceRequestRepository) GetById(id string) (*ServiceRequest, error) {
 
 func (r *serviceRequestRepository) AssignTask(id string, assignedUserId string, notes string, priority string) error {
 	updates := map[string]interface{}{
-		"status":                StatusAssignedToHousekeeper,
-		"notes_from_reception":  notes,
-		"updated_at":            time.Now(),
+		"status":               StatusAssignedToHousekeeper,
+		"notes_from_reception": notes,
+		"updated_at":           time.Now(),
 	}
 	if assignedUserId != "" {
 		updates["assigned_to_user_id"] = assignedUserId
@@ -62,14 +62,20 @@ func (r *serviceRequestRepository) AssignTask(id string, assignedUserId string, 
 	return r.db.Model(&ServiceRequest{}).Where("id = ?", id).Updates(updates).Error
 }
 
-func (r *serviceRequestRepository) CompleteTask(id string, damageCharge int) error {
+func (r *serviceRequestRepository) CompleteTask(id string, damageCharge int, resMinutes int, isBreached bool, breachReason string) error {
 	now := time.Now()
-	return r.db.Model(&ServiceRequest{}).Where("id = ?", id).Updates(map[string]interface{}{
-		"status":        StatusCompleted,
-		"damage_charge": damageCharge,
-		"completed_at":  &now,
-		"updated_at":    now,
-	}).Error
+	updates := map[string]interface{}{
+		"status":                    StatusCompleted,
+		"damage_charge":             damageCharge,
+		"actual_resolution_minutes": resMinutes,
+		"is_resolution_breached":    isBreached,
+		"completed_at":              &now,
+		"updated_at":                now,
+	}
+	if isBreached && breachReason != "" {
+		updates["breach_reason"] = breachReason
+	}
+	return r.db.Model(&ServiceRequest{}).Where("id = ?", id).Updates(updates).Error
 }
 
 func (r *serviceRequestRepository) Cancel(id string) error {

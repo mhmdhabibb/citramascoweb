@@ -53,7 +53,7 @@ func (s *reservationService) GetById(id string) (*Reservation, error) {
 	return reservation, nil
 }
 
-func (s *reservationService) Store(req *dto.CreateReservationRequest) error {
+func (s *reservationService) Store(req *dto.CreateReservationRequest, userId string) error {
 	// 1. Fetch Room details to get the price
 	roomData, err := s.roomRepo.GetById(req.RoomId)
 	if err != nil {
@@ -179,20 +179,27 @@ func (s *reservationService) Store(req *dto.CreateReservationRequest) error {
 		payMethod = "ota_collect"
 	}
 
+	var createdBy *string
+	if userId != "" {
+		createdBy = &userId
+	}
+
 	newReservation := &Reservation{
-		Id:                uuid.New().String(),
-		Code:              code,
-		RoomId:            req.RoomId,
-		FullName:          req.FullName,
-		Email:             req.Email,
-		CheckinDate:       checkinCustom,
-		CheckoutDate:      checkoutCustom,
-		Price:             pricePerNight,
-		TotalNight:        totalNight,
-		TotalPrice:        totalPrice,
-		Status:            ReservationStatusPending,
-		TransactionStatus: txStatus,
-		PaymentMethod:     payMethod,
+		Id:                   uuid.New().String(),
+		Code:                 code,
+		BookingCode:          code,
+		CreatedByUserId:      createdBy,
+		RoomId:               req.RoomId,
+		FullName:             req.FullName,
+		Email:                req.Email,
+		CheckinDate:          checkinCustom,
+		CheckoutDate:         checkoutCustom,
+		Price:                pricePerNight,
+		TotalNight:           totalNight,
+		TotalPrice:           totalPrice,
+		Status:               ReservationStatusPending,
+		TransactionStatus:    txStatus,
+		PaymentMethod:        payMethod,
 		NumberOfAdult:        req.NumberOfAdult,
 		NumberOfChildren:     req.NumberOfChildren,
 		IsOffer:              &isOfferVal,
@@ -519,7 +526,7 @@ func (s *reservationService) CancelReservation(id string) error {
 				guestName,
 				code,
 				"Pemberitahuan Pembatalan Reservasi",
-				"Reservasi kamar Anda di CM Living telah berhasil dibatalkan sesuai permohonan.",
+				"Your room reservation at CM Living has been successfully cancelled as requested.",
 			)
 		}()
 	}
@@ -638,31 +645,29 @@ func (s *reservationService) CheckAvailability(req *dto.CheckAvailabilityRequest
 
 	return allRooms, nil
 }
-func (s *reservationService) CheckIn(id string) error {
+func (s *reservationService) CheckIn(id string, userId string) error {
 	reservation, err := s.reservationRepo.GetById(id)
 	if err != nil {
-		return errors.New("reservation tidak ditemukan")
+		return errors.New("reservation not found")
 	}
 
-	// Validasi: Reservasi yang sudah di-approve, confirmed, atau checked-out (selama masih dalam masa sewa) dapat check-in
 	statusLower := strings.ToLower(string(reservation.Status))
 	if statusLower != "approved" && statusLower != "confirmed" && statusLower != "checked-out" {
-		return fmt.Errorf("gagal check-in, status reservasi saat ini masih '%s'", reservation.Status)
+		return fmt.Errorf("check-in failed, current reservation status is '%s'", reservation.Status)
 	}
 
-	return s.reservationRepo.CheckIn(id, reservation.RoomId)
+	return s.reservationRepo.CheckIn(id, reservation.RoomId, userId)
 }
 
-func (s *reservationService) CheckOut(id string) error {
+func (s *reservationService) CheckOut(id string, userId string) error {
 	reservation, err := s.reservationRepo.GetById(id)
 	if err != nil {
-		return errors.New("reservation tidak ditemukan")
+		return errors.New("reservation not found")
 	}
 
-	// Validasi: Hanya tamu yang sedang menginap (checked-in) yang bisa check-out
 	if reservation.Status != ReservationStatusCheckedIn {
-		return errors.New("gagal check-out, tamu belum berstatus checked-in")
+		return errors.New("check-out failed, guest is not checked-in")
 	}
 
-	return s.reservationRepo.CheckOut(id, reservation.RoomId)
+	return s.reservationRepo.CheckOut(id, reservation.RoomId, userId)
 }

@@ -63,7 +63,7 @@ func (s *roomUnitService) Create(req *dto.CreateRoomUnitRequest) error {
 	// Cek nomor kamar sudah ada
 	existing, _ := s.repo.GetByRoomNumber(req.RoomNumber)
 	if existing != nil && existing.Id != "" {
-		return errors.New("nomor kamar sudah digunakan")
+		return errors.New("room number is already in use")
 	}
 
 	status := "available"
@@ -87,14 +87,14 @@ func (s *roomUnitService) Create(req *dto.CreateRoomUnitRequest) error {
 func (s *roomUnitService) Update(id string, req *dto.UpdateRoomUnitRequest) error {
 	existing, err := s.repo.GetById(id)
 	if err != nil {
-		return errors.New("unit kamar tidak ditemukan")
+		return errors.New("room unit not found")
 	}
 
 	if req.RoomNumber != "" && req.RoomNumber != existing.RoomNumber {
 		// Cek keunikan nomor kamar baru
 		check, _ := s.repo.GetByRoomNumber(req.RoomNumber)
 		if check != nil && check.Id != id {
-			return errors.New("nomor kamar sudah digunakan")
+			return errors.New("room number is already in use")
 		}
 		existing.RoomNumber = req.RoomNumber
 	}
@@ -127,7 +127,7 @@ func (s *roomUnitService) UpdateStatus(id string, status string) error {
 
 	_, err := s.repo.GetById(id)
 	if err != nil {
-		return errors.New("unit kamar tidak ditemukan")
+		return errors.New("room unit not found")
 	}
 
 	return s.repo.UpdateStatus(id, status)
@@ -136,7 +136,7 @@ func (s *roomUnitService) UpdateStatus(id string, status string) error {
 func (s *roomUnitService) Delete(id string) error {
 	_, err := s.repo.GetById(id)
 	if err != nil {
-		return errors.New("unit kamar tidak ditemukan")
+		return errors.New("room unit not found")
 	}
 	return s.repo.Delete(id)
 }
