@@ -16,7 +16,7 @@
       <tbody>
         <tr v-for="res in reservations" :key="res.id">
           <td class="px-2 py-1 border">{{ res.id }}</td>
-          <td class="px-2 py-1 border">{{ res.guest_name }}</td>
+          <td class="px-2 py-1 border">{{ res.full_name }}</td>
           <td class="px-2 py-1 border">{{ res.room?.name || '-' }}</td>
           <td class="px-2 py-1 border">{{ formatDate(res.checkin_date) }}</td>
           <td class="px-2 py-1 border">{{ formatDate(res.checkout_date) }}</td>
@@ -24,8 +24,8 @@
           <td class="px-2 py-1 border space-x-1">
             <button v-if="res.status === 'pending'" @click="approve(res.id)" class="btn btn-sm btn-success">Approve</button>
             <button v-if="res.status === 'pending'" @click="reject(res.id)" class="btn btn-sm btn-danger">Reject</button>
-            <button v-if="res.status === 'approved'" @click="checkIn(res.id, res.room?.id)" class="btn btn-sm btn-primary">Check‑in</button>
-            <button v-if="res.status === 'checked-in'" @click="checkOut(res.id, res.room?.id)" class="btn btn-sm btn-warning">Check‑out</button>
+            <button v-if="res.status === 'approved'" @click="checkIn(res.id, res.room_id)" class="btn btn-sm btn-primary">Check‑in</button>
+            <button v-if="res.status === 'checked-in'" @click="checkOut(res.id, res.room_id)" class="btn btn-sm btn-warning">Check‑out</button>
             <button v-if="['pending','approved','checked-in'].includes(res.status)" @click="cancel(res.id)" class="btn btn-sm btn-outline">Cancel</button>
           </td>
         </tr>
@@ -37,16 +37,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { reservationService } from '@/services/admin/reservationService'
-import { useToast } from '@/stores/toast'
-
-interface Reservation {
-  id: string
-  guest_name: string
-  room?: { id: string; name: string }
-  checkin_date: string
-  checkout_date: string
-  status: string
-}
+import { useToastStore as useToast } from '@/stores/toastStore'
+import type { Reservation } from '@/types'
 
 const reservations = ref<Reservation[]>([])
 const toast = useToast()

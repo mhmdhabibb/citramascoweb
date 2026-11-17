@@ -252,7 +252,7 @@ const propertyRows = computed(() => {
 // Daily Revenue & Occupancy Trend Chart Data
 const dailyTrendData = computed(() => {
   const days = daysInSelectedMonth.value
-  const dailyRev: number[] = Array.from({ length: days }).fill(0)
+  const dailyRev: number[] = Array.from({ length: days }, () => 0)
 
   monthReservations.value.forEach((r) => {
     const inISO = parseDateToISO(r.checkin_date)

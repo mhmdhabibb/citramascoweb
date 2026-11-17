@@ -1,17 +1,17 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from 'vue'
-import { useToastStore } from '@/stores/toastStore'
 import { useToastStore as useToast } from '@/stores/toastStore'
 import { floorService } from '@/services/admin/floorService'
 import { roomUnitService } from '@/services/admin/roomUnitService'
+import type { Floor, RoomUnit } from '@/types'
 import { useRouter } from 'vue-router'
 import { Monitor, Building, CalendarCheck } from 'lucide-vue-next'
 
 const router = useRouter()
 
 const toast = useToast()
-const floors = ref([])
-const units = ref([])
+const floors = ref<Floor[]>([])
+const units = ref<RoomUnit[]>([])
 const loading = ref(false)
 let timer: any = null
 
@@ -37,7 +37,7 @@ onUnmounted(() => {
 })
 
 const unitsByFloor = computed(() => {
-  const map: Record<string, any[]> = {}
+  const map: Record<string, RoomUnit[]> = {}
   units.value.forEach((unit) => {
     const fid = unit.floor_id || 'unknown'
     if (!map[fid]) map[fid] = []

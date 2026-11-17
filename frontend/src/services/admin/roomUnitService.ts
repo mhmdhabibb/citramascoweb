@@ -40,6 +40,14 @@ export const roomUnitService = {
     return response.data.message
   },
 
+  updateStatus: async (id: string, status: string): Promise<string> => {
+    const response = await api.patch<ApiResponse<any>>(`/room-unit/status/${id}`, { status })
+    if (!response.data.success) {
+      throw new Error(response.data.message || 'Failed to update room unit status')
+    }
+    return response.data.message
+  },
+
   // Update status and push notification to housekeeping
   setStatusAndNotify: async (id: string, status: string): Promise<string> => {
     const msg = await roomUnitService.updateStatus(id, status)

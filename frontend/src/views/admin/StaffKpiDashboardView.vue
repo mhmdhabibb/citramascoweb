@@ -374,8 +374,8 @@ const inventoryStats = computed(() => ({
 // Timeframe Flow Bar Chart
 const timeframeFlowData = computed(() => {
   const makeBins = (slots: string[], fn: (d: Date) => number) => {
-    const onTime = Array.from({ length: slots.length }).fill(0)
-    const late = Array.from({ length: slots.length }).fill(0)
+    const onTime: number[] = Array.from({ length: slots.length }, () => 0)
+    const late: number[] = Array.from({ length: slots.length }, () => 0)
     filteredDatabaseTasks.value.forEach((t) => {
       const idx = Math.min(slots.length - 1, Math.max(0, fn(t.dateObj)))
       if (t.isSlaMet) onTime[idx]++
@@ -416,7 +416,7 @@ const flowSeries = computed(() => [
 // Task Completion Trend Area Chart
 const taskTrendData = computed(() => {
   const makeBins = (slots: string[], fn: (d: Date) => number) => {
-    const counts = Array.from({ length: slots.length }).fill(0)
+    const counts: number[] = Array.from({ length: slots.length }, () => 0)
     filteredDatabaseTasks.value.forEach((t) => {
       if (t.status === 'completed') {
         const idx = Math.min(slots.length - 1, Math.max(0, fn(t.dateObj)))
@@ -654,8 +654,8 @@ const receptionistStaffKpiList = computed<ReceptionistStaffKpi[]>(() => {
 
 const receptionistHourlyDistribution = computed(() => {
   const hours = Array.from({ length: 16 }, (_, i) => `${String(i + 6).padStart(2, '0')}:00`)
-  const checkInCounts = Array.from({ length: 16 }).fill(0)
-  const checkOutCounts = Array.from({ length: 16 }).fill(0)
+  const checkInCounts: number[] = Array.from({ length: 16 }, () => 0)
+  const checkOutCounts: number[] = Array.from({ length: 16 }, () => 0)
 
   filteredReceptionistLogs.value.forEach((log) => {
     const h = log.timestamp.getHours()

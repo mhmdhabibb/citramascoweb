@@ -10,7 +10,8 @@ import { roomService } from '@/services/roomService'
 import { channelService } from '@/services/admin/channelService'
 import { useAuthStore } from '@/stores/authStore'
 import { useToastStore } from '@/stores/toastStore'
-import type { Reservation, Room, Channel } from '@/types'
+import { roomUnitService } from '@/services/admin/roomUnitService'
+import type { Reservation, Room, Channel, RoomUnit } from '@/types'
 import {
   Calendar as CalendarIcon,
   ChevronRight,
@@ -41,9 +42,10 @@ const router = useRouter()
 const authStore = useAuthStore()
 const toastStore = useToastStore()
 
+const loading = ref(false)
+
 // State from Database
-import { roomUnitService } from '@/services/admin/roomUnitService'
-const roomUnits = ref([])
+const roomUnits = ref<RoomUnit[]>([])
 const occupiedUnits = computed(() => roomUnits.value.filter(u => u.status === 'occupied'))
 const fetchRoomUnits = async () => {
   try {
@@ -482,7 +484,7 @@ const propertyRows = computed(() => {
 // Daily Revenue & Occupancy Trend Chart Data (from DB)
 const dailyTrendData = computed(() => {
   const days = daysInSelectedMonth.value
-  const dailyRev: number[] = Array.from({ length: days }).fill(0)
+  const dailyRev: number[] = Array.from({ length: days }, () => 0)
 
   monthReservations.value.forEach((r) => {
     const checkinISO = parseDateToISO(r.checkin_date)
