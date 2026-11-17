@@ -34,10 +34,8 @@ const fetchData = async (isSilent: boolean = false) => {
 }
 
 onMounted(() => {
-  fetchData(false)
-  pollingTimer = setInterval(() => {
-    fetchData(true)
-  }, 5000)
+  fetchData(true)
+  pollingTimer = setInterval(() => fetchData(true), 5000)
 })
 
 onUnmounted(() => {

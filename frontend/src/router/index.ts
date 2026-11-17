@@ -35,8 +35,8 @@ import BalanceSheetView from '@/views/admin/finance/BalanceSheetView.vue'
 import ForbiddenView from '@/views/admin/ForbiddenView.vue'
 import GuestBookView from '@/views/admin/GuestBookView.vue'
 import ChannelsView from '@/views/admin/ChannelsView.vue'
-import CalendarView from '@/views/admin/CalendarView.vue'
-import MonthlyReportView from '@/views/admin/MonthlyReportView.vue'
+// import CalendarView from '@/views/admin/CalendarView.vue'
+// import MonthlyReportView from '@/views/admin/MonthlyReportView.vue'
 import ServiceRequestsView from '@/views/admin/ServiceRequestsView.vue'
 
 const router = createRouter({
@@ -143,10 +143,10 @@ const router = createRouter({
           meta: { title: 'Manage Channels' }
         },
         {
-          path: 'calendar',
-          name: 'admin-calendar',
-          component: CalendarView,
-          meta: { title: 'Calendar' }
+          path: 'front-desk',
+          name: 'admin-front-desk',
+          component: () => import('@/views/admin/FrontDeskView.vue'),
+          meta: { title: 'Front Desk' },
         },
         {
           path: 'monthly-report',

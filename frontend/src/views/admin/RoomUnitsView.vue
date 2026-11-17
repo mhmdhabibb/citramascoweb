@@ -121,11 +121,11 @@ const saveRoomUnit = async () => {
     return
   }
   if (!form.value.room_id) {
-    toastStore.warning('Pilih tipe katalog kamar!')
+    toastStore.warning('Select room catalog type!')
     return
   }
   if (!form.value.floor_id) {
-    toastStore.warning('Pilih lantai kamar!')
+    toastStore.warning('Select room floor!')
     return
   }
 
@@ -133,10 +133,10 @@ const saveRoomUnit = async () => {
     loading.value = true
     if (isEditing.value) {
       const msg = await roomUnitService.update(editingId.value, form.value)
-      toastStore.success(msg || 'Unit kamar berhasil diperbarui!')
+      toastStore.success(msg || 'Room unit updated successfully!')
     } else {
       const msg = await roomUnitService.create(form.value)
-      toastStore.success(msg || 'Unit kamar berhasil ditambahkan!')
+      toastStore.success(msg || 'Room unit added successfully!')
     }
     await fetchData()
     closeModal()
@@ -168,7 +168,7 @@ const deleteRoomUnit = async (id: string, roomNumber: string) => {
   try {
     loading.value = true
     const msg = await roomUnitService.delete(id)
-    toastStore.success(msg || 'Unit kamar berhasil dihapus!')
+    toastStore.success(msg || 'Room unit deleted successfully!')
     await fetchData()
   } catch (error: any) {
     console.error('Error deleting room unit:', error)
@@ -272,7 +272,7 @@ const deleteRoomUnit = async (id: string, roomNumber: string) => {
           <table class="premium-table">
             <thead>
               <tr>
-                <th class="w-28">No. Kamar</th>
+                <th class="w-28">Room No.</th>
                 <th>Floor</th>
                 <th>Room Category</th>
                 <th>Bed Type</th>

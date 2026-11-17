@@ -42,9 +42,9 @@ const menuGroups = ref([
     groupName: 'Front Desk & Guests',
     items: [
       {
-        name: 'Room Reservations',
-        icon: 'CalendarCheck',
-        route: '/admin/reservations',
+        name: 'Front Desk',
+        icon: 'Monitor',
+        route: '/admin/front-desk',
       },
       {
         name: 'Guest Book & Check Logs',

@@ -40,7 +40,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
 
   // Format Revenue menjadi Rupiah otomatis di level store
   const formattedRevenue = computed(() => {
-    const revenue = dashboardData.value?.total_revenue ?? 0
+    const _revenue = dashboardData.value?.total_revenue ?? 0
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
       currency: 'IDR',

@@ -123,6 +123,7 @@ export interface ReservationLog {
   timestamp: string
   is_early?: boolean
   notes?: string
+  handled_by_id?: string
   created_at?: string
 }
 

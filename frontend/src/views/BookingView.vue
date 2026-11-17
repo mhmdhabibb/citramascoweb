@@ -138,19 +138,19 @@ const handleSubmit = async () => {
   successMsg.value = ''
 
   if (!selectedRoom.value) {
-    errorMsg.value = 'Silakan pilih kamar terlebih dahulu.'
+    errorMsg.value = 'Please select a room first.'
     return
   }
 
   // 1. Validasi Kapasitas Dewasa
   if (Number(adultGuest.value) > maxAdultCapacity.value) {
-    errorMsg.value = `Jumlah tamu dewasa melebihi kapasitas kamar (${maxAdultCapacity.value} orang).`
+    errorMsg.value = `Number of adults exceeds room capacity (${maxAdultCapacity.value} orang).`
     return
   }
 
   // 2. Validasi Kapasitas Anak
   if (Number(childGuest.value) > maxChildCapacity.value) {
-    errorMsg.value = `Jumlah anak melebihi kapasitas kamar (${maxChildCapacity.value} anak).`
+    errorMsg.value = `Number of children exceeds room capacity (${maxChildCapacity.value} anak).`
     return
   }
 

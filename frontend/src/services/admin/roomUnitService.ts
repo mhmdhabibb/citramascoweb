@@ -40,12 +40,17 @@ export const roomUnitService = {
     return response.data.message
   },
 
-  updateStatus: async (id: string, status: string): Promise<string> => {
-    const response = await api.patch<ApiResponse<any>>(`/room-unit/status/${id}`, { status })
-    if (!response.data.success) {
-      throw new Error(response.data.message || 'Failed to update room unit status')
-    }
-    return response.data.message
+  // Update status and push notification to housekeeping
+  setStatusAndNotify: async (id: string, status: string): Promise<string> => {
+    const msg = await roomUnitService.updateStatus(id, status)
+    // Notify housekeeping role
+    await api.post<ApiResponse<null>>('/notifications/', {
+      title: `Room ${id} status changed`,
+      body: `Status set to ${status}. Please attend.`,
+      target_roles: ['housekeeping'],
+      room_unit_id: id,
+    })
+    return msg
   },
 
   delete: async (id: string): Promise<string> => {

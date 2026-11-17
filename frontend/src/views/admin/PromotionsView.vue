@@ -199,10 +199,10 @@ const savePromotion = async () => {
 
     if (isEditing.value) {
       const msg = await offerStore.update(editingId.value, formData)
-      toastStore.success(msg || 'Penawaran berhasil diperbarui!')
+      toastStore.success(msg || 'Promotion updated successfully!')
     } else {
       const msg = await offerStore.store(formData)
-      toastStore.success(msg || 'Penawaran berhasil ditambahkan!')
+      toastStore.success(msg || 'Promotion added successfully!')
     }
 
     await loadPromotions()
@@ -220,7 +220,7 @@ const deletePromotion = async (id) => {
     try {
       loading.value = true
       const msg = await offerStore.destroy(id)
-      toastStore.success(msg || 'Penawaran berhasil dihapus!')
+      toastStore.success(msg || 'Promotion deleted successfully!')
       await loadPromotions()
     } catch (error) {
       console.error(error)

@@ -40,8 +40,7 @@ export const ROUTE_ACCESS: Record<string, AppRole[]> = {
   '/admin/service-requests': ['admin', 'manager', 'reception', 'housekeeping'],
   '/admin/guestbook': ['admin', 'manager', 'reception'],
   '/admin/reservations/new': ['admin', 'manager', 'reception'],
-  '/admin/rooms': ['admin', 'manager', 'housekeeping', 'reception'],
-  '/admin/room-units': ['admin', 'manager', 'housekeeping', 'reception'],
+  '/admin/front-desk': ['admin', 'manager', 'reception'],
   '/admin/floors': ['admin'], // Master config only for admin
   '/admin/room-types': ['admin'], // Master config only for admin
   '/admin/room-categories': ['admin'], // Master config only for admin

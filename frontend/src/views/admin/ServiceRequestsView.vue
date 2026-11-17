@@ -18,7 +18,7 @@ const statusFilter = ref('all')
 const searchQuery = ref('')
 const selectedRequest = ref<ServiceRequest | null>(null)
 
-// Modal Catat Permintaan Tamu Baru (Input Resepsionis via Telepon/Walk-in)
+// Modal Record New Guest Request (Input Resepsionis via Telepon/Walk-in)
 const isCreateModalOpen = ref(false)
 const createForm = ref({
   room_id: '',
@@ -136,7 +136,7 @@ const onCategoryChangeInCreate = () => {
     case 'extra_cleaning':
       createForm.value.title = 'Extra Cleaning Request'
       createForm.value.priority = 'high'
-      createForm.value.description = 'Tamu meminta pembersihan tambahan / ganti sprei kamar.'
+      createForm.value.description = 'Guest requested extra cleaning / bed sheet change.'
       break
     case 'amenities_request':
       createForm.value.title = 'Additional Towels & Amenities Request'
@@ -629,7 +629,7 @@ const getCategoryLabel = (category: string) => {
       </div>
     </div>
 
-    <!-- Modal Form: Catat Permintaan Tamu Baru (Input Resepsionis) -->
+    <!-- Modal Form: Record New Guest Request (Input Resepsionis) -->
     <div v-if="isCreateModalOpen" class="modal-backdrop" @click.self="isCreateModalOpen = false">
       <div class="modal-dialog max-w-lg">
         <div class="modal-dialog-header">

@@ -42,7 +42,32 @@ const authStore = useAuthStore()
 const toastStore = useToastStore()
 
 // State from Database
-const loading = ref(false)
+import { roomUnitService } from '@/services/admin/roomUnitService'
+const roomUnits = ref([])
+const occupiedUnits = computed(() => roomUnits.value.filter(u => u.status === 'occupied'))
+const fetchRoomUnits = async () => {
+  try {
+    loading.value = true
+    roomUnits.value = await roomUnitService.getAll()
+  } catch (e: any) {
+    toastStore.error(e.message || 'Failed to load room units')
+  } finally {
+    loading.value = false
+  }
+}
+const changeUnitStatus = async (id: string, status: string) => {
+  try {
+    loading.value = true
+    await roomUnitService.setStatusAndNotify(id, status)
+    toastStore.success(`Room status set to ${status}`)
+    await fetchRoomUnits()
+  } catch (e: any) {
+    toastStore.error(e.message || 'Failed to update status')
+  } finally {
+    loading.value = false
+  }
+}
+
 const reservations = ref<Reservation[]>([])
 const rooms = ref<Room[]>([])
 const channels = ref<Channel[]>([])
@@ -285,7 +310,7 @@ const upcomingArrivalsGrouped = computed(() => {
     tomorrow.setDate(tomorrow.getDate() + 1)
     const isTomorrow = dateStr === formatYMD(tomorrow)
 
-    let title = isTomorrow
+    const title = isTomorrow
       ? 'Besok'
       : d.toLocaleDateString('id-ID', { weekday: 'short', month: 'short', day: 'numeric' })
 
@@ -457,7 +482,7 @@ const propertyRows = computed(() => {
 // Daily Revenue & Occupancy Trend Chart Data (from DB)
 const dailyTrendData = computed(() => {
   const days = daysInSelectedMonth.value
-  const dailyRev: number[] = new Array(days).fill(0)
+  const dailyRev: number[] = Array.from({ length: days }).fill(0)
 
   monthReservations.value.forEach((r) => {
     const checkinISO = parseDateToISO(r.checkin_date)
@@ -735,8 +760,8 @@ const exportPDF = () => {
 
     autoTable(doc, {
       startY: (doc as any).lastAutoTable.finalY + 8,
-      head: [['Unit Kamar', 'Booking', 'Dibatalkan', 'Malam', 'Okupansi', 'Total Revenue (IDR)', 'ADR (IDR)', 'RevPAR (IDR)']],
-      body: propRowsData.length > 0 ? propRowsData : [['Tidak ada kamar di database', '-', '-', '-', '-', '-', '-', '-']],
+      head: [['Room Unit', 'Booking', 'Cancelled', 'Nights', 'Occupancy', 'Total Revenue (IDR)', 'ADR (IDR)', 'RevPAR (IDR)']],
+      body: propRowsData.length > 0 ? propRowsData : [['No rooms in database', '-', '-', '-', '-', '-', '-', '-']],
       headStyles: { fillColor: [15, 23, 42] },
       theme: 'striped',
       styles: { fontSize: 8 },
@@ -764,7 +789,7 @@ const exportPDF = () => {
     const resDetailRows: any[] = monthReservations.value.map((r) => [
       r.code || '-',
       r.full_name || '-',
-      r.room?.name || 'Unit Kamar',
+      r.room?.name || 'Room Unit',
       r.checkin_date || '-',
       r.checkout_date || '-',
       `${r.total_night || 1} mlm`,
@@ -776,7 +801,7 @@ const exportPDF = () => {
     if (resDetailRows.length > 0) {
       autoTable(doc, {
         startY: (doc as any).lastAutoTable.finalY + 8,
-        head: [['Kode', 'Nama Tamu', 'Kamar', 'Check-In', 'Check-Out', 'Durasi', 'Channel', 'Status', 'Total Biaya']],
+        head: [['Kode', 'Guest Name', 'Room', 'Check-In', 'Check-Out', 'Duration', 'Channel', 'Status', 'Total Cost']],
         body: resDetailRows,
         headStyles: { fillColor: [67, 56, 202] },
         theme: 'striped',
@@ -785,9 +810,9 @@ const exportPDF = () => {
     }
 
     doc.save(`Laporan_Keuangan_CMLiving_${selectedYear.value}_${selectedMonth.value + 1}.pdf`)
-    toastStore.success('Dokumen PDF data performa & transaksi berhasil diunduh!')
+    toastStore.success('Performance & transaction PDF document downloaded successfully!')
   } catch (error: any) {
-    toastStore.error(error.message || 'Gagal mengekspor dokumen PDF')
+    toastStore.error(error.message || 'Failed to export PDF document')
   }
 }
 
@@ -845,9 +870,9 @@ const exportCSV = () => {
     link.click()
     document.body.removeChild(link)
     URL.revokeObjectURL(url)
-    toastStore.success('File CSV data performa & transaksi berhasil diunduh!')
+    toastStore.success('Performance & transaction CSV file downloaded successfully!')
   } catch (error: any) {
-    toastStore.error(error.message || 'Gagal mengekspor file CSV')
+    toastStore.error(error.message || 'Failed to export CSV file')
   }
 }
 
@@ -877,7 +902,7 @@ onUnmounted(() => {
           <span>Live Database Connected · {{ reservations.length }} Total Reservasi di DB</span>
         </div>
         <h1 class="greeting-title">{{ greeting }}, {{ userName }}</h1>
-        <p class="greeting-subtitle">{{ dateSubtitle }} · {{ rooms.length }} Unit Kamar Terdaftar di Database</p>
+        <p class="greeting-subtitle">{{ dateSubtitle }} · {{ rooms.length }} Registered Room Units in Database</p>
       </div>
 
       <!-- Quick Global Controls & Tab Switcher -->
@@ -950,7 +975,7 @@ onUnmounted(() => {
             <span class="kpi-label">Arrivals today</span>
             <Users class="w-4 h-4 text-blue-600" />
           </div>
-          <span class="kpi-val">{{ todayArrivals.length }} <span class="kpi-unit">tamu</span></span>
+          <span class="kpi-val">{{ todayArrivals.length }} <span class="kpi-unit">guest(s)</span></span>
         </div>
 
         <div class="kpi-card" @click="goToReservations">
@@ -958,7 +983,7 @@ onUnmounted(() => {
             <span class="kpi-label">Departures today</span>
             <CheckCircle2 class="w-4 h-4 text-rose-600" />
           </div>
-          <span class="kpi-val">{{ todayDepartures.length }} <span class="kpi-unit">tamu</span></span>
+          <span class="kpi-val">{{ todayDepartures.length }} <span class="kpi-unit">guest(s)</span></span>
         </div>
 
         <div class="kpi-card" @click="goToReservations">
@@ -966,7 +991,7 @@ onUnmounted(() => {
             <span class="kpi-label">In house tonight</span>
             <BedDouble class="w-4 h-4 text-emerald-600" />
           </div>
-          <span class="kpi-val">{{ inHouseTonight.length }} <span class="kpi-unit">kamar</span></span>
+          <span class="kpi-val">{{ inHouseTonight.length }} <span class="kpi-unit">room(s)</span></span>
         </div>
 
         <div class="kpi-card" @click="goToReservations">
@@ -974,7 +999,7 @@ onUnmounted(() => {
             <span class="kpi-label">Arrivals this week</span>
             <CalendarIcon class="w-4 h-4 text-amber-600" />
           </div>
-          <span class="kpi-val">{{ thisWeekArrivals.length }} <span class="kpi-unit">tamu</span></span>
+          <span class="kpi-val">{{ thisWeekArrivals.length }} <span class="kpi-unit">guest(s)</span></span>
         </div>
 
         <div class="kpi-card" @click="goToCalendar">
@@ -982,7 +1007,7 @@ onUnmounted(() => {
             <span class="kpi-label">Properties / Units</span>
             <Building2 class="w-4 h-4 text-purple-600" />
           </div>
-          <span class="kpi-val">{{ rooms.length }} <span class="kpi-unit">kamar</span></span>
+          <span class="kpi-val">{{ rooms.length }} <span class="kpi-unit">room(s)</span></span>
         </div>
       </div>
 
@@ -997,7 +1022,7 @@ onUnmounted(() => {
             <div v-for="item in todayArrivals" :key="item.id" class="arrival-row">
               <div class="guest-info">
                 <span class="guest-name">{{ item.full_name }}</span>
-                <span class="unit-name">{{ item.room?.name || 'Unit Kamar' }} · {{ (item.number_of_adult || 1) + (item.number_of_children || 0) }} tamu</span>
+                <span class="unit-name">{{ item.room?.name || 'Room Unit' }} · {{ (item.number_of_adult || 1) + (item.number_of_children || 0) }} tamu</span>
               </div>
               <span
                 class="channel-pill"
@@ -1011,7 +1036,7 @@ onUnmounted(() => {
             </div>
           </div>
           <div v-else class="empty-panel">
-            <span>Tidak ada jadwal kedatangan tamu hari ini di database</span>
+            <span>No guest arrivals scheduled today</span>
           </div>
         </div>
 
@@ -1024,13 +1049,13 @@ onUnmounted(() => {
             <div v-for="item in todayDepartures" :key="item.id" class="arrival-row">
               <div class="guest-info">
                 <span class="guest-name">{{ item.full_name }}</span>
-                <span class="unit-name">{{ item.room?.name || 'Unit Kamar' }}</span>
+                <span class="unit-name">{{ item.room?.name || 'Room Unit' }}</span>
               </div>
               <span class="badge-checkedout">Check-Out</span>
             </div>
           </div>
           <div v-else class="empty-panel">
-            <span>Tidak ada kepulangan tamu hari ini di database</span>
+            <span>No guest departures scheduled today</span>
           </div>
         </div>
 
@@ -1060,7 +1085,7 @@ onUnmounted(() => {
         <div class="upcoming-head">
           <div>
             <h3>Upcoming arrivals · next 60 days</h3>
-            <p class="text-xs text-slate-500 mt-1">Daftar tamu yang akan datang dari database (60 hari ke depan)</p>
+            <p class="text-xs text-slate-500 mt-1">Upcoming guest arrivals (60 hari ke depan)</p>
           </div>
           <div class="flex items-center gap-3">
             <select v-model="selectedChannel" class="custom-select-sm">
@@ -1102,7 +1127,7 @@ onUnmounted(() => {
                   <div class="guest-meta">
                     <span class="guest-name">{{ item.full_name }}</span>
                     <span class="stay-info">
-                      {{ item.room?.name || 'Unit Kamar' }} · {{ (item.number_of_adult || 1) + (item.number_of_children || 0) }} guests · {{ item.total_night || 1 }} nights
+                      {{ item.room?.name || 'Room Unit' }} · {{ (item.number_of_adult || 1) + (item.number_of_children || 0) }} guests · {{ item.total_night || 1 }} nights
                     </span>
                   </div>
                 </div>
@@ -1124,7 +1149,7 @@ onUnmounted(() => {
         </div>
         <div v-else class="empty-state-box">
           <CalendarIcon class="w-10 h-10 text-slate-300 mx-auto mb-2" />
-          <p class="font-bold text-slate-700">Belum ada jadwal kedatangan tamu di database</p>
+          <p class="font-bold text-slate-700">No upcoming guest arrivals</p>
           <p class="text-xs text-slate-400 mt-1">Gunakan menu 'Reservation' &rarr; 'New Reservation' untuk menambahkan pemesanan baru</p>
         </div>
       </div>
@@ -1209,7 +1234,7 @@ onUnmounted(() => {
           </select>
 
           <select v-model="selectedProperty" class="custom-select">
-            <option value="all">Semua Kamar ({{ rooms.length }})</option>
+            <option value="all">All Rooms ({{ rooms.length }})</option>
             <option v-for="r in rooms" :key="r.id" :value="r.id">
               {{ r.name }}
             </option>
@@ -1244,7 +1269,7 @@ onUnmounted(() => {
             <BedDouble class="w-4 h-4 text-indigo-600" />
           </div>
           <span class="metric-val">{{ totalNights }}</span>
-          <span class="metric-hint">Malam kamar terjual</span>
+          <span class="metric-hint">Room nights sold</span>
         </div>
 
         <div class="kpi-metric-card">
@@ -1354,7 +1379,7 @@ onUnmounted(() => {
       <div class="table-box">
         <div class="chart-header">
           <h3>Performance by Property / Room ({{ monthTitle }})</h3>
-          <p>Tabel rincian performa okupansi, ADR, dan pendapatan tiap kamar dari database</p>
+          <p>Room performance, occupancy, ADR, and revenue details</p>
         </div>
 
         <div class="table-responsive">
@@ -1384,7 +1409,7 @@ onUnmounted(() => {
               </tr>
               <tr v-if="propertyRows.length === 0">
                 <td colspan="8" class="text-center py-6 text-slate-400 font-semibold">
-                  Belum ada kamar terdaftar di database
+                  No rooms registered in database
                 </td>
               </tr>
             </tbody>
@@ -1408,7 +1433,7 @@ onUnmounted(() => {
       <div class="heatmap-box">
         <div class="chart-header">
           <h3>Daily Occupancy Heatmap</h3>
-          <p>Tingkat hunian kamar harian pada bulan {{ monthTitle }} dari database</p>
+          <p>Daily room occupancy rate for month {{ monthTitle }} dari database</p>
         </div>
 
         <div class="heatmap-grid">

@@ -434,7 +434,7 @@ onMounted(async () => {
           </div>
         </div>
 
-        <!-- Live Physical Room Matrix (Denah Unit Kamar Real-time) -->
+        <!-- Live Physical Room Matrix (Live Physical Room Matrix) -->
         <div class="dashboard-card p-5 space-y-4">
           <div class="flex items-center justify-between flex-wrap gap-2 pb-3 border-b border-slate-100">
             <div class="flex items-center gap-2.5">

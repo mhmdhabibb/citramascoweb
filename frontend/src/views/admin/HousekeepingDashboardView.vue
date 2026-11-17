@@ -9,7 +9,7 @@ import type { ApexOptions } from 'apexcharts'
 import { Users, Sparkles, Clock, RotateCcw } from 'lucide-vue-next'
 
 const toastStore = useToastStore()
-const loading = ref(true)
+const loading = ref(false)
 const chartKey = ref(0)
 
 const requests = ref<ServiceRequest[]>([])
@@ -53,7 +53,7 @@ const fetchData = async (silent = false) => {
 }
 
 onMounted(() => {
-  fetchData(false)
+  fetchData(true)
   pollingTimer = setInterval(() => fetchData(true), 15000)
 })
 

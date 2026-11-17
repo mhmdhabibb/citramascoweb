@@ -374,8 +374,8 @@ const inventoryStats = computed(() => ({
 // Timeframe Flow Bar Chart
 const timeframeFlowData = computed(() => {
   const makeBins = (slots: string[], fn: (d: Date) => number) => {
-    const onTime = new Array(slots.length).fill(0)
-    const late = new Array(slots.length).fill(0)
+    const onTime = Array.from({ length: slots.length }).fill(0)
+    const late = Array.from({ length: slots.length }).fill(0)
     filteredDatabaseTasks.value.forEach((t) => {
       const idx = Math.min(slots.length - 1, Math.max(0, fn(t.dateObj)))
       if (t.isSlaMet) onTime[idx]++
@@ -416,7 +416,7 @@ const flowSeries = computed(() => [
 // Task Completion Trend Area Chart
 const taskTrendData = computed(() => {
   const makeBins = (slots: string[], fn: (d: Date) => number) => {
-    const counts = new Array(slots.length).fill(0)
+    const counts = Array.from({ length: slots.length }).fill(0)
     filteredDatabaseTasks.value.forEach((t) => {
       if (t.status === 'completed') {
         const idx = Math.min(slots.length - 1, Math.max(0, fn(t.dateObj)))
@@ -565,6 +565,127 @@ const latestTasks = computed(() => [...filteredDatabaseTasks.value].sort((a, b) 
 function getInitials(user: User): string {
   return ((user.first_name?.[0] || '') + (user.last_name?.[0] || '')).toUpperCase() || 'ST'
 }
+
+// -------------------------------------------------------------
+// RECEPTIONIST KPI (from reservation logs with handled_by_id)
+// -------------------------------------------------------------
+interface ReceptionistLogRecord {
+  logId: string
+  reservationId: string
+  reservationCode: string
+  guestName: string
+  roomName: string
+  action: string
+  timestamp: Date
+  isEarly: boolean
+  handledById: string
+  staffName: string
+}
+
+const allReceptionistLogs = computed<ReceptionistLogRecord[]>(() => {
+  const result: ReceptionistLogRecord[] = []
+  reservations.value.forEach((r) => {
+    if (!r.logs) return
+    r.logs.forEach((log) => {
+      if (!log.handled_by_id) return
+      result.push({
+        logId: log.id,
+        reservationId: r.id,
+        reservationCode: r.code || '',
+        guestName: r.full_name || '',
+        roomName: r.room?.name || 'Room',
+        action: log.action,
+        timestamp: new Date(log.timestamp),
+        isEarly: log.is_early || false,
+        handledById: log.handled_by_id,
+        staffName: (() => {
+          const u = allStaff.value.find((s) => s.id === log.handled_by_id)
+          return u ? `${u.first_name} ${u.last_name}` : 'Unknown'
+        })(),
+      })
+    })
+  })
+  return result
+})
+
+const filteredReceptionistLogs = computed<ReceptionistLogRecord[]>(() => {
+  const { start, end } = activeTimeframeRange.value
+  return allReceptionistLogs.value.filter((log) => {
+    if (log.timestamp < start || log.timestamp > end) return false
+    if (selectedStaffId.value !== 'all' && log.handledById !== selectedStaffId.value) return false
+    return true
+  })
+})
+
+const receptionistSummary = computed(() => {
+  const logs = filteredReceptionistLogs.value
+  const totalActions = logs.length
+  const checkIns = logs.filter((l) => l.action === 'check_in').length
+  const checkOuts = logs.filter((l) => l.action === 'check_out').length
+  const earlyCheckIns = logs.filter((l) => l.action === 'check_in' && l.isEarly).length
+  return { totalActions, checkIns, checkOuts, earlyCheckIns }
+})
+
+interface ReceptionistStaffKpi {
+  user: User
+  totalActions: number
+  checkIns: number
+  checkOuts: number
+  earlyCheckIns: number
+  avgActionsPerDay: number
+}
+
+const receptionistStaffKpiList = computed<ReceptionistStaffKpi[]>(() => {
+  const receptionStaff = allStaff.value.filter((s) => s.role === 'reception')
+  const pool = selectedStaffId.value === 'all' ? receptionStaff : receptionStaff.filter((s) => s.id === selectedStaffId.value)
+  const { start, end } = activeTimeframeRange.value
+  const daySpan = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)))
+
+  return pool.map((s) => {
+    const staffLogs = filteredReceptionistLogs.value.filter((l) => l.handledById === s.id)
+    const checkIns = staffLogs.filter((l) => l.action === 'check_in').length
+    const checkOuts = staffLogs.filter((l) => l.action === 'check_out').length
+    const earlyCheckIns = staffLogs.filter((l) => l.action === 'check_in' && l.isEarly).length
+    const totalActions = staffLogs.length
+    const avgActionsPerDay = Math.round((totalActions / daySpan) * 10) / 10
+    return { user: s, totalActions, checkIns, checkOuts, earlyCheckIns, avgActionsPerDay }
+  }).sort((a, b) => b.totalActions - a.totalActions)
+})
+
+const receptionistHourlyDistribution = computed(() => {
+  const hours = Array.from({ length: 16 }, (_, i) => `${String(i + 6).padStart(2, '0')}:00`)
+  const checkInCounts = Array.from({ length: 16 }).fill(0)
+  const checkOutCounts = Array.from({ length: 16 }).fill(0)
+
+  filteredReceptionistLogs.value.forEach((log) => {
+    const h = log.timestamp.getHours()
+    const idx = Math.max(0, Math.min(15, h - 6))
+    if (log.action === 'check_in') checkInCounts[idx]++
+    else if (log.action === 'check_out') checkOutCounts[idx]++
+  })
+  return { categories: hours, checkIns: checkInCounts, checkOuts: checkOutCounts }
+})
+
+const receptionistHourlyChartOptions = computed<ApexOptions>(() => ({
+  chart: { type: 'bar', toolbar: { show: false }, fontFamily: 'inherit', stacked: false },
+  colors: ['#10b981', '#6366f1'],
+  plotOptions: { bar: { horizontal: false, columnWidth: '50%', borderRadius: 4 } },
+  dataLabels: { enabled: false },
+  stroke: { show: true, width: 2, colors: ['transparent'] },
+  xaxis: { categories: receptionistHourlyDistribution.value.categories, labels: { style: { colors: '#64748b', fontSize: '10px', fontWeight: 600 } }, axisBorder: { show: false }, axisTicks: { show: false } },
+  yaxis: { min: 0, labels: { style: { colors: '#94a3b8', fontSize: '10px' } } },
+  grid: { borderColor: '#f1f5f9', strokeDashArray: 4, xaxis: { lines: { show: false } }, yaxis: { lines: { show: true } } },
+  legend: { position: 'top', horizontalAlign: 'right', fontSize: '11px', fontWeight: 600, labels: { colors: '#475569' } },
+  tooltip: { theme: 'light', y: { formatter: (v: number) => `${v} guest(s)` } }
+}))
+const receptionistHourlySeries = computed(() => [
+  { name: 'Check-ins', data: receptionistHourlyDistribution.value.checkIns },
+  { name: 'Check-outs', data: receptionistHourlyDistribution.value.checkOuts },
+])
+
+const latestReceptionistLogs = computed(() =>
+  [...filteredReceptionistLogs.value].sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()).slice(0, 15)
+)
 </script>
 
 <template>

@@ -89,7 +89,7 @@ const closeDrawer = () => {
   selectedRoom.value = null
 }
 
-// --- AKSI BARU: Mengubah Status Fisik Kamar (Active, Maintenance, Dirty) ---
+// --- AKSI BARU: Change Physical Room Status (Active, Maintenance, Dirty) ---
 const mutateRoomStatus = async (id, targetStatus) => {
   try {
     loading.value = true

@@ -129,7 +129,7 @@ async function verifyPayment(id: string, status: 'confirmed' | 'rejected') {
 }
 
 onMounted(() => {
-  fetchAll(false)
+  fetchAll(true)
   pollingTimer = setInterval(() => {
     fetchAll(true)
   }, 5000)
