@@ -347,3 +347,65 @@ export interface ServiceRequest {
   updated_at: string
   completed_at?: string
 }
+
+// ============================================
+// Service Monitoring & Metrics
+// ============================================
+export interface CategoryMetricStats {
+  name: string
+  category: string
+  total_requests: number
+  success_count: number
+  client_error_count: number
+  server_error_count: number
+  avg_latency_ms: number
+  min_latency_ms: number
+  max_latency_ms: number
+  status: 'healthy' | 'degraded' | 'down'
+  error_rate_percent: number
+  last_status_code: number
+  last_request_at?: string
+}
+
+export interface OverallMonitoringStats {
+  status: 'healthy' | 'degraded' | 'down'
+  uptime_seconds: number
+  uptime_formatted: string
+  start_time: string
+  total_requests: number
+  total_2xx: number
+  total_3xx: number
+  total_4xx: number
+  total_5xx: number
+  global_error_rate_percent: number
+  avg_latency_ms: number
+  requests_per_minute: number
+}
+
+export interface DatabaseHealthStats {
+  status: 'healthy' | 'down'
+  ping_ms: number
+  open_connections: number
+  in_use: number
+  idle: number
+  wait_count: number
+  max_open_connections: number
+}
+
+export interface SystemRuntimeStats {
+  go_version: string
+  goroutines: number
+  memory_allocated_mb: number
+  total_allocated_mb: number
+  system_memory_mb: number
+  num_gc: number
+}
+
+export interface MonitoringReport {
+  overall: OverallMonitoringStats
+  categories: CategoryMetricStats[]
+  database: DatabaseHealthStats
+  system: SystemRuntimeStats
+  timestamp: string
+}
+

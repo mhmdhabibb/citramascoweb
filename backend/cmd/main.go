@@ -12,6 +12,7 @@ import (
 	"citramascoweb-backend/internal/modules/finance"
 	"citramascoweb-backend/internal/modules/guest"
 	"citramascoweb-backend/internal/modules/inventory"
+	"citramascoweb-backend/internal/modules/monitoring"
 	"citramascoweb-backend/internal/modules/notification"
 	"citramascoweb-backend/internal/modules/offer"
 	"citramascoweb-backend/internal/modules/pricing"
@@ -83,6 +84,10 @@ func main() {
 
 	app.Use(cors.New(corsConfig))
 
+	// Live API service monitoring and metrics collector
+	monitoringModule := monitoring.InitModule(db)
+	app.Use(monitoringModule.Middleware())
+
 	port := config.Config("PORT")
 
 	//  init modules
@@ -135,6 +140,9 @@ func main() {
 	slaModule.RegisterRoutes(api)
 	pricingModule.RegisterRoutes(api)
 	auditModule.RegisterRoutes(api)
+
+	// Register monitoring and metrics routes (/metrics, /api/metrics, /api/monitoring/services)
+	monitoringModule.RegisterRoutes(app, api)
 
 	api.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{
