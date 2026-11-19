@@ -69,6 +69,8 @@ func main() {
 	facility.SeedDefaultFacilities(db)
 	sla.SeedDefaultSLAPolicies(db)
 	pricing.SeedDefaultSeasons(db)
+	unit.SeedDefaultRoomStatuses(db)
+	types.SeedDefaultBedTypes(db)
 
 	corsConfig := cors.Config{
 		AllowOrigins:     []string{"*"},

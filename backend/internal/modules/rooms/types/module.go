@@ -22,6 +22,7 @@ func InitModule(db *gorm.DB) *Module {
 }
 
 func (m *Module) TypeRoutes(router *gin.RouterGroup) {
+	// Room Types
 	router.GET("/types", m.Handler.GetAll)
 
 	category := router.Group("/type")
@@ -29,4 +30,13 @@ func (m *Module) TypeRoutes(router *gin.RouterGroup) {
 	category.GET("/:id", m.Handler.GetById)
 	category.PATCH("/:id", middlewares.AuthMiddleware(), middlewares.RoleMiddleware("admin"), m.Handler.Update)
 	category.DELETE("/:id", middlewares.AuthMiddleware(), middlewares.RoleMiddleware("admin"), m.Handler.Delete)
+
+	// Bed Types (Master Data: Single, Twin, Double, Queen, King, Super King)
+	router.GET("/bed-types", m.Handler.GetAllBedTypes)
+	bed := router.Group("/bed-type")
+	bed.GET("/:id", m.Handler.GetBedTypeById)
+	bed.POST("", middlewares.AuthMiddleware(), middlewares.RoleMiddleware("admin", "manager"), m.Handler.CreateBedType)
+	bed.PATCH("/:id", middlewares.AuthMiddleware(), middlewares.RoleMiddleware("admin", "manager"), m.Handler.UpdateBedType)
+	bed.PUT("/:id", middlewares.AuthMiddleware(), middlewares.RoleMiddleware("admin", "manager"), m.Handler.UpdateBedType)
+	bed.DELETE("/:id", middlewares.AuthMiddleware(), middlewares.RoleMiddleware("admin"), m.Handler.DeleteBedType)
 }

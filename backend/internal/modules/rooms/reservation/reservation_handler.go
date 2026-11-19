@@ -164,3 +164,100 @@ func (h *reservationHandler) CheckOut(c *gin.Context) {
 	}
 	c.JSON(200, gin.H{"message": "Check-out successful, room status back to Available"})
 }
+
+// ---------------------------------------------------------------------------
+// Reservation Logs & Items Handlers
+// ---------------------------------------------------------------------------
+
+func (h *reservationHandler) GetLogs(c *gin.Context) {
+	reservationId := c.Param("id")
+	logs, err := h.reservationService.GetLogs(reservationId)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"success": true, "data": logs})
+}
+
+func (h *reservationHandler) CreateLog(c *gin.Context) {
+	var req dto.CreateReservationLogRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": err.Error()})
+		return
+	}
+
+	// Auto-fill reservation_id from param if not in body
+	if idParam := c.Param("id"); idParam != "" && req.ReservationId == "" {
+		req.ReservationId = idParam
+	}
+
+	// Auto-fill handled_by_id from context if available
+	if userId := c.GetString("user_id"); userId != "" && req.HandledById == nil {
+		req.HandledById = &userId
+	}
+
+	logEntry, err := h.reservationService.CreateLog(&req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"success": true,
+		"message": "Reservation log created successfully",
+		"data":    logEntry,
+	})
+}
+
+func (h *reservationHandler) DeleteLog(c *gin.Context) {
+	logId := c.Param("logId")
+	if err := h.reservationService.DeleteLog(logId); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"success": true, "message": "Reservation log deleted successfully"})
+}
+
+func (h *reservationHandler) GetItems(c *gin.Context) {
+	reservationId := c.Param("id")
+	items, err := h.reservationService.GetItems(reservationId)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"success": true, "data": items})
+}
+
+func (h *reservationHandler) CreateItem(c *gin.Context) {
+	var req dto.CreateReservationItemRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": err.Error()})
+		return
+	}
+
+	if idParam := c.Param("id"); idParam != "" && req.ReservationId == "" {
+		req.ReservationId = idParam
+	}
+
+	item, err := h.reservationService.CreateItem(&req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"success": true,
+		"message": "Reservation item created successfully",
+		"data":    item,
+	})
+}
+
+func (h *reservationHandler) DeleteItem(c *gin.Context) {
+	itemId := c.Param("itemId")
+	if err := h.reservationService.DeleteItem(itemId); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"success": true, "message": "Reservation item deleted successfully"})
+}
+

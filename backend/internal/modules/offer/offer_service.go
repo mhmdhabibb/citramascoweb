@@ -184,3 +184,41 @@ func (s *offerService) Delete(id string) error {
 
 	return nil
 }
+
+// ---------------------------------------------------------------------------
+// OfferUsage Service Methods
+// ---------------------------------------------------------------------------
+
+func (s *offerService) GetOfferUsages(offerId, reservationId, guestId string) ([]OfferUsage, error) {
+	return s.repo.GetOfferUsages(offerId, reservationId, guestId)
+}
+
+func (s *offerService) GetOfferUsageById(id string) (*OfferUsage, error) {
+	usage, err := s.repo.GetOfferUsageById(id)
+	if err != nil {
+		return nil, errors.New("Offer usage not found")
+	}
+	return usage, nil
+}
+
+func (s *offerService) CreateOfferUsage(req *dto.CreateOfferUsageRequest) (*OfferUsage, error) {
+	if req.OfferId == "" || req.ReservationId == "" {
+		return nil, errors.New("offer_id and reservation_id are required")
+	}
+
+	usage := &OfferUsage{
+		Id:              uuid.New().String(),
+		ReservationId:   req.ReservationId,
+		GuestId:         req.GuestId,
+		OfferId:         req.OfferId,
+		DiscountApplied: req.DiscountApplied,
+		CreatedAt:       time.Now(),
+	}
+
+	if err := s.repo.CreateOfferUsage(usage); err != nil {
+		return nil, err
+	}
+
+	return usage, nil
+}
+

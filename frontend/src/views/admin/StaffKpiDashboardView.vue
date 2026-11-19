@@ -659,6 +659,7 @@ const receptionistHourlyDistribution = computed(() => {
 
   filteredReceptionistLogs.value.forEach((log) => {
     const h = log.timestamp.getHours()
+    if (isNaN(h)) return
     const idx = Math.max(0, Math.min(15, h - 6))
     if (log.action === 'check_in') checkInCounts[idx] = (checkInCounts[idx] ?? 0) + 1
     else if (log.action === 'check_out') checkOutCounts[idx] = (checkOutCounts[idx] ?? 0) + 1

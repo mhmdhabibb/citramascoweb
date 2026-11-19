@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import VueApexCharts from 'vue3-apexcharts'
 import type { ApexOptions } from 'apexcharts'
@@ -43,6 +43,7 @@ const authStore = useAuthStore()
 const toastStore = useToastStore()
 
 const loading = ref(false)
+const chartKey = ref(0)
 
 // State from Database
 const roomUnits = ref<RoomUnit[]>([])
@@ -125,8 +126,12 @@ const dateSubtitle = computed(() => {
 })
 
 // --- ROBUST DATE PARSING HELPERS (Handle DD-MM-YYYY from Go Backend & ISO) ---
-function parseDateToISO(d?: string): string {
+function parseDateToISO(d?: any): string {
   if (!d) return ''
+  if (typeof d !== 'string') {
+    if (d instanceof Date) return formatYMD(d)
+    d = String(d)
+  }
   const trimmed = d.trim()
   // Check if DD-MM-YYYY format (e.g. "14-08-2026")
   const parts = trimmed.split('-')
@@ -327,16 +332,16 @@ const upcomingArrivalsGrouped = computed(() => {
 
 // --- 2. MONTHLY REVENUE & PERFORMANCE ANALYTICS (100% PURE DATABASE DATA) ---
 const daysInSelectedMonth = computed(() => {
-  return new Date(selectedYear.value, selectedMonth.value + 1, 0).getDate()
+  return new Date(Number(selectedYear.value), Number(selectedMonth.value) + 1, 0).getDate()
 })
 
 const monthTitle = computed(() => {
-  const m = monthsList[selectedMonth.value]?.label || ''
+  const m = monthsList[Number(selectedMonth.value)]?.label || ''
   return `${m} ${selectedYear.value}`
 })
 
 const monthReservations = computed(() => {
-  const currentYM = `${selectedYear.value}-${String(selectedMonth.value + 1).padStart(2, '0')}`
+  const currentYM = `${selectedYear.value}-${String(Number(selectedMonth.value) + 1).padStart(2, '0')}`
   return reservations.value.filter((r) => {
     const checkinISO = parseDateToISO(r.checkin_date)
     const matchesMonth = checkinISO.startsWith(currentYM)
@@ -443,7 +448,7 @@ const activeChannelsWithRevenue = computed(() => {
 
 // Cancelled/Rejected Reservations in Selected Month (from DB)
 const monthCancelledReservations = computed(() => {
-  const currentYM = `${selectedYear.value}-${String(selectedMonth.value + 1).padStart(2, '0')}`
+  const currentYM = `${selectedYear.value}-${String(Number(selectedMonth.value) + 1).padStart(2, '0')}`
   return reservations.value.filter((r) => {
     const checkinISO = parseDateToISO(r.checkin_date)
     const matchesMonth = checkinISO.startsWith(currentYM)
@@ -496,7 +501,7 @@ const dailyTrendData = computed(() => {
     const pricePerNight = (r.total_price || 0) / Math.max(1, r.total_night || 1)
 
     for (let d = 1; d <= days; d++) {
-      const cur = new Date(selectedYear.value, selectedMonth.value, d)
+      const cur = new Date(Number(selectedYear.value), Number(selectedMonth.value), d)
       if (cur >= startD && cur < endD) {
         dailyRev[d - 1] = (dailyRev[d - 1] || 0) + pricePerNight
       }
@@ -576,7 +581,7 @@ const revenueChartOptions = computed<ApexOptions>(() => ({
     theme: 'dark',
     custom: function ({ series, seriesIndex, dataPointIndex }: any) {
       const day = dataPointIndex + 1
-      const val = series[seriesIndex][dataPointIndex]
+      const val = series?.[seriesIndex]?.[dataPointIndex] ?? 0
       const formatted = formatIDR(val)
       return `
         <div style="padding: 10px 14px; font-family: Plus Jakarta Sans, sans-serif; font-size: 12px; background: #0f172a; color: #fff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
@@ -637,7 +642,10 @@ const channelChartOptions = computed<ApexOptions>(() => ({
   tooltip: {
     theme: 'dark',
     y: {
-      formatter: (val: number) => `${val}% (${formatIDR((val / 100) * totalRevenue.value)})`,
+      formatter: (val: number) => {
+        const v = val || 0
+        return `${v}% (${formatIDR((v / 100) * totalRevenue.value)})`
+      },
     },
   },
 }))
@@ -652,8 +660,8 @@ const dailyOccupancyMap = computed(() => {
   const days = daysInSelectedMonth.value
   const result = []
   for (let i = 1; i <= days; i++) {
-    const dStr = `${selectedYear.value}-${String(selectedMonth.value + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`
-    const dateObj = new Date(selectedYear.value, selectedMonth.value, i)
+    const dStr = `${selectedYear.value}-${String(Number(selectedMonth.value) + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`
+    const dateObj = new Date(Number(selectedYear.value), Number(selectedMonth.value), i)
     const matching = monthReservations.value.filter((r) => {
       const inISO = parseDateToISO(r.checkin_date)
       const outISO = parseDateToISO(r.checkout_date)
@@ -684,17 +692,24 @@ const refreshData = async (isSilent: boolean = false) => {
     if (!isSilent) {
       loading.value = true
     }
-    const [resList, rList, cList] = await Promise.all([
-      reservationService.getAll(),
+    const [resList, rList, cList, uList] = await Promise.all([
+      reservationService.getAll().catch((err) => {
+        console.warn('Failed to load reservations:', err)
+        return []
+      }),
       roomService.getAll().catch(() => []),
       channelService.getAll().catch(() => []),
+      roomUnitService.getAll().catch(() => []),
     ])
-    reservations.value = resList
-    rooms.value = rList
-    channels.value = cList
+    reservations.value = resList || []
+    rooms.value = rList || []
+    channels.value = cList || []
+    roomUnits.value = uList || []
+    await nextTick()
+    chartKey.value++
   } catch (error: any) {
     if (!isSilent) {
-      toastStore.error(error.message || 'Gagal memuat data dari database')
+      toastStore.error(error?.message || 'Gagal memuat data dari database')
     }
   } finally {
     if (!isSilent) {
@@ -702,6 +717,15 @@ const refreshData = async (isSilent: boolean = false) => {
     }
   }
 }
+
+watch(
+  [selectedMonth, selectedYear, selectedProperty, selectedChannel],
+  () => {
+    nextTick(() => {
+      chartKey.value++
+    })
+  },
+)
 
 const exportPDF = () => {
   try {
@@ -1321,6 +1345,7 @@ onUnmounted(() => {
             <p>Grafik tren pendapatan harian dari database (IDR)</p>
           </div>
           <VueApexCharts
+            :key="'rev-' + chartKey"
             type="bar"
             height="260"
             :options="revenueChartOptions"
@@ -1338,6 +1363,7 @@ onUnmounted(() => {
             <!-- Left: Donut Chart -->
             <div class="donut-chart-col">
               <VueApexCharts
+                :key="'ch-' + chartKey"
                 type="donut"
                 height="220"
                 :options="channelChartOptions"

@@ -11,6 +11,14 @@ type TypeRepositoryInterface interface {
 	Update(id string, types *Types) error
 	Delete(id string) error
 	Search(query string) ([]Types, error)
+
+	// BedType operations
+	GetAllBedTypes() ([]BedType, error)
+	GetBedTypeById(id string) (*BedType, error)
+	GetBedTypeBySlug(slug string) (*BedType, error)
+	CreateBedType(bedType *BedType) error
+	UpdateBedType(id string, bedType *BedType) error
+	DeleteBedType(id string) error
 }
 
 type typeRepository struct {
@@ -64,4 +72,47 @@ func (r *typeRepository) Search(query string) ([]Types, error) {
 		return nil, err
 	}
 	return types, nil
+}
+
+// ---------------------------------------------------------------------------
+// BedType CRUD
+// ---------------------------------------------------------------------------
+
+func (r *typeRepository) GetAllBedTypes() ([]BedType, error) {
+	var bedTypes []BedType
+	err := r.db.Order("name asc").Find(&bedTypes).Error
+	if err != nil {
+		return nil, err
+	}
+	return bedTypes, nil
+}
+
+func (r *typeRepository) GetBedTypeById(id string) (*BedType, error) {
+	var bt BedType
+	err := r.db.First(&bt, "id = ?", id).Error
+	if err != nil {
+		return nil, err
+	}
+	return &bt, nil
+}
+
+func (r *typeRepository) GetBedTypeBySlug(slug string) (*BedType, error) {
+	var bt BedType
+	err := r.db.First(&bt, "slug = ?", slug).Error
+	if err != nil {
+		return nil, err
+	}
+	return &bt, nil
+}
+
+func (r *typeRepository) CreateBedType(bedType *BedType) error {
+	return r.db.Create(bedType).Error
+}
+
+func (r *typeRepository) UpdateBedType(id string, bedType *BedType) error {
+	return r.db.Model(&BedType{}).Where("id = ?", id).Updates(bedType).Error
+}
+
+func (r *typeRepository) DeleteBedType(id string) error {
+	return r.db.Where("id = ?", id).Delete(&BedType{}).Error
 }

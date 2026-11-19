@@ -20,6 +20,14 @@ type ReservationRepositoryInterface interface {
 	CheckAvailability(checkInDate time.Time, checkOutDate time.Time) ([]rooms.Room, error)
 	CheckIn(id string, roomId string, userId string) error
 	CheckOut(id string, roomId string, userId string) error
+
+	// Logs & Items
+	GetLogsByReservationId(reservationId string) ([]ReservationLog, error)
+	CreateLog(log *ReservationLog) error
+	DeleteLog(id string) error
+	GetItemsByReservationId(reservationId string) ([]ReservationItem, error)
+	CreateItem(item *ReservationItem) error
+	DeleteItem(id string) error
 }
 
 type reservationRepo struct {
@@ -31,7 +39,7 @@ func NewReservationRepository(db *gorm.DB) ReservationRepositoryInterface {
 }
 
 func (r *reservationRepo) GetAll() ([]Reservation, error) {
-	var reservations []Reservation
+	reservations := make([]Reservation, 0)
 	err := r.db.Preload("Room").Preload("RoomUnit").Preload("RoomUnit.Floor").Preload("Channel").Preload("Logs", func(db *gorm.DB) *gorm.DB {
 		return db.Order("timestamp asc")
 	}).Find(&reservations).Error
@@ -297,4 +305,38 @@ func (r *reservationRepo) CheckOut(id string, roomId string, userId string) erro
 		}
 		return nil
 	})
+}
+
+func (r *reservationRepo) GetLogsByReservationId(reservationId string) ([]ReservationLog, error) {
+	var logs []ReservationLog
+	err := r.db.Where("reservation_id = ?", reservationId).Order("timestamp asc").Find(&logs).Error
+	if err != nil {
+		return nil, err
+	}
+	return logs, nil
+}
+
+func (r *reservationRepo) CreateLog(log *ReservationLog) error {
+	return r.db.Create(log).Error
+}
+
+func (r *reservationRepo) DeleteLog(id string) error {
+	return r.db.Where("id = ?", id).Delete(&ReservationLog{}).Error
+}
+
+func (r *reservationRepo) GetItemsByReservationId(reservationId string) ([]ReservationItem, error) {
+	var items []ReservationItem
+	err := r.db.Where("reservation_id = ?", reservationId).Order("stay_date asc").Find(&items).Error
+	if err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+func (r *reservationRepo) CreateItem(item *ReservationItem) error {
+	return r.db.Create(item).Error
+}
+
+func (r *reservationRepo) DeleteItem(id string) error {
+	return r.db.Where("id = ?", id).Delete(&ReservationItem{}).Error
 }

@@ -129,3 +129,10 @@ type UpdateOfferRequest struct {
 	Description *string `json:"description" form:"description"`
 	Status      *string `json:"status" form:"status"`
 }
+
+type CreateOfferUsageRequest struct {
+	ReservationId   string  `json:"reservation_id" binding:"required"`
+	GuestId         *string `json:"guest_id"`
+	OfferId         string  `json:"offer_id" binding:"required"`
+	DiscountApplied float64 `json:"discount_applied" binding:"required"`
+}

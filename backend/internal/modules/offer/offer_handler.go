@@ -155,3 +155,52 @@ func (h *offerHandler) Delete(c *gin.Context) {
 
 	c.JSON(200, gin.H{"message": "Offer data deleted successfully!"})
 }
+
+// ---------------------------------------------------------------------------
+// OfferUsage Handlers
+// ---------------------------------------------------------------------------
+
+func (h *offerHandler) GetOfferUsages(c *gin.Context) {
+	offerId := c.Query("offer_id")
+	reservationId := c.Query("reservation_id")
+	guestId := c.Query("guest_id")
+
+	usages, err := h.offerService.GetOfferUsages(offerId, reservationId, guestId)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": usages})
+}
+
+func (h *offerHandler) GetOfferUsageById(c *gin.Context) {
+	id := c.Param("id")
+	usage, err := h.offerService.GetOfferUsageById(id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": usage})
+}
+
+func (h *offerHandler) CreateOfferUsage(c *gin.Context) {
+	var req dto.CreateOfferUsageRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	usage, err := h.offerService.CreateOfferUsage(&req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"message": "Offer usage recorded successfully",
+		"data":    usage,
+	})
+}
+

@@ -671,3 +671,67 @@ func (s *reservationService) CheckOut(id string, userId string) error {
 
 	return s.reservationRepo.CheckOut(id, reservation.RoomId, userId)
 }
+
+// ---------------------------------------------------------------------------
+// Logs & Items Operations
+// ---------------------------------------------------------------------------
+
+func (s *reservationService) GetLogs(reservationId string) ([]ReservationLog, error) {
+	return s.reservationRepo.GetLogsByReservationId(reservationId)
+}
+
+func (s *reservationService) CreateLog(req *dto.CreateReservationLogRequest) (*ReservationLog, error) {
+	log := &ReservationLog{
+		Id:            uuid.New().String(),
+		ReservationId: req.ReservationId,
+		Action:        req.Action,
+		Timestamp:     time.Now(),
+		IsEarly:       req.IsEarly,
+		Notes:         req.Notes,
+		HandledById:   req.HandledById,
+		CreatedAt:     time.Now(),
+	}
+
+	if err := s.reservationRepo.CreateLog(log); err != nil {
+		return nil, err
+	}
+	return log, nil
+}
+
+func (s *reservationService) DeleteLog(id string) error {
+	return s.reservationRepo.DeleteLog(id)
+}
+
+func (s *reservationService) GetItems(reservationId string) ([]ReservationItem, error) {
+	return s.reservationRepo.GetItemsByReservationId(reservationId)
+}
+
+func (s *reservationService) CreateItem(req *dto.CreateReservationItemRequest) (*ReservationItem, error) {
+	stayDate, err := time.Parse("2006-01-02", req.StayDate)
+	if err != nil {
+		// try alternate format
+		stayDate, err = time.Parse("02-01-2006", req.StayDate)
+		if err != nil {
+			return nil, errors.New("invalid stay_date format, expected YYYY-MM-DD or DD-MM-YYYY")
+		}
+	}
+
+	item := &ReservationItem{
+		Id:            uuid.New().String(),
+		ReservationId: req.ReservationId,
+		RoomUnitId:    req.RoomUnitId,
+		StayDate:      stayDate,
+		RateApplied:   req.RateApplied,
+		CreatedAt:     time.Now(),
+	}
+
+	if err := s.reservationRepo.CreateItem(item); err != nil {
+		return nil, err
+	}
+	return item, nil
+}
+
+func (s *reservationService) DeleteItem(id string) error {
+	return s.reservationRepo.DeleteItem(id)
+}
+

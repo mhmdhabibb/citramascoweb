@@ -9,6 +9,11 @@ type OfferRepositoryInterface interface {
 	Create(offer *Offer) error
 	Update(id string, offer *Offer) error
 	Delete(id string) error
+
+	// OfferUsage operations
+	GetOfferUsages(offerId, reservationId, guestId string) ([]OfferUsage, error)
+	GetOfferUsageById(id string) (*OfferUsage, error)
+	CreateOfferUsage(usage *OfferUsage) error
 }
 
 type offerRepository struct {
@@ -70,4 +75,40 @@ func (r *offerRepository) Delete(id string) error {
 		return err
 	}
 	return nil
+}
+
+// ---------------------------------------------------------------------------
+// OfferUsage CRUD
+// ---------------------------------------------------------------------------
+
+func (r *offerRepository) GetOfferUsages(offerId, reservationId, guestId string) ([]OfferUsage, error) {
+	var usages []OfferUsage
+	q := r.db.Order("created_at desc")
+	if offerId != "" {
+		q = q.Where("offer_id = ?", offerId)
+	}
+	if reservationId != "" {
+		q = q.Where("reservation_id = ?", reservationId)
+	}
+	if guestId != "" {
+		q = q.Where("guest_id = ?", guestId)
+	}
+	err := q.Find(&usages).Error
+	if err != nil {
+		return nil, err
+	}
+	return usages, nil
+}
+
+func (r *offerRepository) GetOfferUsageById(id string) (*OfferUsage, error) {
+	var usage OfferUsage
+	err := r.db.Where("id = ?", id).First(&usage).Error
+	if err != nil {
+		return nil, err
+	}
+	return &usage, nil
+}
+
+func (r *offerRepository) CreateOfferUsage(usage *OfferUsage) error {
+	return r.db.Create(usage).Error
 }

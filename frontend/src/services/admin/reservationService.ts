@@ -1,4 +1,4 @@
-import type { ApiResponse, Reservation } from '@/types'
+import type { ApiResponse, Reservation, ReservationItem, ReservationLog } from '@/types'
 import api from '../api'
 
 export const reservationService = {
@@ -7,10 +7,7 @@ export const reservationService = {
    */
   getAll: async (): Promise<Reservation[]> => {
     const response = await api.get<ApiResponse<Reservation[]>>('/reservations')
-    if (!response.data.data) {
-      throw new Error(response.data.message || 'Failed to fetch reservations')
-    }
-    return response.data.data
+    return response.data.data ?? []
   },
 
   /**
@@ -91,5 +88,43 @@ export const reservationService = {
       throw new Error(response.data.message || 'Failed to submit reservation')
     }
     return response.data.message
+  },
+
+  /**
+   * GET /api/reservation/:id/logs
+   */
+  getLogs: async (reservationId: string): Promise<ReservationLog[]> => {
+    const response = await api.get<ApiResponse<ReservationLog[]>>(`/reservation/${reservationId}/logs`)
+    return response.data.data ?? []
+  },
+
+  /**
+   * POST /api/reservation/:id/logs
+   */
+  createLog: async (
+    reservationId: string,
+    data: { action: string; is_early?: boolean; notes?: string; handled_by_id?: string },
+  ): Promise<ReservationLog> => {
+    const response = await api.post<ApiResponse<ReservationLog>>(`/reservation/${reservationId}/logs`, data)
+    return response.data.data!
+  },
+
+  /**
+   * GET /api/reservation/:id/items
+   */
+  getItems: async (reservationId: string): Promise<ReservationItem[]> => {
+    const response = await api.get<ApiResponse<ReservationItem[]>>(`/reservation/${reservationId}/items`)
+    return response.data.data ?? []
+  },
+
+  /**
+   * POST /api/reservation/:id/items
+   */
+  createItem: async (
+    reservationId: string,
+    data: { room_unit_id: string; stay_date: string; rate_applied: number },
+  ): Promise<ReservationItem> => {
+    const response = await api.post<ApiResponse<ReservationItem>>(`/reservation/${reservationId}/items`, data)
+    return response.data.data!
   },
 }

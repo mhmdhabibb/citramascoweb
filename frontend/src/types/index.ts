@@ -33,6 +33,31 @@ export interface RoomType {
 }
 
 // ============================================
+// BedType (from backend: internal/modules/rooms/types/entity.go)
+// ============================================
+export interface BedType {
+  id: string
+  name: string
+  slug: string
+  is_active: boolean
+  created_at?: string
+  updated_at?: string
+}
+
+// ============================================
+// RoomStatus (from backend: internal/modules/rooms/unit/entity.go)
+// ============================================
+export interface RoomStatus {
+  id: string
+  code: string // VC, VD, OC, OD, OOO, OOS, DND, SO
+  name: string
+  description?: string
+  is_active: boolean
+  created_at?: string
+  updated_at?: string
+}
+
+// ============================================
 // Floor (Lantai)
 // ============================================
 export interface Floor {
@@ -55,6 +80,8 @@ export interface RoomUnit {
   floor_id: string
   floor?: Floor
   status: 'available' | 'occupied' | 'dirty' | 'maintenance' | string
+  room_status_id?: string
+  room_status?: RoomStatus
   created_at?: string
   updated_at?: string
 }
@@ -124,6 +151,24 @@ export interface ReservationLog {
   is_early?: boolean
   notes?: string
   handled_by_id?: string
+  created_at?: string
+}
+
+export interface ReservationItem {
+  id: string
+  reservation_id: string
+  room_unit_id: string
+  stay_date: string
+  rate_applied: number
+  created_at?: string
+}
+
+export interface OfferUsage {
+  id: string
+  reservation_id: string
+  guest_id?: string
+  offer_id: string
+  discount_applied: number
   created_at?: string
 }
 

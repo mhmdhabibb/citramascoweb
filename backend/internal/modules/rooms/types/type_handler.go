@@ -112,3 +112,64 @@ func (h *typeHandler) Search(c *gin.Context) {
 	c.JSON(200, gin.H{"success": true, "message": "Types data searched successfully!", "data": types})
 
 }
+
+// ---------------------------------------------------------------------------
+// BedType Handlers
+// ---------------------------------------------------------------------------
+
+func (h *typeHandler) GetAllBedTypes(c *gin.Context) {
+	bedTypes, err := h.typeService.GetAllBedTypes()
+	if err != nil {
+		c.JSON(400, gin.H{"success": false, "message": "Gagal mengambil data tipe tempat tidur"})
+		return
+	}
+	c.JSON(200, gin.H{"success": true, "data": bedTypes})
+}
+
+func (h *typeHandler) GetBedTypeById(c *gin.Context) {
+	id := c.Param("id")
+	bt, err := h.typeService.GetBedTypeById(id)
+	if err != nil {
+		c.JSON(404, gin.H{"success": false, "message": "Bed type not found"})
+		return
+	}
+	c.JSON(200, gin.H{"success": true, "data": bt})
+}
+
+func (h *typeHandler) CreateBedType(c *gin.Context) {
+	var req dto.CreateBedTypeRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(400, gin.H{"success": false, "message": err.Error()})
+		return
+	}
+
+	if err := h.typeService.CreateBedType(&req); err != nil {
+		c.JSON(400, gin.H{"success": false, "message": err.Error()})
+		return
+	}
+	c.JSON(201, gin.H{"success": true, "message": "Bed type created successfully"})
+}
+
+func (h *typeHandler) UpdateBedType(c *gin.Context) {
+	id := c.Param("id")
+	var req dto.UpdateBedTypeRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(400, gin.H{"success": false, "message": err.Error()})
+		return
+	}
+
+	if err := h.typeService.UpdateBedType(id, &req); err != nil {
+		c.JSON(400, gin.H{"success": false, "message": err.Error()})
+		return
+	}
+	c.JSON(200, gin.H{"success": true, "message": "Bed type updated successfully"})
+}
+
+func (h *typeHandler) DeleteBedType(c *gin.Context) {
+	id := c.Param("id")
+	if err := h.typeService.DeleteBedType(id); err != nil {
+		c.JSON(400, gin.H{"success": false, "message": err.Error()})
+		return
+	}
+	c.JSON(200, gin.H{"success": true, "message": "Bed type deleted successfully"})
+}

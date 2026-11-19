@@ -27,7 +27,7 @@ export type AppRole =
  * A role not listed for an admin path is blocked from that page.
  */
 export const ROUTE_ACCESS: Record<string, AppRole[]> = {
-  '/admin/dashboard': ['admin', 'manager', 'reception', 'inventory', 'housekeeping'],
+  '/admin/dashboard': ['admin', 'manager', 'reception', 'inventory', 'housekeeping', 'finance'],
   '/admin/finance': ['admin', 'finance'],
   '/admin/finance/cash-bank': ['admin', 'finance'],
   '/admin/finance/general-journal': ['admin', 'finance'],

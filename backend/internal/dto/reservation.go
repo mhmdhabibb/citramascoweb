@@ -40,3 +40,19 @@ type CheckAvailabilityRequest struct {
 	CheckOutDate string `form:"check_out_date" json:"check_out_date" binding:"required"`
 	RoomId       string `form:"room_id" json:"room_id"`
 }
+
+type CreateReservationLogRequest struct {
+	ReservationId string  `json:"reservation_id" binding:"required"`
+	Action        string  `json:"action" binding:"required"`
+	IsEarly       bool    `json:"is_early"`
+	Notes         string  `json:"notes"`
+	HandledById   *string `json:"handled_by_id"`
+}
+
+type CreateReservationItemRequest struct {
+	ReservationId string  `json:"reservation_id" binding:"required"`
+	RoomUnitId    string  `json:"room_unit_id" binding:"required"`
+	StayDate      string  `json:"stay_date" binding:"required"`
+	RateApplied   float64 `json:"rate_applied" binding:"required"`
+}
+

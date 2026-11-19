@@ -109,3 +109,64 @@ func (h *roomUnitHandler) Delete(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"success": true, "message": "Room unit deleted successfully"})
 }
+
+// ---------------------------------------------------------------------------
+// RoomStatus Handlers
+// ---------------------------------------------------------------------------
+
+func (h *roomUnitHandler) GetAllStatuses(c *gin.Context) {
+	statuses, err := h.service.GetAllStatuses()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "message": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"success": true, "data": statuses})
+}
+
+func (h *roomUnitHandler) GetStatusById(c *gin.Context) {
+	id := c.Param("id")
+	status, err := h.service.GetStatusById(id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"success": false, "message": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"success": true, "data": status})
+}
+
+func (h *roomUnitHandler) CreateStatus(c *gin.Context) {
+	var req dto.CreateRoomStatusRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": err.Error()})
+		return
+	}
+
+	if err := h.service.CreateStatus(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": err.Error()})
+		return
+	}
+	c.JSON(http.StatusCreated, gin.H{"success": true, "message": "Room status created successfully"})
+}
+
+func (h *roomUnitHandler) UpdateStatusModel(c *gin.Context) {
+	id := c.Param("id")
+	var req dto.UpdateRoomStatusRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": err.Error()})
+		return
+	}
+
+	if err := h.service.UpdateStatusModel(id, &req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"success": true, "message": "Room status updated successfully"})
+}
+
+func (h *roomUnitHandler) DeleteStatus(c *gin.Context) {
+	id := c.Param("id")
+	if err := h.service.DeleteStatus(id); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"success": true, "message": "Room status deleted successfully"})
+}
